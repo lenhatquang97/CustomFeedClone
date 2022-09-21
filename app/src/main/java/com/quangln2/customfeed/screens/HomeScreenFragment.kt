@@ -69,6 +69,7 @@ class HomeScreenFragment : Fragment() {
                                     )
                                     videoView.setVideoURI(uri)
                                     videoView.setBackgroundDrawable(FileUtils.getVideoThumbnail(uri, requireContext()))
+
                                     videoView.setOnClickListener {
                                         videoView.setBackgroundDrawable(null)
                                         videoView.seekTo(0)

@@ -52,8 +52,13 @@ class AllFeedsFragment : Fragment() {
         val onClickAddPost = fun() {
             findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment)
         }
+        val onClickVideoView = fun(url: String) {
+            val bundle = Bundle()
+            bundle.putString("url", url)
+            findNavController().navigate(R.id.action_allFeedsFragment_to_viewFullVideoFragment, bundle)
+        }
 
-        adapterVal = FeedListAdapter(requireContext(), onDeleteItem, onClickAddPost)
+        adapterVal = FeedListAdapter(requireContext(), onDeleteItem, onClickAddPost, onClickVideoView)
         val linearLayoutManager = LinearLayoutManager(requireContext())
         binding.allFeeds.apply {
             adapter = adapterVal
@@ -118,9 +123,12 @@ class AllFeedsFragment : Fragment() {
         val view = customGridGroup?.getChildAt(videoIndex!!)
         if (view is VideoView && videoIndex != null) {
             view.setBackgroundDrawable(null)
+            view.seekTo(0)
             view.start()
             view.setOnCompletionListener {
-                FeedController.videoQueue.remove()
+                if(FeedController.videoQueue.size >= 1){
+                    FeedController.videoQueue.remove()
+                }
                 for (i in videoIndex until customGridGroup.size) {
                     val nextView = customGridGroup.getChildAt(i)
                     if (nextView is VideoView && i != videoIndex) {

@@ -12,6 +12,7 @@
         <entry key="app/src/main/res/layout/feed_item.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_all_feeds.xml" value="0.21311475409836064" />
         <entry key="app/src/main/res/layout/fragment_home_screen.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/fragment_view_full_video.xml" value="0.10052083333333334" />
         <entry key="app/src/main/res/layout/image_layer_view.xml" value="0.2291041056315104" />
         <entry key="app/src/main/res/layout/image_video_view.xml" value="0.10677083333333333" />
       </map>

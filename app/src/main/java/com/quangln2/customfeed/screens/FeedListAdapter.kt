@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.MediaController
 import android.widget.VideoView
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.size
@@ -47,7 +48,8 @@ import java.util.concurrent.Executors
 class FeedListAdapter(
     private var context: Context,
     private val onDeleteItem: (String) -> Unit,
-    private val onClickAddPost: () -> Unit
+    private val onClickAddPost: () -> Unit,
+    private val onClickVideoView: (String) -> Unit
 ) :
     ListAdapter<UploadPost, RecyclerView.ViewHolder>(
         AsyncDifferConfig.Builder(FeedListDiffCallback())
@@ -73,7 +75,6 @@ class FeedListAdapter(
                 binding.loadingCircularIndicator.visibility = View.GONE
                 return
             }
-//            binding.customGridGroup.removeAllViews()
 
             binding.feedId.text = item.feedId
             binding.myName.text = item.name
@@ -107,8 +108,23 @@ class FeedListAdapter(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
-                            videoView.setVideoURI(Uri.parse(value))
-                            videoView.setBackgroundDrawable(FileUtils.getVideoThumbnail(Uri.parse(value), context, value))
+
+                            val uri = Uri.parse(value)
+                            val mediaController = MediaController(context)
+                            mediaController.visibility = View.INVISIBLE
+                            videoView.setMediaController(mediaController)
+
+                            videoView.setVideoURI(uri)
+                            videoView.requestFocus()
+
+                            videoView.setOnClickListener {
+                                onClickVideoView(value)
+                            }
+
+
+
+
+                            videoView.setBackgroundDrawable(context.resources.getDrawable(R.drawable.played))
                             withContext(Dispatchers.Main){
                                 binding.customGridGroup.addView(videoView)
                                 binding.loadingCircularIndicator.visibility = View.INVISIBLE
@@ -123,6 +139,10 @@ class FeedListAdapter(
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
                         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+
+                        imageView.setOnClickListener {
+                            onClickVideoView(value)
+                        }
                         withContext(Dispatchers.Main) {
                             Glide.with(context).load(value).listener(
                                 object : RequestListener<Drawable> {

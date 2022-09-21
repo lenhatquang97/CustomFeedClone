@@ -22,5 +22,12 @@
         <action
             android:id="@+id/action_allFeedsFragment_to_homeScreenFragment"
             app:destination="@id/homeScreenFragment" />
+        <action
+            android:id="@+id/action_allFeedsFragment_to_viewFullVideoFragment"
+            app:destination="@id/viewFullVideoFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/viewFullVideoFragment"
+        android:name="com.quangln2.customfeed.screens.ViewFullVideoFragment"
+        android:label="ViewFullVideoFragment" />
 </navigation>
