@@ -2,6 +2,7 @@ package com.quangln2.customfeed.screens
 
 import android.graphics.drawable.BitmapDrawable
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,9 +17,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.ui.PlayerView
+import com.quangln2.customfeed.FeedController
 import com.quangln2.customfeed.R
+import com.quangln2.customfeed.VideoPlayed
 import com.quangln2.customfeed.customview.CustomGridGroup
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
+import com.quangln2.customfeed.utils.FileUtils
 import com.quangln2.customfeed.viewmodel.FeedViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,7 +62,7 @@ class AllFeedsFragment : Fragment() {
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                val itemPosition = linearLayoutManager.findFirstVisibleItemPosition()
+                val itemPosition = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
                 if (itemPosition > 0 && globalIndex != itemPosition) {
                     globalIndex = itemPosition
                     val viewItem = linearLayoutManager.findViewByPosition(itemPosition)
@@ -67,15 +71,17 @@ class AllFeedsFragment : Fragment() {
                         for (i in 0 until customGridGroup?.size!!) {
                             val view = customGridGroup.getChildAt(i)
                             if (view is VideoView) {
-                                if(view != null) {
-                                    view.setBackgroundDrawable(null)
-                                    Toast.makeText(requireContext(), "Player completed", Toast.LENGTH_SHORT).show()
-                                    view.start()
-                                } else {
-                                    Toast.makeText(requireContext(), "Player null", Toast.LENGTH_SHORT).show()
-                                }
+                                FeedController.videoQueue.add(VideoPlayed(itemPosition, i))
+                                break
                             }
                         }
+                        if(FeedController.videoQueue.size == 1) {
+                            playVideo(linearLayoutManager)
+                        } else if(FeedController.videoQueue.size > 1){
+                            pauseVideo(linearLayoutManager)
+                            playVideo(linearLayoutManager)
+                        }
+
                     }
                 }
 
@@ -91,6 +97,41 @@ class AllFeedsFragment : Fragment() {
 
 
         return binding.root
+    }
+    private fun pauseVideo(linearLayoutManager: LinearLayoutManager){
+        val pausedItemIndex = FeedController.videoQueue.peek()?.itemPosition
+        val videoIndex = FeedController.videoQueue.peek()?.index
+        val viewItem = linearLayoutManager.findViewByPosition(pausedItemIndex!!)
+        val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
+        val view = customGridGroup?.getChildAt(videoIndex!!)
+        if (view is VideoView) {
+            view.pause()
+            FeedController.videoQueue.remove()
+        }
+    }
+
+    private fun playVideo(linearLayoutManager: LinearLayoutManager){
+        val mainItemIndex = FeedController.videoQueue.peek()?.itemPosition
+        val videoIndex = FeedController.videoQueue.peek()?.index
+        val viewItem = linearLayoutManager.findViewByPosition(mainItemIndex!!)
+        val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
+        val view = customGridGroup?.getChildAt(videoIndex!!)
+        if (view is VideoView && videoIndex != null) {
+            view.setBackgroundDrawable(null)
+            view.start()
+            view.setOnCompletionListener {
+                FeedController.videoQueue.remove()
+                for (i in videoIndex until customGridGroup.size) {
+                    val nextView = customGridGroup.getChildAt(i)
+                    if (nextView is VideoView && i != videoIndex) {
+                        FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
+                        playVideo(linearLayoutManager)
+                        break
+                    }
+                }
+
+            }
+        }
     }
 
 
