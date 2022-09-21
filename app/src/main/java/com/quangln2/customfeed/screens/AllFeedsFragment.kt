@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import android.widget.VideoView
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
@@ -14,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.customview.CustomGridGroup
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
@@ -61,20 +63,16 @@ class AllFeedsFragment : Fragment() {
                     globalIndex = itemPosition
                     val viewItem = linearLayoutManager.findViewByPosition(itemPosition)
                     val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
-                    lifecycleScope.launch(Dispatchers.IO){
+                    lifecycleScope.launch(Dispatchers.Main){
                         for (i in 0 until customGridGroup?.size!!) {
                             val view = customGridGroup.getChildAt(i)
-                            if (view is VideoView) {
-                                if(view.background != null){
-                                    val anotherView = view as VideoView
-                                    withContext(Dispatchers.Main){
-                                        anotherView.setBackgroundDrawable(null)
-                                        anotherView.seekTo(0)
-                                        anotherView.start()
-                                    }
-
+                            if (view is PlayerView) {
+                                if(view.player != null) {
+                                    Toast.makeText(requireContext(), "Player completed", Toast.LENGTH_SHORT).show()
+                                    view.player?.play()
+                                } else {
+                                    Toast.makeText(requireContext(), "Player null", Toast.LENGTH_SHORT).show()
                                 }
-
                             }
                         }
                     }

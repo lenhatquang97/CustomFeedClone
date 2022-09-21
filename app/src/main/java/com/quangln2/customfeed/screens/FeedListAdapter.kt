@@ -18,6 +18,10 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
 import com.quangln2.customfeed.databinding.FeedCardBinding
@@ -86,15 +90,20 @@ class FeedListAdapter(
 
                     val value = item.imagesAndVideos[i]
                     if (value.contains("mp4")) {
-                        val videoView = VideoView(context)
-                        videoView.layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        videoView.setVideoURI(Uri.parse(value))
-                        val thumbnail = FileUtils.getVideoThumbnail(Uri.parse(value), context, value)
-                        videoView.setBackgroundDrawable(thumbnail)
                         withContext(Dispatchers.Main) {
+                            val videoView = PlayerView(context)
+                            videoView.layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+
+                            val player = ExoPlayer.Builder(context).build()
+                            videoView.player = null
+                            videoView.player = player
+
+                            val mediaItem = MediaItem.fromUri(Uri.parse(value))
+                            player.setMediaItem(mediaItem)
+                            player.prepare()
                             binding.customGridGroup.addView(videoView)
                             binding.loadingCircularIndicator.visibility = View.INVISIBLE
                         }
