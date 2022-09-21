@@ -101,24 +101,20 @@ class FeedListAdapter(
 
                     val value = item.imagesAndVideos[i]
                     if (value.contains("mp4")) {
-                        withContext(Dispatchers.Main) {
-                            val videoView = PlayerView(context)
+                        withContext(Dispatchers.IO) {
+                            val videoView = VideoView(context)
                             videoView.layoutParams = ViewGroup.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
-                            withContext(Dispatchers.IO){
-                                videoView.setBackgroundDrawable(FileUtils.getVideoThumbnail(Uri.parse(value), context, value))
+                            videoView.setVideoURI(Uri.parse(value))
+                            videoView.setBackgroundDrawable(FileUtils.getVideoThumbnail(Uri.parse(value), context, value))
+                            withContext(Dispatchers.Main){
+                                binding.customGridGroup.addView(videoView)
+                                binding.loadingCircularIndicator.visibility = View.INVISIBLE
                             }
 
-                            val player = ExoPlayer.Builder(context).build()
-                            videoView.player = player
-                            val mediaItem = MediaItem.fromUri(value)
-                            player.setMediaItem(mediaItem)
-                            player.prepare()
 
-                            binding.customGridGroup.addView(videoView)
-                            binding.loadingCircularIndicator.visibility = View.INVISIBLE
                         }
                     } else {
                         val imageView = ImageView(context)

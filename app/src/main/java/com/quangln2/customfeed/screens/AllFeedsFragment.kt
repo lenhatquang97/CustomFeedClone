@@ -66,11 +66,11 @@ class AllFeedsFragment : Fragment() {
                     lifecycleScope.launch(Dispatchers.Main){
                         for (i in 0 until customGridGroup?.size!!) {
                             val view = customGridGroup.getChildAt(i)
-                            if (view is PlayerView) {
-                                if(view.player != null) {
+                            if (view is VideoView) {
+                                if(view != null) {
                                     view.setBackgroundDrawable(null)
                                     Toast.makeText(requireContext(), "Player completed", Toast.LENGTH_SHORT).show()
-                                    view.player?.play()
+                                    view.start()
                                 } else {
                                     Toast.makeText(requireContext(), "Player null", Toast.LENGTH_SHORT).show()
                                 }
