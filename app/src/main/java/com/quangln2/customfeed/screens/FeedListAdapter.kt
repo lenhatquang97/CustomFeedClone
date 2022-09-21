@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.VideoView
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.size
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
@@ -21,7 +22,15 @@ import com.bumptech.glide.request.target.Target
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
+import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
+import com.google.android.exoplayer2.util.Util
+import com.quangln2.customfeed.R
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
 import com.quangln2.customfeed.databinding.FeedCardBinding
@@ -32,6 +41,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import java.util.concurrent.Executors
 
 class FeedListAdapter(
@@ -60,6 +70,7 @@ class FeedListAdapter(
         fun bind(item: UploadPost, context: Context) {
             binding.loadingCircularIndicator.visibility = View.VISIBLE
             if(binding.customGridGroup.size > 0){
+                binding.loadingCircularIndicator.visibility = View.GONE
                 return
             }
 //            binding.customGridGroup.removeAllViews()
@@ -96,14 +107,16 @@ class FeedListAdapter(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
+                            withContext(Dispatchers.IO){
+                                videoView.setBackgroundDrawable(FileUtils.getVideoThumbnail(Uri.parse(value), context, value))
+                            }
 
                             val player = ExoPlayer.Builder(context).build()
-                            videoView.player = null
                             videoView.player = player
-
-                            val mediaItem = MediaItem.fromUri(Uri.parse(value))
+                            val mediaItem = MediaItem.fromUri(value)
                             player.setMediaItem(mediaItem)
                             player.prepare()
+
                             binding.customGridGroup.addView(videoView)
                             binding.loadingCircularIndicator.visibility = View.INVISIBLE
                         }

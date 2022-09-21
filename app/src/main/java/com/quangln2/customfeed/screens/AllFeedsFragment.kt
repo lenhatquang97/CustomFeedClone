@@ -68,6 +68,7 @@ class AllFeedsFragment : Fragment() {
                             val view = customGridGroup.getChildAt(i)
                             if (view is PlayerView) {
                                 if(view.player != null) {
+                                    view.setBackgroundDrawable(null)
                                     Toast.makeText(requireContext(), "Player completed", Toast.LENGTH_SHORT).show()
                                     view.player?.play()
                                 } else {
@@ -76,7 +77,6 @@ class AllFeedsFragment : Fragment() {
                             }
                         }
                     }
-                    println("Custom grid group ${customGridGroup?.size}")
                 }
 
             }

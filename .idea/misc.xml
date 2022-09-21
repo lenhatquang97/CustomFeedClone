@@ -9,7 +9,7 @@
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="app/src/main/res/layout/feed_card.xml" value="0.234375" />
-        <entry key="app/src/main/res/layout/feed_item.xml" value="0.375365716791662" />
+        <entry key="app/src/main/res/layout/feed_item.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_all_feeds.xml" value="0.21311475409836064" />
         <entry key="app/src/main/res/layout/fragment_home_screen.xml" value="0.1" />
         <entry key="app/src/main/res/layout/image_layer_view.xml" value="0.2291041056315104" />
