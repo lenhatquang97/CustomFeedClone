@@ -2,14 +2,11 @@ package com.quangln2.customfeed.screens
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.MediaController
-import android.widget.VideoView
-import androidx.core.content.ContentProviderCompat.requireContext
+import android.widget.LinearLayout
 import androidx.core.view.size
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
@@ -20,20 +17,9 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
-import com.google.android.exoplayer2.source.hls.HlsMediaSource
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.util.Util
-import com.quangln2.customfeed.R
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
+import com.quangln2.customfeed.customview.LoadingVideoView
 import com.quangln2.customfeed.databinding.FeedCardBinding
 import com.quangln2.customfeed.databinding.FeedItemBinding
 import com.quangln2.customfeed.models.UploadPost
@@ -42,7 +28,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import java.util.concurrent.Executors
 
 class FeedListAdapter(
@@ -71,7 +56,7 @@ class FeedListAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: UploadPost, context: Context) {
             binding.loadingCircularIndicator.visibility = View.VISIBLE
-            if(binding.customGridGroup.size > 0){
+            if (binding.customGridGroup.size > 0) {
                 binding.loadingCircularIndicator.visibility = View.GONE
                 return
             }
@@ -85,8 +70,6 @@ class FeedListAdapter(
             binding.deleteButton.setOnClickListener {
                 onDeleteItem(item.feedId)
             }
-
-            println("Created ${item.createdTime}")
 
             CoroutineScope(Dispatchers.IO).launch {
                 for (i in 0 until item.imagesAndVideos.size) {
@@ -102,35 +85,14 @@ class FeedListAdapter(
 
                     val value = item.imagesAndVideos[i]
                     if (value.contains("mp4")) {
-                        withContext(Dispatchers.IO) {
-                            val videoView = VideoView(context)
-                            videoView.layoutParams = ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-
-                            val uri = Uri.parse(value)
-                            val mediaController = MediaController(context)
-                            mediaController.visibility = View.INVISIBLE
-                            videoView.setMediaController(mediaController)
-
-                            videoView.setVideoURI(uri)
-                            videoView.requestFocus()
-
-                            videoView.setOnClickListener {
-                                onClickVideoView(value)
-                            }
-
-
-
-
-                            videoView.setBackgroundDrawable(context.resources.getDrawable(R.drawable.played))
-                            withContext(Dispatchers.Main){
-                                binding.customGridGroup.addView(videoView)
-                                binding.loadingCircularIndicator.visibility = View.INVISIBLE
-                            }
-
-
+                        val videoView = LoadingVideoView(context, value)
+                        videoView.layoutParams = LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        withContext(Dispatchers.Main) {
+                            binding.customGridGroup.addView(videoView)
+                            binding.loadingCircularIndicator.visibility = View.INVISIBLE
                         }
                     } else {
                         val imageView = ImageView(context)
@@ -202,10 +164,10 @@ class FeedListAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (position == 0) {
-            (holder as AddNewItemViewHolder).bind(context)
+            (holder as FeedListAdapter.AddNewItemViewHolder).bind(context)
         } else {
             val item = getItem(position)
-            (holder as FeedItemViewHolder).bind(item, context)
+            (holder as FeedListAdapter.FeedItemViewHolder).bind(item, context)
         }
     }
 

@@ -2,13 +2,12 @@ package com.quangln2.customfeed.screens
 
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.MediaController
+import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
-import com.quangln2.customfeed.R
 import com.quangln2.customfeed.databinding.FragmentViewFullVideoBinding
 
 
@@ -25,7 +24,7 @@ class ViewFullVideoFragment : Fragment() {
     ): View? {
         binding = FragmentViewFullVideoBinding.inflate(inflater, container, false)
         val url = arguments?.getString("url")
-        if(url != null && url.contains(".mp4")){
+        if (url != null && url.contains(".mp4")) {
             binding.fullVideoView.visibility = View.VISIBLE
             binding.fullImageView.visibility = View.GONE
 

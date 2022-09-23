@@ -3,7 +3,6 @@ package com.quangln2.customfeed.customview
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
 import android.view.ViewGroup
 
 class CustomGridGroup : ViewGroup {
@@ -141,42 +140,58 @@ class CustomGridGroup : ViewGroup {
 
         for (i in 0 until itemNumber) {
             val child = getChildAt(i)
-            child.layout(
-                rectangles[i].leftTop.x.toInt() + contentPadding,
-                rectangles[i].leftTop.y.toInt() + contentPadding,
-                rectangles[i].rightBottom.x.toInt() - contentPadding,
-                rectangles[i].rightBottom.y.toInt() - contentPadding
-            )
+            if (child is ViewGroup) {
+                val width =
+                    (rectangles[i].rightBottom.x.toInt()) - (rectangles[i].leftTop.x.toInt()) + 2 * contentPadding
+                val height =
+                    (rectangles[i].rightBottom.y.toInt()) - (rectangles[i].leftTop.y.toInt()) + 2 * contentPadding
+                measureChild(child, width, height)
+                child.layout(
+                    rectangles[i].leftTop.x.toInt(),
+                    rectangles[i].leftTop.y.toInt(),
+                    rectangles[i].rightBottom.x.toInt(),
+                    rectangles[i].rightBottom.y.toInt()
+                )
+            } else {
+                child.layout(
+                    rectangles[i].leftTop.x.toInt() + contentPadding,
+                    rectangles[i].leftTop.y.toInt() + contentPadding,
+                    rectangles[i].rightBottom.x.toInt() - contentPadding,
+                    rectangles[i].rightBottom.y.toInt() - contentPadding
+                )
+            }
+
+
         }
 
 
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(widthMeasureSpec, widthMeasureSpec)
+        //setMeasuredDimension(widthMeasureSpec, widthMeasureSpec)
         super.onMeasure(widthMeasureSpec, widthMeasureSpec)
     }
 
-    override fun measureChildWithMargins(
-        child: View,
-        parentWidthMeasureSpec: Int,
-        widthUsed: Int,
-        parentHeightMeasureSpec: Int,
-        heightUsed: Int
-    ) {
-        val lp = child.layoutParams as MarginLayoutParams
-        val childWidthMeasureSpec = getChildMeasureSpec(
-            parentWidthMeasureSpec,
-            widthUsed + lp.leftMargin + lp.rightMargin,
-            lp.width
-        )
-        val childHeightMeasureSpec = getChildMeasureSpec(
-            parentHeightMeasureSpec,
-            heightUsed + lp.topMargin + lp.bottomMargin,
-            lp.height
-        )
-        child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
-    }
+//    override fun measureChildWithMargins(
+//        child: View,
+//        parentWidthMeasureSpec: Int,
+//        widthUsed: Int,
+//        parentHeightMeasureSpec: Int,
+//        heightUsed: Int
+//    ) {
+//        val lp = child.layoutParams as MarginLayoutParams
+//        val childWidthMeasureSpec = getChildMeasureSpec(
+//            parentWidthMeasureSpec,
+//            widthUsed + lp.leftMargin + lp.rightMargin,
+//            lp.width
+//        )
+//        val childHeightMeasureSpec = getChildMeasureSpec(
+//            parentHeightMeasureSpec,
+//            heightUsed + lp.topMargin + lp.bottomMargin,
+//            lp.height
+//        )
+//        child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
+//    }
 
 
 }

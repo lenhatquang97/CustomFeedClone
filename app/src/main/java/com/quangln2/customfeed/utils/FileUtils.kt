@@ -7,9 +7,6 @@ import android.graphics.drawable.Drawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.MediaStore
-import androidx.core.content.ContentProviderCompat.requireContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 object FileUtils {
     fun getRealPathFromURI(contentURI: Uri, context: Context): String? {
@@ -33,9 +30,10 @@ object FileUtils {
         sdf.timeZone = java.util.TimeZone.getTimeZone("GMT+7")
         return sdf.format(date)
     }
+
     fun getVideoThumbnail(uri: Uri, context: Context, url: String = ""): Drawable {
         val retriever = MediaMetadataRetriever()
-        if (url.isNotEmpty()){
+        if (url.isNotEmpty()) {
             retriever.setDataSource(url, HashMap<String, String>())
         } else {
             retriever.setDataSource(context, uri)

@@ -3,10 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="../../../../layout/custom_preview.xml" value="0.23822300022714196" />
+        <entry key="../../../../layout/custom_preview.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/black_background.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/circle_shape.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ic_triangle_right.xml" value="0.1985" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="app/src/main/res/layout/feed_card.xml" value="0.234375" />
         <entry key="app/src/main/res/layout/feed_item.xml" value="0.1" />
@@ -15,6 +16,7 @@
         <entry key="app/src/main/res/layout/fragment_view_full_video.xml" value="0.10052083333333334" />
         <entry key="app/src/main/res/layout/image_layer_view.xml" value="0.2291041056315104" />
         <entry key="app/src/main/res/layout/image_video_view.xml" value="0.10677083333333333" />
+        <entry key="app/src/main/res/layout/loading_video_view.xml" value="0.10085601806640632" />
       </map>
     </option>
   </component>

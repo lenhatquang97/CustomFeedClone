@@ -18,7 +18,6 @@ import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
 import com.quangln2.customfeed.utils.FileUtils
-import com.quangln2.customfeed.utils.FileUtils.getVideoThumbnail
 import com.quangln2.customfeed.viewmodel.FeedViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -99,7 +98,6 @@ class HomeScreenFragment : Fragment() {
             }
         }
     }
-
 
 
     private fun uploadFiles() {
