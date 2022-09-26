@@ -123,7 +123,6 @@ class AllFeedsFragment : Fragment() {
 
             if(view.mediaPlayer != null){
                 println("Play video in AllFeedsFragment")
-
                 view.mediaPlayer?.start()
             }
             view.mediaPlayer?.setOnCompletionListener {

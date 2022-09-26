@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitSetup {
-    private const val DEFAULT_ENDPOINT = "http://172.25.85.20:8080"
+    private const val DEFAULT_ENDPOINT = "http://b5f0-171-244-166-189.ap.ngrok.io/"
     private val client = OkHttpClient.Builder()
         .connectTimeout(120, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS)

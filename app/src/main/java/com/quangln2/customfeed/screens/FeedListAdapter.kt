@@ -1,6 +1,7 @@
 package com.quangln2.customfeed.screens
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +17,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.request.transition.Transition
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
 import com.quangln2.customfeed.customview.LoadingVideoView
@@ -131,8 +134,16 @@ class FeedListAdapter(
                                         return false
                                     }
 
+
                                 }
-                            ).into(imageView)
+                            ).into(object : SimpleTarget<Drawable>(){
+                                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                                    binding.customGridGroup.firstWidth = resource.intrinsicWidth
+                                    binding.customGridGroup.firstHeight = resource.intrinsicHeight
+                                    imageView.setImageDrawable(resource)
+                                }
+
+                            })
                             binding.customGridGroup.addView(imageView)
                         }
                     }

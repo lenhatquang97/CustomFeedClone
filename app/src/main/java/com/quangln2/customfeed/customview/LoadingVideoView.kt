@@ -112,8 +112,7 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-    }
+    override fun surfaceDestroyed(holder: SurfaceHolder) {}
     override fun onPrepared(mp: MediaPlayer?) {
         try{
             mediaPlayer?.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
