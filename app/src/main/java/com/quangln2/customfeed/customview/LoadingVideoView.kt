@@ -1,5 +1,6 @@
 package com.quangln2.customfeed.customview
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -25,6 +26,7 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var videoView: SurfaceView
     lateinit var progressBar: ProgressBar
     lateinit var playButton: ImageView
+    lateinit var soundButton: ImageView
     var mediaPlayer: MediaPlayer? = null
     lateinit var surfaceHolder: SurfaceHolder
     var url = ""
@@ -38,15 +40,35 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     private fun init() {
         val view = LayoutInflater.from(context).inflate(R.layout.loading_video_view, this, true)
         videoView = view.findViewById(R.id.my_video_view)
         progressBar = view.findViewById(R.id.my_spinner)
         playButton = view.findViewById(R.id.play_button)
+        soundButton = view.findViewById(R.id.sound_button)
 
+
+        //soundButton onClickListener
+        soundButton.setOnClickListener {
+            val drawable1 = soundButton.drawable.constantState
+            val drawable2 = context.getDrawable(R.drawable.volume_off)?.constantState
+            if (drawable1 != null) {
+                if(drawable1 == drawable2){
+                    soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_on))
+                    mediaPlayer?.setVolume(1f,1f)
+                } else {
+                    soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_off))
+                    mediaPlayer?.setVolume(0f,0f)
+                }
+            }
+        }
+
+        //Visibility
         progressBar.visibility = View.VISIBLE
         playButton.visibility = View.INVISIBLE
 
+        //Set surfaceHolder
         surfaceHolder = videoView.holder
         surfaceHolder.addCallback(this)
 
