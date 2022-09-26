@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -15,6 +16,7 @@ import com.quangln2.customfeed.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class LoadingVideoView @JvmOverloads constructor(
@@ -42,7 +44,7 @@ class LoadingVideoView @JvmOverloads constructor(
         progressBar = view.findViewById(R.id.my_spinner)
         playButton = view.findViewById(R.id.play_button)
 
-        progressBar.visibility = View.INVISIBLE
+        progressBar.visibility = View.VISIBLE
         playButton.visibility = View.INVISIBLE
 
         surfaceHolder = videoView.holder
@@ -64,12 +66,21 @@ class LoadingVideoView @JvmOverloads constructor(
     override fun surfaceCreated(holder: SurfaceHolder) {
         CoroutineScope(Dispatchers.IO).launch {
             mediaPlayer = MediaPlayer()
+            mediaPlayer?.reset()
             mediaPlayer?.setDisplay(surfaceHolder)
             try {
+                mediaPlayer?.setOnBufferingUpdateListener { mp, percent ->
+                    if (percent >= 1 && mp?.isPlaying == false) {
+                        playButton.visibility = View.VISIBLE
+                        progressBar.visibility = View.INVISIBLE
+                    }
+                }
                 mediaPlayer?.setDataSource(url)
-                mediaPlayer?.prepare()
                 mediaPlayer?.setOnPreparedListener(this@LoadingVideoView)
                 mediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
+                mediaPlayer?.prepareAsync()
+
+
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -79,9 +90,16 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
-    override fun surfaceDestroyed(holder: SurfaceHolder) {}
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+    }
     override fun onPrepared(mp: MediaPlayer?) {
-        mediaPlayer?.start()
+        try{
+            mediaPlayer?.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
+
+        }catch (e: Exception){
+            e.printStackTrace()
+            Log.d("TAG", "onPrepared: ${e.cause}")
+        }
     }
 
 

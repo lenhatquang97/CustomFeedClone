@@ -90,6 +90,9 @@ class FeedListAdapter(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
+                        videoView.setOnClickListener {
+                            onClickVideoView(value)
+                        }
                         withContext(Dispatchers.Main) {
                             binding.customGridGroup.addView(videoView)
                             binding.loadingCircularIndicator.visibility = View.INVISIBLE

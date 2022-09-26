@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.VideoView
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -16,6 +15,7 @@ import com.quangln2.customfeed.FeedController
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.VideoPlayed
 import com.quangln2.customfeed.customview.CustomGridGroup
+import com.quangln2.customfeed.customview.LoadingVideoView
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.viewmodel.FeedViewModel
 import kotlinx.coroutines.Dispatchers
@@ -68,7 +68,7 @@ class AllFeedsFragment : Fragment() {
                     lifecycleScope.launch(Dispatchers.Main) {
                         for (i in 0 until customGridGroup?.size!!) {
                             val view = customGridGroup.getChildAt(i)
-                            if (view is VideoView) {
+                            if (view is LoadingVideoView) {
                                 FeedController.videoQueue.add(VideoPlayed(itemPosition, i))
                                 break
                             }
@@ -103,8 +103,10 @@ class AllFeedsFragment : Fragment() {
         val viewItem = linearLayoutManager.findViewByPosition(pausedItemIndex!!)
         val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex!!)
-        if (view is VideoView) {
-            view.pause()
+        if (view is LoadingVideoView) {
+            if(view.mediaPlayer != null && view.mediaPlayer?.isPlaying == true){
+                view.mediaPlayer?.pause()
+            }
             FeedController.videoQueue.remove()
         }
     }
@@ -115,17 +117,23 @@ class AllFeedsFragment : Fragment() {
         val viewItem = linearLayoutManager.findViewByPosition(mainItemIndex!!)
         val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex!!)
-        if (view is VideoView && videoIndex != null) {
-            view.setBackgroundDrawable(null)
-            view.seekTo(0)
-            view.start()
-            view.setOnCompletionListener {
+        if (view is LoadingVideoView && videoIndex != null) {
+            view.playButton.visibility = View.INVISIBLE
+            view.progressBar.visibility = View.GONE
+
+            if(view.mediaPlayer != null){
+                println("Play video in AllFeedsFragment")
+
+                view.mediaPlayer?.start()
+            }
+            view.mediaPlayer?.setOnCompletionListener {
+                view.playButton.visibility = View.VISIBLE
                 if (FeedController.videoQueue.size >= 1) {
                     FeedController.videoQueue.remove()
                 }
                 for (i in videoIndex until customGridGroup.size) {
                     val nextView = customGridGroup.getChildAt(i)
-                    if (nextView is VideoView && i != videoIndex) {
+                    if (nextView is LoadingVideoView && i != videoIndex) {
                         FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
                         playVideo(linearLayoutManager)
                         break
