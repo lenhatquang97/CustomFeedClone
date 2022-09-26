@@ -24,7 +24,6 @@ class CustomGridGroup : ViewGroup {
         if(childCount >= 1){
             val firstChild = getChildAt(0)
             if(firstChild is ImageView){
-                println("firstWidth $firstWidth and firstHeight $firstHeight")
                 if(firstWidth > firstHeight){
                     drawHorizontalGrid()
                 } else {
@@ -65,7 +64,6 @@ class CustomGridGroup : ViewGroup {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        //setMeasuredDimension(widthMeasureSpec, widthMeasureSpec)
         super.onMeasure(widthMeasureSpec, widthMeasureSpec)
     }
     private fun drawHorizontalGrid(){

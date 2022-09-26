@@ -20,6 +20,8 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.video.VideoSize
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
 import com.quangln2.customfeed.customview.LoadingVideoView
@@ -90,6 +92,7 @@ class FeedListAdapter(
                     if (value.contains("mp4")) {
                         withContext(Dispatchers.Main){
                             val videoView = LoadingVideoView(context, value)
+
                             videoView.layoutParams = LinearLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -97,10 +100,21 @@ class FeedListAdapter(
                             videoView.setOnClickListener {
                                 onClickVideoView(value)
                             }
-                            withContext(Dispatchers.Main) {
-                                binding.customGridGroup.addView(videoView)
-                                binding.loadingCircularIndicator.visibility = View.INVISIBLE
-                            }
+//                            videoView.player.addListener(
+//                                object : Player.Listener{
+//                                    override fun onVideoSizeChanged(
+//                                        videoSize: VideoSize
+//                                    ) {
+//                                        super.onVideoSizeChanged(videoSize)
+//                                        binding.customGridGroup.firstWidth = videoSize.width
+//                                        binding.customGridGroup.firstHeight = videoSize.height
+//                                        println("width = ${videoSize.width} and height = ${videoSize.height}")
+//                                    }
+//                                }
+//                            )
+
+                            binding.customGridGroup.addView(videoView)
+                            binding.loadingCircularIndicator.visibility = View.INVISIBLE
                         }
 
                     } else {

@@ -10,7 +10,9 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.video.VideoSize
 import com.quangln2.customfeed.R
 
 class LoadingVideoView @JvmOverloads constructor(
@@ -58,6 +60,7 @@ class LoadingVideoView @JvmOverloads constructor(
 
         player = ExoPlayer.Builder(context).build()
         playerView.player = player
+
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
