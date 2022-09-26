@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.FeedController
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.VideoPlayed
@@ -79,10 +80,8 @@ class AllFeedsFragment : Fragment() {
                             pauseVideo(linearLayoutManager)
                             playVideo(linearLayoutManager)
                         }
-
                     }
                 }
-
             }
         })
 
@@ -104,9 +103,7 @@ class AllFeedsFragment : Fragment() {
         val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex!!)
         if (view is LoadingVideoView) {
-            if(view.mediaPlayer != null && view.mediaPlayer?.isPlaying == true){
-                view.mediaPlayer?.pause()
-            }
+            view.player.pause()
             FeedController.videoQueue.remove()
         }
     }
@@ -120,26 +117,29 @@ class AllFeedsFragment : Fragment() {
         if (view is LoadingVideoView && videoIndex != null) {
             view.playButton.visibility = View.INVISIBLE
             view.progressBar.visibility = View.GONE
-
-            if(view.mediaPlayer != null){
-                println("Play video in AllFeedsFragment")
-                view.mediaPlayer?.start()
-            }
-            view.mediaPlayer?.setOnCompletionListener {
-                view.playButton.visibility = View.VISIBLE
-                if (FeedController.videoQueue.size >= 1) {
-                    FeedController.videoQueue.remove()
-                }
-                for (i in videoIndex until customGridGroup.size) {
-                    val nextView = customGridGroup.getChildAt(i)
-                    if (nextView is LoadingVideoView && i != videoIndex) {
-                        FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
-                        playVideo(linearLayoutManager)
-                        break
+            view.player.play()
+            view.player.addListener(
+                object : Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        super.onPlaybackStateChanged(playbackState)
+                        if (playbackState == Player.STATE_ENDED) {
+                            view.playButton.visibility = View.VISIBLE
+                            if (FeedController.videoQueue.size >= 1) {
+                                FeedController.videoQueue.remove()
+                            }
+                            for (i in videoIndex until customGridGroup.size) {
+                                val nextView = customGridGroup.getChildAt(i)
+                                if (nextView is LoadingVideoView && i != videoIndex) {
+                                    FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
+                                    playVideo(linearLayoutManager)
+                                    break
+                                }
+                            }
+                        }
                     }
                 }
+            )
 
-            }
         }
     }
 

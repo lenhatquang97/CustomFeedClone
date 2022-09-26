@@ -1,19 +1,20 @@
 package com.quangln2.customfeed.screens
 
-import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.MediaController
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.databinding.FragmentViewFullVideoBinding
 
 
 class ViewFullVideoFragment : Fragment() {
     private lateinit var binding: FragmentViewFullVideoBinding
+    private lateinit var player: Player
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,31 +32,29 @@ class ViewFullVideoFragment : Fragment() {
             binding.fullVideoProgressBar.visibility = View.VISIBLE
             binding.fullVideoPlayButton.visibility = View.INVISIBLE
 
-            val uri = Uri.parse(url)
-            val mediaController = MediaController(context)
-            mediaController.setAnchorView(binding.fullVideoView)
-            binding.fullVideoView.setMediaController(mediaController)
-            binding.fullVideoView.setVideoURI(uri)
-            binding.fullVideoView.requestFocus()
+            player = ExoPlayer.Builder(requireContext()).build()
+            binding.fullVideoView.player = player
+            val mediaItem = MediaItem.fromUri(url)
+            player.setMediaItem(mediaItem)
+            player.prepare()
 
             binding.fullVideoProgressBar.visibility = View.INVISIBLE
             binding.fullVideoPlayButton.visibility = View.VISIBLE
 
-            binding.fullVideoView.setOnInfoListener(
-                object : MediaPlayer.OnInfoListener {
-                    override fun onInfo(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
-                        if(mp?.isPlaying == true){
+
+            player.addListener(
+                object : Player.Listener{
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        super.onPlaybackStateChanged(playbackState)
+                        if(playbackState == Player.STATE_READY){
                             binding.fullVideoPlayButton.visibility = View.INVISIBLE
-                            return true
+                        } else if(playbackState == Player.STATE_ENDED){
+                            binding.fullVideoPlayButton.visibility = View.VISIBLE
                         }
-                        return false
                     }
                 }
             )
 
-            binding.fullVideoView.setOnCompletionListener {
-                binding.fullVideoPlayButton.visibility = View.VISIBLE
-            }
 
         } else {
             binding.fullVideoView.visibility = View.GONE

@@ -88,18 +88,21 @@ class FeedListAdapter(
 
                     val value = item.imagesAndVideos[i]
                     if (value.contains("mp4")) {
-                        val videoView = LoadingVideoView(context, value)
-                        videoView.layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        videoView.setOnClickListener {
-                            onClickVideoView(value)
+                        withContext(Dispatchers.Main){
+                            val videoView = LoadingVideoView(context, value)
+                            videoView.layoutParams = LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            videoView.setOnClickListener {
+                                onClickVideoView(value)
+                            }
+                            withContext(Dispatchers.Main) {
+                                binding.customGridGroup.addView(videoView)
+                                binding.loadingCircularIndicator.visibility = View.INVISIBLE
+                            }
                         }
-                        withContext(Dispatchers.Main) {
-                            binding.customGridGroup.addView(videoView)
-                            binding.loadingCircularIndicator.visibility = View.INVISIBLE
-                        }
+
                     } else {
                         val imageView = ImageView(context)
                         imageView.layoutParams = ViewGroup.LayoutParams(
