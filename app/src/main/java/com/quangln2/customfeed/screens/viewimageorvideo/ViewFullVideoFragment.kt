@@ -1,4 +1,4 @@
-package com.quangln2.customfeed.screens
+package com.quangln2.customfeed.screens.viewimageorvideo
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -43,12 +43,12 @@ class ViewFullVideoFragment : Fragment() {
 
 
             player.addListener(
-                object : Player.Listener{
+                object : Player.Listener {
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         super.onPlaybackStateChanged(playbackState)
-                        if(playbackState == Player.STATE_READY){
+                        if (playbackState == Player.STATE_READY) {
                             binding.fullVideoPlayButton.visibility = View.INVISIBLE
-                        } else if(playbackState == Player.STATE_ENDED){
+                        } else if (playbackState == Player.STATE_ENDED) {
                             binding.fullVideoPlayButton.visibility = View.VISIBLE
                         }
                     }

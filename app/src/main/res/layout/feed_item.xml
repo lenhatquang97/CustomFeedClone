@@ -79,11 +79,41 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:paddingRight="16dp"
+        android:paddingRight="32dp"
         android:text="How many people are there?"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/created_time" />
+
+    <TextView
+        android:id="@+id/learn_more"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="16dp"
+        android:paddingTop="8dp"
+        android:paddingRight="32dp"
+        android:paddingBottom="8dp"
+        android:text="Xem thêm"
+        android:textColor="@color/blue"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/caption" />
+
+    <TextView
+        android:id="@+id/learn_less"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="16dp"
+        android:paddingTop="8dp"
+        android:paddingRight="32dp"
+        android:paddingBottom="8dp"
+        android:text="Xem gọn"
+        android:textColor="@color/blue"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/learn_more" />
 
     <com.quangln2.customfeed.customview.CustomGridGroup
         android:id="@+id/customGridGroup"
@@ -91,7 +121,7 @@
         android:layout_height="wrap_content"
         android:padding="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/caption"></com.quangln2.customfeed.customview.CustomGridGroup>
+        app:layout_constraintTop_toBottomOf="@id/learn_less" />
 
     <ImageButton
         android:id="@+id/delete_button"

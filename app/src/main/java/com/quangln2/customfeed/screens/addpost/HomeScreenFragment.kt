@@ -1,4 +1,4 @@
-package com.quangln2.customfeed.screens
+package com.quangln2.customfeed.screens.addpost
 
 import android.app.Activity
 import android.content.Intent
@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
@@ -143,6 +144,10 @@ class HomeScreenFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentHomeScreenBinding.inflate(inflater, container, false)
+
+        Glide.with(requireContext()).load(ConstantClass.AVATAR_LINK).into(binding.myAvatarImage)
+
+
         binding.buttonChooseImageVideo.setOnClickListener {
             val pickerIntent = Intent(Intent.ACTION_PICK)
             pickerIntent.type = "*/*"
@@ -165,7 +170,7 @@ class HomeScreenFragment : Fragment() {
             }
             for (viewChild in listOfViews) {
                 if (viewChild is CustomLayer) {
-                    viewChild.textValue = "+${listOfViews.size - 9}"
+                    viewChild.addedImagesText.text = "+${listOfViews.size - 9}"
                     binding.customGridGroup.addView(viewChild)
                     break
                 } else {

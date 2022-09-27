@@ -1,7 +1,6 @@
 package com.quangln2.customfeed.screens
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
@@ -20,8 +19,6 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.video.VideoSize
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
 import com.quangln2.customfeed.customview.LoadingVideoView
@@ -39,7 +36,8 @@ class FeedListAdapter(
     private var context: Context,
     private val onDeleteItem: (String) -> Unit,
     private val onClickAddPost: () -> Unit,
-    private val onClickVideoView: (String) -> Unit
+    private val onClickVideoView: (String) -> Unit,
+    private val onClickViewMore: () -> Unit
 ) :
     ListAdapter<UploadPost, RecyclerView.ViewHolder>(
         AsyncDifferConfig.Builder(FeedListDiffCallback())
@@ -70,10 +68,34 @@ class FeedListAdapter(
             binding.myName.text = item.name
             Glide.with(context).load(item.avatar).into(binding.myAvatarImage)
             binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
-            binding.caption.text = item.caption
+            if (item.caption.isEmpty()) {
+                binding.caption.visibility = View.GONE
+            } else {
+                binding.caption.visibility = View.VISIBLE
+                if (item.caption.length > 50) {
+                    binding.caption.text = item.caption.substring(0, 50) + "..."
+                    binding.learnMore.visibility = View.VISIBLE
+                    binding.learnLess.visibility = View.GONE
+                } else {
+                    binding.caption.text = item.caption
+                    binding.learnMore.visibility = View.GONE
+                    binding.learnLess.visibility = View.GONE
+                }
+            }
 
             binding.deleteButton.setOnClickListener {
                 onDeleteItem(item.feedId)
+            }
+
+            binding.learnMore.setOnClickListener {
+                binding.caption.text = item.caption
+                binding.learnMore.visibility = View.GONE
+                binding.learnLess.visibility = View.VISIBLE
+            }
+            binding.learnLess.setOnClickListener {
+                binding.caption.text = item.caption.substring(0, 50) + "..."
+                binding.learnMore.visibility = View.VISIBLE
+                binding.learnLess.visibility = View.GONE
             }
 
             CoroutineScope(Dispatchers.IO).launch {
@@ -81,7 +103,10 @@ class FeedListAdapter(
                     if (i >= 8 && item.imagesAndVideos.size > 9) {
                         val numbersOfAddedImages = item.imagesAndVideos.size - 9
                         val viewChild = CustomLayer(context)
-                        viewChild.textValue = "+$numbersOfAddedImages"
+                        viewChild.setOnClickListener {
+                            onClickViewMore()
+                        }
+                        viewChild.addedImagesText.text = "+$numbersOfAddedImages"
                         withContext(Dispatchers.Main) {
                             binding.customGridGroup.addView(viewChild)
                         }
@@ -90,9 +115,8 @@ class FeedListAdapter(
 
                     val value = item.imagesAndVideos[i]
                     if (value.contains("mp4")) {
-                        withContext(Dispatchers.Main){
+                        withContext(Dispatchers.Main) {
                             val videoView = LoadingVideoView(context, value)
-
                             videoView.layoutParams = LinearLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -100,23 +124,9 @@ class FeedListAdapter(
                             videoView.setOnClickListener {
                                 onClickVideoView(value)
                             }
-//                            videoView.player.addListener(
-//                                object : Player.Listener{
-//                                    override fun onVideoSizeChanged(
-//                                        videoSize: VideoSize
-//                                    ) {
-//                                        super.onVideoSizeChanged(videoSize)
-//                                        binding.customGridGroup.firstWidth = videoSize.width
-//                                        binding.customGridGroup.firstHeight = videoSize.height
-//                                        println("width = ${videoSize.width} and height = ${videoSize.height}")
-//                                    }
-//                                }
-//                            )
-
-                            binding.customGridGroup.addView(videoView)
                             binding.loadingCircularIndicator.visibility = View.INVISIBLE
+                            binding.customGridGroup.addView(videoView)
                         }
-
                     } else {
                         val imageView = ImageView(context)
                         imageView.layoutParams = ViewGroup.LayoutParams(
@@ -153,7 +163,7 @@ class FeedListAdapter(
 
 
                                 }
-                            ).into(object : SimpleTarget<Drawable>(){
+                            ).into(object : SimpleTarget<Drawable>() {
                                 override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                                     binding.customGridGroup.firstWidth = resource.intrinsicWidth
                                     binding.customGridGroup.firstHeight = resource.intrinsicHeight

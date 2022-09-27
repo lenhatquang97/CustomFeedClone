@@ -11,8 +11,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         app:resize_mode="zoom"
-        app:use_controller="false"
-        />
+        app:use_controller="false" />
 
 
     <ProgressBar
@@ -20,10 +19,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:indeterminateTint="@color/blue"
-        android:indeterminate="true" />
+        android:indeterminate="true"
+        android:indeterminateTint="@color/blue" />
 
     <ImageView
+        android:visibility="gone"
         android:id="@+id/play_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -32,10 +32,10 @@
 
     <ImageView
         android:id="@+id/sound_button"
-        android:layout_margin="32dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right|bottom"
+        android:layout_margin="32dp"
         android:src="@drawable/volume_on" />
 
 

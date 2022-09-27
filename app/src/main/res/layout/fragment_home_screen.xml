@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".screens.HomeScreenFragment">
+    tools:context=".screens.addpost.HomeScreenFragment">
 
 
     <ScrollView
@@ -14,6 +14,39 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/my_avatar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="24dp"
+                app:cardPreventCornerOverlap="false"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/my_avatar_image"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@string/avatar" />
+            </androidx.cardview.widget.CardView>
+
+
+            <TextView
+                android:id="@+id/my_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_marginTop="16dp"
+                android:text="Quang Le"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toEndOf="@id/my_avatar"
+                app:layout_constraintTop_toTopOf="parent" />
+
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textField"
@@ -25,9 +58,10 @@
                 app:boxStrokeWidthFocused="0dp"
                 app:hintEnabled="false"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toBottomOf="@id/my_avatar">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="24sp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
@@ -51,42 +85,68 @@
                 style="Widget.App.Button.OutlinedButton.IconOnly"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:background="@android:color/transparent"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
-                android:paddingLeft="16dp"
+                android:padding="16dp"
                 android:src="@drawable/multimedia"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/customGridGroup"
                 tools:ignore="SpeakableTextPresentCheck" />
+
+            <TextView
+                android:id="@+id/image_video_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="16dp"
+                android:text="ẢNH/VIDEO"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/buttonChooseImageVideo"
+                app:layout_constraintTop_toBottomOf="@+id/customGridGroup" />
 
             <ImageButton
                 android:id="@+id/buttonSubmitToServer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:background="@android:color/transparent"
                 android:minWidth="48dp"
-                android:minHeight="48dp"
-                android:paddingLeft="16dp"
+                android:paddingTop="16dp"
+                android:paddingRight="8dp"
+                android:paddingBottom="16dp"
                 android:src="@drawable/send"
-                app:layout_constraintStart_toEndOf="@+id/buttonChooseImageVideo"
-                app:layout_constraintTop_toBottomOf="@id/customGridGroup"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/send_title"
+                app:layout_constraintTop_toBottomOf="@+id/customGridGroup"
                 tools:ignore="SpeakableTextPresentCheck" />
+
+            <TextView
+                android:id="@+id/send_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="16dp"
+                android:text="GỬI"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/customGridGroup" />
 
             <ImageButton
                 android:id="@+id/buttonGetAllPosts"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:background="@android:color/transparent"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
-                android:paddingLeft="16dp"
+                android:padding="16dp"
                 android:src="@drawable/news_feed"
-                app:layout_constraintStart_toEndOf="@id/buttonSubmitToServer"
-                app:layout_constraintTop_toBottomOf="@+id/customGridGroup"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="SpeakableTextPresentCheck" />
 
             <ProgressBar
@@ -95,9 +155,9 @@
                 android:layout_height="wrap_content"
                 android:indeterminateTint="@color/blue"
                 android:paddingRight="8dp"
-                android:visibility="invisible"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintEnd_toStartOf="@+id/buttonSubmitToServer"
+                app:layout_constraintTop_toBottomOf="@+id/customGridGroup" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>

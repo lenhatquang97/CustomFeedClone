@@ -6,22 +6,25 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
+import android.widget.FrameLayout
+import android.widget.TextView
+import com.bumptech.glide.Glide.init
 import com.quangln2.customfeed.R
 
-class CustomLayer : View {
-    var textValue = "+1"
+class CustomLayer @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr) {
+    lateinit var addedImagesText: TextView
 
-    constructor(context: Context) : super(context) {}
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {}
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {}
-
-    @SuppressLint("DrawAllocation")
-    override fun onDraw(canvas: Canvas?) {
-        setBackgroundColor(resources.getColor(R.color.black))
-        canvas?.drawText(textValue, (width / 2 - 15).toFloat(), (height / 2).toFloat(), Paint().apply {
-            textSize = 30f
-            color = resources.getColor(R.color.white)
-        })
-        super.onDraw(canvas)
+    init {
+        init()
     }
+    private fun init(){
+        val view = View.inflate(context, R.layout.custom_layer, this)
+        addedImagesText = view.findViewById(R.id.addedImagesText)
+        addedImagesText.setTextColor(resources.getColor(R.color.white))
+        view.setBackgroundColor(resources.getColor(R.color.black))
+    }
+
+
 }

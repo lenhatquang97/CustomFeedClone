@@ -7,10 +7,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.VideoView
 
-class CustomGridGroup : ViewGroup {
+class ExtendedCustomGridGroup : ViewGroup {
     private val rectangles = mutableListOf<RectanglePoint>()
     private val contentPadding = 5
-    private var itemNumber = 0
 
     var firstWidth = 0
     var firstHeight = 0
@@ -34,28 +33,31 @@ class CustomGridGroup : ViewGroup {
             }
         }
 
-        for (i in 0 until itemNumber) {
+        for (i in 0 until childCount) {
             val child = getChildAt(i)
-            if (child is ViewGroup) {
-                val width =
-                    (rectangles[i].rightBottom.x.toInt()) - (rectangles[i].leftTop.x.toInt()) + 2 * contentPadding
-                val height =
-                    (rectangles[i].rightBottom.y.toInt()) - (rectangles[i].leftTop.y.toInt()) + 2 * contentPadding
-                measureChild(child, width, height)
-                child.layout(
-                    rectangles[i].leftTop.x.toInt(),
-                    rectangles[i].leftTop.y.toInt(),
-                    rectangles[i].rightBottom.x.toInt(),
-                    rectangles[i].rightBottom.y.toInt()
-                )
-            } else {
-                child.layout(
-                    rectangles[i].leftTop.x.toInt() + contentPadding,
-                    rectangles[i].leftTop.y.toInt() + contentPadding,
-                    rectangles[i].rightBottom.x.toInt() - contentPadding,
-                    rectangles[i].rightBottom.y.toInt() - contentPadding
-                )
-            }
+
+            child.layout(
+                rectangles[i].leftTop.x.toInt() + contentPadding,
+                rectangles[i].leftTop.y.toInt() + contentPadding,
+                rectangles[i].rightBottom.x.toInt() - contentPadding,
+                rectangles[i].rightBottom.y.toInt() - contentPadding
+            )
+
+//            if (child is ViewGroup) {
+//                val width =
+//                    (rectangles[i].rightBottom.x.toInt()) - (rectangles[i].leftTop.x.toInt()) + 2 * contentPadding
+//                val height =
+//                    (rectangles[i].rightBottom.y.toInt()) - (rectangles[i].leftTop.y.toInt()) + 2 * contentPadding
+//                measureChild(child, width, height)
+//                child.layout(
+//                    rectangles[i].leftTop.x.toInt(),
+//                    rectangles[i].leftTop.y.toInt(),
+//                    rectangles[i].rightBottom.x.toInt(),
+//                    rectangles[i].rightBottom.y.toInt()
+//                )
+//            } else {
+//
+//            }
 
 
         }
@@ -63,12 +65,7 @@ class CustomGridGroup : ViewGroup {
 
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, widthMeasureSpec)
-    }
-
     private fun drawHorizontalGrid() {
-        itemNumber = childCount
         rectangles.clear()
         if (childCount == 1) {
             drawOneChild()
@@ -123,13 +120,11 @@ class CustomGridGroup : ViewGroup {
             }
 
         } else if (childCount >= 9) {
-            drawNineChildren()
-            itemNumber = 9
+            drawMoreThanNineChildren()
         }
     }
 
     private fun drawVerticalGrid() {
-        itemNumber = childCount
         rectangles.clear()
         if (childCount == 1) {
             drawOneChild()
@@ -198,8 +193,7 @@ class CustomGridGroup : ViewGroup {
             }
 
         } else if (childCount >= 9) {
-            drawNineChildren()
-            itemNumber = 9
+            drawMoreThanNineChildren()
         }
     }
 
@@ -257,8 +251,10 @@ class CustomGridGroup : ViewGroup {
         }
     }
 
-    private fun drawNineChildren() {
-        for (k in 0 until 3) {
+    private fun drawMoreThanNineChildren() {
+        val loopNumber = childCount / 3
+        val remainingItemNumber = childCount % 3
+        for (k in 0 until loopNumber) {
             val top = k * width.toFloat() / 3
             val bottom = (k + 1) * width.toFloat() / 3
             for (i in 0 until 3) {
@@ -267,28 +263,15 @@ class CustomGridGroup : ViewGroup {
                 rectangles.add(RectanglePoint(left, top, right, bottom))
             }
         }
+        val top = loopNumber * width.toFloat() / 3
+        val bottom = (loopNumber + 1) * width.toFloat() / 3
+        for (k in 0 until remainingItemNumber){
+            val left = k * (width.toFloat() / 3)
+            val right = (k + 1) * (width.toFloat() / 3)
+            rectangles.add(RectanglePoint(left, top, right, bottom))
+        }
     }
 
-//    override fun measureChildWithMargins(
-//        child: View,
-//        parentWidthMeasureSpec: Int,
-//        widthUsed: Int,
-//        parentHeightMeasureSpec: Int,
-//        heightUsed: Int
-//    ) {
-//        val lp = child.layoutParams as MarginLayoutParams
-//        val childWidthMeasureSpec = getChildMeasureSpec(
-//            parentWidthMeasureSpec,
-//            widthUsed + lp.leftMargin + lp.rightMargin,
-//            lp.width
-//        )
-//        val childHeightMeasureSpec = getChildMeasureSpec(
-//            parentHeightMeasureSpec,
-//            heightUsed + lp.topMargin + lp.bottomMargin,
-//            lp.height
-//        )
-//        child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
-//    }
 
 
 }

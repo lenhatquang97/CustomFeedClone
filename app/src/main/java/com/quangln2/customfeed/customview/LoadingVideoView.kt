@@ -2,6 +2,7 @@ package com.quangln2.customfeed.customview
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.wifi.rtt.CivicLocationKeys.STATE
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +13,6 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.video.VideoSize
 import com.quangln2.customfeed.R
 
 class LoadingVideoView @JvmOverloads constructor(
@@ -44,7 +44,7 @@ class LoadingVideoView @JvmOverloads constructor(
             val drawable1 = soundButton.drawable.constantState
             val drawable2 = context.getDrawable(R.drawable.volume_off)?.constantState
             if (drawable1 != null) {
-                if(drawable1 == drawable2){
+                if (drawable1 == drawable2) {
                     soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_on))
                     player.volume = 1f
                 } else {
@@ -61,6 +61,20 @@ class LoadingVideoView @JvmOverloads constructor(
         player = ExoPlayer.Builder(context).build()
         playerView.player = player
 
+        player.addListener(
+            object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    super.onPlaybackStateChanged(playbackState)
+                    if (playbackState == Player.STATE_READY) {
+                        progressBar.visibility = View.INVISIBLE
+                    } else if(playbackState == Player.STATE_IDLE){
+                        playButton.visibility = View.VISIBLE
+                    }
+                }
+
+            }
+        )
+
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
@@ -76,7 +90,17 @@ class LoadingVideoView @JvmOverloads constructor(
         super.onLayout(changed, left, top, right, bottom)
     }
 
+    fun playVideo() {
+        progressBar.visibility = View.GONE
+        playButton.visibility = View.INVISIBLE
+        player.play()
+    }
 
+    fun pauseVideo() {
+        playButton.visibility = View.VISIBLE
+        player.seekTo(0)
+        player.pause()
+    }
 
 
 }

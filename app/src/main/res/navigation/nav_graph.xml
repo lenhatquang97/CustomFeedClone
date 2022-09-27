@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/homeScreenFragment"
-        android:name="com.quangln2.customfeed.screens.HomeScreenFragment"
+        android:name="com.quangln2.customfeed.screens.addpost.HomeScreenFragment"
         android:label="fragment_home_screen"
         tools:layout="@layout/fragment_home_screen">
         <action
@@ -16,7 +16,7 @@
     </fragment>
     <fragment
         android:id="@+id/allFeedsFragment"
-        android:name="com.quangln2.customfeed.screens.AllFeedsFragment"
+        android:name="com.quangln2.customfeed.screens.allfeeds.AllFeedsFragment"
         android:label="fragment_all_feeds"
         tools:layout="@layout/fragment_all_feeds">
         <action
@@ -25,9 +25,17 @@
         <action
             android:id="@+id/action_allFeedsFragment_to_viewFullVideoFragment"
             app:destination="@id/viewFullVideoFragment" />
+        <action
+            android:id="@+id/action_allFeedsFragment_to_viewMoreFragment"
+            app:destination="@id/viewMoreFragment" />
     </fragment>
     <fragment
         android:id="@+id/viewFullVideoFragment"
-        android:name="com.quangln2.customfeed.screens.ViewFullVideoFragment"
+        android:name="com.quangln2.customfeed.screens.viewimageorvideo.ViewFullVideoFragment"
         android:label="ViewFullVideoFragment" />
+    <fragment
+        android:id="@+id/viewMoreFragment"
+        android:name="com.quangln2.customfeed.screens.viewimageorvideo.ViewMoreFragment"
+        android:label="fragment_view_more"
+        tools:layout="@layout/fragment_view_more" />
 </navigation>
