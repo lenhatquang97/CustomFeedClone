@@ -14,8 +14,10 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
@@ -37,7 +39,7 @@ class FeedListAdapter(
     private val onDeleteItem: (String) -> Unit,
     private val onClickAddPost: () -> Unit,
     private val onClickVideoView: (String) -> Unit,
-    private val onClickViewMore: () -> Unit
+    private val onClickViewMore: (String) -> Unit
 ) :
     ListAdapter<UploadPost, RecyclerView.ViewHolder>(
         AsyncDifferConfig.Builder(FeedListDiffCallback())
@@ -104,7 +106,7 @@ class FeedListAdapter(
                         val numbersOfAddedImages = item.imagesAndVideos.size - 9
                         val viewChild = CustomLayer(context)
                         viewChild.setOnClickListener {
-                            onClickViewMore()
+                            onClickViewMore(item.feedId)
                         }
                         viewChild.addedImagesText.text = "+$numbersOfAddedImages"
                         withContext(Dispatchers.Main) {
@@ -129,6 +131,7 @@ class FeedListAdapter(
                         }
                     } else {
                         val imageView = ImageView(context)
+                        val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(200)
                         imageView.layoutParams = ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
@@ -163,7 +166,7 @@ class FeedListAdapter(
 
 
                                 }
-                            ).into(object : SimpleTarget<Drawable>() {
+                            ).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
                                 override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                                     binding.customGridGroup.firstWidth = resource.intrinsicWidth
                                     binding.customGridGroup.firstHeight = resource.intrinsicHeight

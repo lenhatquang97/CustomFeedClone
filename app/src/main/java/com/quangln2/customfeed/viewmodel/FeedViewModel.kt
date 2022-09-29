@@ -67,6 +67,15 @@ class FeedViewModel : ViewModel() {
 
         })
     }
+    fun getFeedItem(feedId: String): UploadPost{
+        val ls = _uploadLists.value
+        if(ls != null){
+            val indexOfFirst = ls.indexOfFirst { it.feedId == feedId }
+            return ls[indexOfFirst]
+        }
+        return UploadPost().copy(feedId = "none")
+
+    }
 
     fun deleteFeed(id: String) {
         RemoteDataSource.deleteFeed(id).enqueue(object : Callback<ResponseBody> {

@@ -52,8 +52,10 @@ class AllFeedsFragment : Fragment() {
             findNavController().navigate(R.id.action_allFeedsFragment_to_viewFullVideoFragment, bundle)
         }
 
-        val onClickViewMore = fun() {
-            findNavController().navigate(R.id.action_allFeedsFragment_to_viewMoreFragment)
+        val onClickViewMore = fun(id: String) {
+            val bundle = Bundle()
+            bundle.putString("id", id)
+            findNavController().navigate(R.id.action_allFeedsFragment_to_viewMoreFragment, bundle)
         }
 
         adapterVal = FeedListAdapter(requireContext(), onDeleteItem, onClickAddPost, onClickVideoView, onClickViewMore)

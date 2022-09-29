@@ -37,5 +37,9 @@
         android:id="@+id/viewMoreFragment"
         android:name="com.quangln2.customfeed.screens.viewimageorvideo.ViewMoreFragment"
         android:label="fragment_view_more"
-        tools:layout="@layout/fragment_view_more" />
+        tools:layout="@layout/fragment_view_more" >
+        <action
+            android:id="@+id/action_viewMoreFragment_to_viewFullVideoFragment"
+            app:destination="@id/viewFullVideoFragment" />
+    </fragment>
 </navigation>
