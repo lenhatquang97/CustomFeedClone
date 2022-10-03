@@ -7,7 +7,10 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.quangln2.customfeed.datasource.remote.RemoteDataSource
+import com.quangln2.customfeed.domain.DeleteFeedUseCase
+import com.quangln2.customfeed.domain.GetAllFeedsUseCase
+import com.quangln2.customfeed.domain.UploadMultipartBuilderUseCase
+import com.quangln2.customfeed.domain.UploadPostUseCase
 import com.quangln2.customfeed.models.UploadPost
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -15,7 +18,12 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class FeedViewModel : ViewModel() {
+class FeedViewModel(
+    val uploadPostUseCase: UploadPostUseCase,
+    val getAllFeedsUseCase: GetAllFeedsUseCase,
+    val deleteFeedUseCase: DeleteFeedUseCase,
+    val uploadMultipartBuilderUseCase: UploadMultipartBuilderUseCase
+) : ViewModel() {
     var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
     val uriLists: LiveData<MutableList<Uri>> = _uriLists
 
@@ -27,7 +35,7 @@ class FeedViewModel : ViewModel() {
 
     fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context) {
         _isUploading.value = true
-        RemoteDataSource.uploadFiles(requestBody).enqueue(object : Callback<ResponseBody> {
+        uploadPostUseCase(requestBody).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.code() == 200) {
                     println(response.body())
@@ -46,7 +54,7 @@ class FeedViewModel : ViewModel() {
     }
 
     fun getAllFeeds() {
-        RemoteDataSource.getAllFeeds().enqueue(object : Callback<MutableList<UploadPost>> {
+        getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
                 if (response.code() == 200) {
                     Log.d("GetAllFeeds", "Success")
@@ -67,9 +75,10 @@ class FeedViewModel : ViewModel() {
 
         })
     }
-    fun getFeedItem(feedId: String): UploadPost{
+
+    fun getFeedItem(feedId: String): UploadPost {
         val ls = _uploadLists.value
-        if(ls != null){
+        if (ls != null) {
             val indexOfFirst = ls.indexOfFirst { it.feedId == feedId }
             return ls[indexOfFirst]
         }
@@ -78,7 +87,7 @@ class FeedViewModel : ViewModel() {
     }
 
     fun deleteFeed(id: String) {
-        RemoteDataSource.deleteFeed(id).enqueue(object : Callback<ResponseBody> {
+        deleteFeedUseCase(id).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.code() == 200) {
                     val ls = uploadLists.value
@@ -93,5 +102,13 @@ class FeedViewModel : ViewModel() {
             }
 
         })
+    }
+
+    fun uploadMultipartBuilder(
+        caption: String,
+        uriLists: LiveData<MutableList<Uri>>,
+        context: Context
+    ): List<MultipartBody.Part> {
+        return uploadMultipartBuilderUseCase(caption, uriLists, context)
     }
 }

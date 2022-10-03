@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.VideoView
+import com.quangln2.customfeed.models.RectanglePoint
 
 class ExtendedCustomGridGroup : ViewGroup {
     private val rectangles = mutableListOf<RectanglePoint>()
@@ -265,7 +266,7 @@ class ExtendedCustomGridGroup : ViewGroup {
         }
         val top = loopNumber * width.toFloat() / 3
         val bottom = (loopNumber + 1) * width.toFloat() / 3
-        for (k in 0 until remainingItemNumber){
+        for (k in 0 until remainingItemNumber) {
             val left = k * (width.toFloat() / 3)
             val right = (k + 1) * (width.toFloat() / 3)
             rectangles.add(RectanglePoint(left, top, right, bottom))
@@ -278,7 +279,6 @@ class ExtendedCustomGridGroup : ViewGroup {
         val height = MeasureSpec.getSize(heightMeasureSpec)
         setMeasuredDimension(width, height)
     }
-
 
 
 }

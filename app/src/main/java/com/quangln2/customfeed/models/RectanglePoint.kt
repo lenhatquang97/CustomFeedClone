@@ -1,4 +1,4 @@
-package com.quangln2.customfeed.customview
+package com.quangln2.customfeed.models
 
 class APoint(var x: Float, var y: Float) {
     fun set(x: Float, y: Float) {

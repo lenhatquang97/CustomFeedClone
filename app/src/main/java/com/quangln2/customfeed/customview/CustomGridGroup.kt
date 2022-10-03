@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.VideoView
+import com.quangln2.customfeed.models.RectanglePoint
 
 class CustomGridGroup : ViewGroup {
     private val rectangles = mutableListOf<RectanglePoint>()

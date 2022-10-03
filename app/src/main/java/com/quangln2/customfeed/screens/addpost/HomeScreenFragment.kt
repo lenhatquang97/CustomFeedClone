@@ -1,39 +1,53 @@
 package com.quangln2.customfeed.screens.addpost
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.Toast
 import android.widget.VideoView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
+import com.quangln2.customfeed.datasource.local.LocalDataSourceImpl
+import com.quangln2.customfeed.datasource.remote.RemoteDataSourceImpl
+import com.quangln2.customfeed.repository.FeedRepository
 import com.quangln2.customfeed.utils.FileUtils
 import com.quangln2.customfeed.viewmodel.FeedViewModel
+import com.quangln2.customfeed.viewmodel.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 
 
 class HomeScreenFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeScreenBinding
-    private val viewModel: FeedViewModel by activityViewModels()
+    private val viewModel: FeedViewModel by activityViewModels {
+        ViewModelFactory(FeedRepository(LocalDataSourceImpl(), RemoteDataSourceImpl()))
+    }
     private var listOfViews: MutableList<View> = mutableListOf()
 
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -47,33 +61,32 @@ class HomeScreenFragment : Fragment() {
                             val uri = data.clipData!!.getItemAt(i).uri
                             val mimeType = context?.contentResolver?.getType(uri)
                             if (mimeType != null) {
-                                println(mimeType)
                                 if (mimeType.startsWith("image/")) {
                                     val imageView = ImageView(context)
-                                    imageView.layoutParams = ViewGroup.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        ViewGroup.LayoutParams.MATCH_PARENT
-                                    )
-                                    imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-                                    imageView.setImageURI(uri)
-                                    listOfViews.add(imageView)
-                                    if (listOfViews.size >= 10) {
-                                        listOfViews[8] = CustomLayer(requireContext())
+                                    imageView.apply {
+                                        layoutParams = ViewGroup.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.MATCH_PARENT
+                                        )
+                                        scaleType = ImageView.ScaleType.CENTER_CROP
+                                        setImageURI(uri)
                                     }
-
+                                    listOfViews.add(imageView)
+                                    if (listOfViews.size >= 10) listOfViews[8] = CustomLayer(requireContext())
                                 } else if (mimeType.startsWith("video/")) {
                                     val videoView = VideoView(requireContext())
-                                    videoView.layoutParams = ViewGroup.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        ViewGroup.LayoutParams.MATCH_PARENT
-                                    )
-                                    videoView.setVideoURI(uri)
-                                    videoView.setBackgroundDrawable(FileUtils.getVideoThumbnail(uri, requireContext()))
-
-                                    videoView.setOnClickListener {
-                                        videoView.setBackgroundDrawable(null)
-                                        videoView.seekTo(0)
-                                        videoView.start()
+                                    videoView.apply {
+                                        layoutParams = ViewGroup.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.MATCH_PARENT
+                                        )
+                                        setVideoURI(uri)
+                                        setBackgroundDrawable(FileUtils.getVideoThumbnail(uri, requireContext()))
+                                        setOnClickListener {
+                                            videoView.setBackgroundDrawable(null)
+                                            videoView.seekTo(0)
+                                            videoView.start()
+                                        }
                                     }
                                     withContext(Dispatchers.Main) {
                                         listOfViews.add(videoView)
@@ -100,33 +113,46 @@ class HomeScreenFragment : Fragment() {
         }
     }
 
-
-    private fun uploadFiles() {
-        if (viewModel.uriLists.value?.isEmpty()!!) {
-            return
-        }
-        val builder = MultipartBody.Builder()
-        builder.setType(MultipartBody.FORM)
-        builder.addFormDataPart("feedId", UUID.randomUUID().toString())
-        builder.addFormDataPart("name", ConstantClass.NAME)
-        builder.addFormDataPart("avatar", ConstantClass.AVATAR_LINK)
-        builder.addFormDataPart("createdTime", System.currentTimeMillis().toString())
-        builder.addFormDataPart("caption", binding.textField.editText?.text.toString())
-
-        for (uriItr in viewModel.uriLists.value!!) {
-            val tmp = FileUtils.getRealPathFromURI(uriItr, requireContext())
-            if (tmp != null) {
-                val file = File(tmp)
-                val requestFile = RequestBody.create(
-                    if (uriItr.toString()
-                            .contains("mp4")
-                    ) "video/*".toMediaTypeOrNull() else "image/*".toMediaTypeOrNull(), file
-                )
-                builder.addFormDataPart("upload", file.name, requestFile)
+    private fun compressImagesAndVideos(uriLists: MutableList<Uri>): LiveData<MutableList<Uri>> {
+        val result: MutableList<Uri> = mutableListOf()
+        for (uri in uriLists) {
+            val mimeTypeForMultipart = context?.contentResolver?.getType(uri)
+            val file = File(requireContext().filesDir, "${UUID.randomUUID().toString()}.jpg")
+            if (mimeTypeForMultipart != null) {
+                if (mimeTypeForMultipart.startsWith("image/")) {
+                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+                    val out = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 30, out)
+                    result.add(file.toUri())
+                } else if (mimeTypeForMultipart.startsWith("video/")) {
+                    result.add(uri)
+                }
             }
         }
+
+        return MutableLiveData<MutableList<Uri>>().apply { value = result }
+    }
+
+
+    private fun uploadFiles() {
+        if (viewModel.uriLists.value?.isEmpty()!!) return
+
+        val uriListsForCompressing = compressImagesAndVideos(viewModel.uriLists.value!!)
+
+        println(uriListsForCompressing.value!!.joinToString { it.toString() })
+
+        if (viewModel.uriLists.value?.isEmpty()!!) {
+            Toast.makeText(requireContext(), "No file to upload", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val parts = viewModel.uploadMultipartBuilder(
+            binding.textField.editText?.text.toString(),
+            uriListsForCompressing,
+            requireContext()
+        )
         try {
-            viewModel.uploadFiles(builder.build().parts, requireContext())
+            viewModel.uploadFiles(parts, requireContext())
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -139,13 +165,14 @@ class HomeScreenFragment : Fragment() {
         viewModel._uriLists.value?.clear()
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentHomeScreenBinding.inflate(inflater, container, false)
-
-        Glide.with(requireContext()).load(ConstantClass.AVATAR_LINK).into(binding.myAvatarImage)
+        val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
+        Glide.with(requireContext()).load(ConstantClass.AVATAR_LINK).apply(requestOptions).into(binding.myAvatarImage)
 
 
         binding.buttonChooseImageVideo.setOnClickListener {
@@ -180,11 +207,7 @@ class HomeScreenFragment : Fragment() {
         }
 
         viewModel.isUploading.observe(viewLifecycleOwner) {
-            if (it) {
-                binding.progressBar.visibility = View.VISIBLE
-            } else {
-                binding.progressBar.visibility = View.GONE
-            }
+            binding.progressBar.visibility = if (it) View.VISIBLE else View.GONE
         }
 
         return binding.root

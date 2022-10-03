@@ -61,11 +61,11 @@
                 app:layout_constraintTop_toBottomOf="@id/my_avatar">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:textSize="24sp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:hint="@string/what_are_you_thinking"
+                    android:textSize="24sp"
                     tools:ignore="SpeakableTextPresentCheck" />
 
             </com.google.android.material.textfield.TextInputLayout>

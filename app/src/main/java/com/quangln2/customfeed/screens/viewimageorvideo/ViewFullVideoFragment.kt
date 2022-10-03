@@ -16,10 +16,6 @@ class ViewFullVideoFragment : Fragment() {
     private lateinit var binding: FragmentViewFullVideoBinding
     private lateinit var player: Player
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -32,38 +28,42 @@ class ViewFullVideoFragment : Fragment() {
             binding.fullVideoProgressBar.visibility = View.VISIBLE
             binding.fullVideoPlayButton.visibility = View.INVISIBLE
 
-            player = ExoPlayer.Builder(requireContext()).build()
-            binding.fullVideoView.player = player
-            val mediaItem = MediaItem.fromUri(url)
-            player.setMediaItem(mediaItem)
-            player.prepare()
+            initializeVideoForLoading(url)
 
             binding.fullVideoProgressBar.visibility = View.INVISIBLE
             binding.fullVideoPlayButton.visibility = View.VISIBLE
-
 
             player.addListener(
                 object : Player.Listener {
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         super.onPlaybackStateChanged(playbackState)
-                        if (playbackState == Player.STATE_READY) {
-                            binding.fullVideoPlayButton.visibility = View.INVISIBLE
-                        } else if (playbackState == Player.STATE_ENDED) {
-                            binding.fullVideoPlayButton.visibility = View.VISIBLE
+                        when (playbackState) {
+                            Player.STATE_READY -> {
+                                binding.fullVideoPlayButton.visibility = View.INVISIBLE
+                            }
+                            Player.STATE_ENDED -> {
+                                binding.fullVideoPlayButton.visibility = View.VISIBLE
+                            }
                         }
                     }
                 }
             )
 
-
         } else {
             binding.fullVideoView.visibility = View.GONE
             binding.fullImageView.visibility = View.VISIBLE
             Glide.with(requireContext()).load(url).into(binding.fullImageView)
-
         }
 
 
         return binding.root
+    }
+
+    private fun initializeVideoForLoading(url: String) {
+        player = ExoPlayer.Builder(requireContext()).build()
+        binding.fullVideoView.player = player
+        val mediaItem = MediaItem.fromUri(url)
+        player.setMediaItem(mediaItem)
+        player.prepare()
     }
 }

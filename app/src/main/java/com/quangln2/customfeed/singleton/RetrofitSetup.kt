@@ -1,5 +1,6 @@
 package com.quangln2.customfeed.singleton
 
+import com.quangln2.customfeed.constants.ConstantClass.DEFAULT_ENDPOINT
 import com.quangln2.customfeed.datasource.remote.ApiSource
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
@@ -9,7 +10,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitSetup {
-    private const val DEFAULT_ENDPOINT = "http://8335-2a09-bac0-23-00-827-7f97.ap.ngrok.io/"
     private val client = OkHttpClient.Builder()
         .connectTimeout(120, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS)
@@ -30,7 +30,7 @@ object RetrofitSetup {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    val gitHubService = retrofit.create(ApiSource::class.java)
+    val gitHubService: ApiSource = retrofit.create(ApiSource::class.java)
 
 
 }

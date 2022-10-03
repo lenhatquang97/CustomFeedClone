@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:scrollbars="vertical"
     android:fillViewport="true"
+    android:scrollbars="vertical"
     tools:context=".screens.viewimageorvideo.ViewMoreFragment"
     tools:ignore="SpeakableTextPresentCheck">
 
@@ -74,15 +74,15 @@
             android:id="@+id/linear_layout"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            app:layout_constraintTop_toBottomOf="@id/caption"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginTop= "16dp"
-            android:orientation="vertical">
+            app:layout_constraintTop_toBottomOf="@id/caption">
 
             <com.quangln2.customfeed.customview.ExtendedCustomGridGroup
                 android:id="@+id/extendedCustomGridGroup"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="match_parent" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

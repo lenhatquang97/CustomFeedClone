@@ -2,7 +2,6 @@ package com.quangln2.customfeed.customview
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.wifi.rtt.CivicLocationKeys.STATE
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -67,7 +66,7 @@ class LoadingVideoView @JvmOverloads constructor(
                     super.onPlaybackStateChanged(playbackState)
                     if (playbackState == Player.STATE_READY) {
                         progressBar.visibility = View.INVISIBLE
-                    } else if(playbackState == Player.STATE_IDLE){
+                    } else if (playbackState == Player.STATE_IDLE) {
                         playButton.visibility = View.VISIBLE
                     }
                 }
@@ -98,7 +97,7 @@ class LoadingVideoView @JvmOverloads constructor(
 
     fun pauseVideo() {
         playButton.visibility = View.VISIBLE
-        player.seekTo(0)
+        //player.seekTo(0)
         player.pause()
     }
 

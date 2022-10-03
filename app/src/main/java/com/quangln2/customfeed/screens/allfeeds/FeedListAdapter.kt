@@ -1,4 +1,4 @@
-package com.quangln2.customfeed.screens
+package com.quangln2.customfeed.screens.allfeeds
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -21,6 +21,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
+import com.quangln2.customfeed.callback.EventFeedCallback
 import com.quangln2.customfeed.constants.ConstantClass
 import com.quangln2.customfeed.customview.CustomLayer
 import com.quangln2.customfeed.customview.LoadingVideoView
@@ -36,10 +37,7 @@ import java.util.concurrent.Executors
 
 class FeedListAdapter(
     private var context: Context,
-    private val onDeleteItem: (String) -> Unit,
-    private val onClickAddPost: () -> Unit,
-    private val onClickVideoView: (String) -> Unit,
-    private val onClickViewMore: (String) -> Unit
+    private val eventFeedCallback: EventFeedCallback
 ) :
     ListAdapter<UploadPost, RecyclerView.ViewHolder>(
         AsyncDifferConfig.Builder(FeedListDiffCallback())
@@ -50,9 +48,10 @@ class FeedListAdapter(
     inner class AddNewItemViewHolder constructor(private val binding: FeedCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(context: Context) {
-            Glide.with(context).load(ConstantClass.AVATAR_LINK).into(binding.circleAvatar)
+            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
+            Glide.with(context).load(ConstantClass.AVATAR_LINK).apply(requestOptions).into(binding.circleAvatar)
             binding.root.setOnClickListener {
-                onClickAddPost()
+                eventFeedCallback.onClickAddPost()
             }
         }
     }
@@ -68,7 +67,8 @@ class FeedListAdapter(
 
             binding.feedId.text = item.feedId
             binding.myName.text = item.name
-            Glide.with(context).load(item.avatar).into(binding.myAvatarImage)
+            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(200)
+            Glide.with(context).load(item.avatar).apply(requestOptions).into(binding.myAvatarImage)
             binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
             if (item.caption.isEmpty()) {
                 binding.caption.visibility = View.GONE
@@ -86,7 +86,7 @@ class FeedListAdapter(
             }
 
             binding.deleteButton.setOnClickListener {
-                onDeleteItem(item.feedId)
+                eventFeedCallback.onDeleteItem(item.feedId)
             }
 
             binding.learnMore.setOnClickListener {
@@ -106,7 +106,7 @@ class FeedListAdapter(
                         val numbersOfAddedImages = item.imagesAndVideos.size - 9
                         val viewChild = CustomLayer(context)
                         viewChild.setOnClickListener {
-                            onClickViewMore(item.feedId)
+                            eventFeedCallback.onClickViewMore(item.feedId)
                         }
                         viewChild.addedImagesText.text = "+$numbersOfAddedImages"
                         withContext(Dispatchers.Main) {
@@ -124,14 +124,13 @@ class FeedListAdapter(
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
                             videoView.setOnClickListener {
-                                onClickVideoView(value)
+                                eventFeedCallback.onClickVideoView(value)
                             }
                             binding.loadingCircularIndicator.visibility = View.INVISIBLE
                             binding.customGridGroup.addView(videoView)
                         }
                     } else {
                         val imageView = ImageView(context)
-                        val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(200)
                         imageView.layoutParams = ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
@@ -139,7 +138,7 @@ class FeedListAdapter(
                         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
                         imageView.setOnClickListener {
-                            onClickVideoView(value)
+                            eventFeedCallback.onClickVideoView(value)
                         }
                         withContext(Dispatchers.Main) {
                             Glide.with(context).load(value).listener(
@@ -163,8 +162,6 @@ class FeedListAdapter(
                                         binding.loadingCircularIndicator.visibility = View.INVISIBLE
                                         return false
                                     }
-
-
                                 }
                             ).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
                                 override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
@@ -208,10 +205,10 @@ class FeedListAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (position == 0) {
-            (holder as FeedListAdapter.AddNewItemViewHolder).bind(context)
+            (holder as AddNewItemViewHolder).bind(context)
         } else {
             val item = getItem(position)
-            (holder as FeedListAdapter.FeedItemViewHolder).bind(item, context)
+            (holder as FeedItemViewHolder).bind(item, context)
         }
     }
 
