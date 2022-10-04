@@ -13,16 +13,16 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.Player
-import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.R
+import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.controllers.VideoPlayed
-import com.quangln2.customfeed.others.callback.EventFeedCallback
-import com.quangln2.customfeed.ui.customview.CustomGridGroup
-import com.quangln2.customfeed.ui.customview.LoadingVideoView
-import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
+import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
+import com.quangln2.customfeed.others.callback.EventFeedCallback
+import com.quangln2.customfeed.ui.customview.CustomGridGroup
+import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +40,10 @@ class AllFeedsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.getAllFeeds()
+
+        //Download Image
+        //DownloadUtils.downloadImage(ConstantClass.IMAGE_SAMPLE_LINK, requireContext())
+        //DownloadUtils.downloadVideo(ConstantClass.VIDEO_SAMPLE_LINK, requireContext())
     }
 
     override fun onCreateView(
@@ -75,8 +79,11 @@ class AllFeedsFragment : Fragment() {
         })
 
         viewModel.uploadLists.observe(viewLifecycleOwner) {
-            if (it != null && it.isNotEmpty()) {
+            if (it != null && it.size > 1) {
+                binding.noPostId.root.visibility = View.INVISIBLE
                 adapterVal.submitList(it.toMutableList())
+            } else {
+                binding.noPostId.root.visibility = View.VISIBLE
             }
         }
 
@@ -107,21 +114,23 @@ class AllFeedsFragment : Fragment() {
 
         if (firstCondition || secondCondition) {
             val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
-            lifecycleScope.launch(Dispatchers.Main) {
-                for (i in 0 until customGridGroup?.size!!) {
-                    val view = customGridGroup.getChildAt(i)
-                    if (FeedController.isViewAddedToQueue(view, itemPosition, i)) break
-                }
-                if (FeedController.videoQueue.size == 1) {
-                    playVideo()
-                } else if (FeedController.videoQueue.size > 1) {
-                    Log.d("CustomFeed", "Queue size ${FeedController.videoQueue.size}")
-                    Log.d("CustomFeed", FeedController.videoQueue.joinToString { it.toString() })
-                    if(!checkWhetherHaveMoreThanTwoVideosInPost()) {
-                        pauseVideo()
-                        playVideo()
+            if(customGridGroup != null){
+                lifecycleScope.launch(Dispatchers.Main) {
+                    for (i in 0 until customGridGroup.size) {
+                        val view = customGridGroup.getChildAt(i)
+                        if (FeedController.isViewAddedToQueue(view, itemPosition, i)) break
                     }
+                    if (FeedController.videoQueue.size == 1) {
+                        playVideo()
+                    } else if (FeedController.videoQueue.size > 1) {
+                        Log.d("CustomFeed", "Queue size ${FeedController.videoQueue.size}")
+                        Log.d("CustomFeed", FeedController.videoQueue.joinToString { it.toString() })
+                        if(!checkWhetherHaveMoreThanTwoVideosInPost()) {
+                            pauseVideo()
+                            playVideo()
+                        }
 
+                    }
                 }
             }
         } else {

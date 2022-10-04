@@ -6,6 +6,7 @@
         <entry key="../../../../layout/custom_preview.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/black_background.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/circle_shape.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ic_baseline_post_add_24.xml" value="0.17" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_triangle_right.xml" value="0.1985" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
@@ -19,6 +20,7 @@
         <entry key="app/src/main/res/layout/image_layer_view.xml" value="0.2291041056315104" />
         <entry key="app/src/main/res/layout/image_video_view.xml" value="0.10677083333333333" />
         <entry key="app/src/main/res/layout/loading_video_view.xml" value="0.1049682617187501" />
+        <entry key="app/src/main/res/layout/no_post_screen.xml" value="0.16906127929687503" />
       </map>
     </option>
   </component>

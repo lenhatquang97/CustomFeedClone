@@ -7,11 +7,11 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.quangln2.customfeed.data.models.UploadPost
 import com.quangln2.customfeed.domain.DeleteFeedUseCase
 import com.quangln2.customfeed.domain.GetAllFeedsUseCase
 import com.quangln2.customfeed.domain.UploadMultipartBuilderUseCase
 import com.quangln2.customfeed.domain.UploadPostUseCase
-import com.quangln2.customfeed.data.models.UploadPost
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -56,13 +56,15 @@ class FeedViewModel(
     fun getAllFeeds() {
         getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
+                val ls = mutableListOf<UploadPost>()
                 if (response.code() == 200) {
                     Log.d("GetAllFeeds", "Success")
-                    val ls = mutableListOf<UploadPost>()
                     ls.add(UploadPost().copy(feedId = "none"))
                     ls.addAll(response.body()!!)
-                    _uploadLists.value = ls.toMutableList()
+                } else {
+                    ls.add(UploadPost().copy(feedId = "none"))
                 }
+                _uploadLists.value = ls.toMutableList()
             }
 
             override fun onFailure(call: Call<MutableList<UploadPost>>, t: Throwable) {

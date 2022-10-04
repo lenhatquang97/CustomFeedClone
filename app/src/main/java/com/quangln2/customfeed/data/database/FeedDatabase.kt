@@ -11,6 +11,7 @@ import com.quangln2.customfeed.data.models.MyPost
 @Database(entities = [MyPost::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class FeedDatabase: RoomDatabase() {
+    abstract fun feedDao() : FeedDao
     companion object{
         @Volatile
         private var INSTANCE: FeedDatabase? = null

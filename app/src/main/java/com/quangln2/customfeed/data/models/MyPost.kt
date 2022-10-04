@@ -12,4 +12,6 @@ data class MyPost(
     @ColumnInfo(name="created_time") var createdTime: String,
     @ColumnInfo(name="caption") var caption: String,
     var resources: MutableList<OfflineResource>
-)
+){
+    constructor(): this("","","","","", mutableListOf())
+}

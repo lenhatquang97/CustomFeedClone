@@ -20,5 +20,10 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <include
+        android:id="@+id/no_post_id"
+        android:visibility="invisible"
+        layout="@layout/no_post_screen"/>
+
 
 </FrameLayout>
