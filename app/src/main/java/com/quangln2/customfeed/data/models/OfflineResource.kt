@@ -13,9 +13,13 @@ data class OfflineResource(
     @Expose
     var localPath: String,
 
-    @SerializedName("downloadProgress")
+    @SerializedName("size")
     @Expose
-    var downloadProgress: Int,
+    var size: Long,
+
+    @SerializedName("bytesCopied")
+    @Expose
+    var bytesCopied: Long,
 
     @SerializedName("stateOfDownloader")
     @Expose
