@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -35,6 +36,9 @@ android {
 }
 
 dependencies {
+    def room_version = "2.4.3"
+    def exo_player_version = "2.18.1"
+
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.5.0'
@@ -78,12 +82,15 @@ dependencies {
 
     implementation "com.google.android.gms:play-services-auth:20.3.0"
 
-    implementation 'com.google.android.exoplayer:exoplayer:2.18.1'
-    implementation "com.google.android.exoplayer:exoplayer-core:2.18.1"
-    implementation "com.google.android.exoplayer:exoplayer-dash:2.18.1"
-    implementation "com.google.android.exoplayer:exoplayer-hls:2.18.1"
-    implementation "com.google.android.exoplayer:exoplayer-smoothstreaming:2.18.1"
-    implementation "com.google.android.exoplayer:exoplayer-ui:2.18.1"
+    implementation "com.google.android.exoplayer:exoplayer:$exo_player_version"
+    implementation "com.google.android.exoplayer:exoplayer-core:$exo_player_version"
+    implementation "com.google.android.exoplayer:exoplayer-dash:$exo_player_version"
+    implementation "com.google.android.exoplayer:exoplayer-hls:$exo_player_version"
+    implementation "com.google.android.exoplayer:exoplayer-smoothstreaming:$exo_player_version"
+    implementation "com.google.android.exoplayer:exoplayer-ui:$exo_player_version"
 
+    implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
 
 }

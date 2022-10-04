@@ -1,7 +1,7 @@
 package com.quangln2.customfeed.domain
 
-import com.quangln2.customfeed.models.UploadPost
-import com.quangln2.customfeed.repository.FeedRepository
+import com.quangln2.customfeed.data.models.UploadPost
+import com.quangln2.customfeed.data.repository.FeedRepository
 import retrofit2.Call
 
 class GetAllFeedsUseCase(private val feedRepository: FeedRepository) {
