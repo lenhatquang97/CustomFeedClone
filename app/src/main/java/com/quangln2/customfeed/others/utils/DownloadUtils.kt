@@ -1,3 +1,4 @@
+
 package com.quangln2.customfeed.others.utils
 
 import android.content.Context
@@ -19,7 +20,41 @@ import java.io.*
 
 
 object DownloadUtils {
+    fun fileSizeFromInternet(url: String): Long {
+        val request = Request.Builder().url(url).build()
+        val response = downloadClient.newCall(request).execute()
+        return response.body?.contentLength() ?: 0
+    }
+
+    fun doesLocalFileExist(url: String, context: Context): Boolean{
+        val fileName = URLUtil.guessFileName(url, null, null)
+        val file = File(context.cacheDir, fileName)
+        return file.exists()
+    }
+    fun isValidFile(url: String, context: Context, anotherSize: Long): Boolean{
+        val fileName = URLUtil.guessFileName(url, null, null)
+        val file = File(context.cacheDir, fileName)
+        if(!file.exists()) return false
+        try{
+            if(file.length() == anotherSize && anotherSize != 0L){
+                return true
+            } else {
+                file.delete()
+            }
+        } catch(e: Exception){
+            e.printStackTrace()
+        }
+        return false
+    }
+
+    fun getTemporaryFilePath(url: String, context: Context): String{
+        val fileName = URLUtil.guessFileName(url, null, null)
+        val file = File(context.cacheDir, fileName)
+        return file.absolutePath
+    }
+
     fun downloadResource(url: String, context: Context){
+        if(doesLocalFileExist(url, context)) return
         val mimeType = getMimeType(url)
         if(mimeType != null){
             if(mimeType.contains("image")){

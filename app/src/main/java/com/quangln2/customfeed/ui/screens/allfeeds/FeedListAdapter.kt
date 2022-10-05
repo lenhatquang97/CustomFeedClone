@@ -22,10 +22,11 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.quangln2.customfeed.data.constants.ConstantClass
-import com.quangln2.customfeed.data.models.UploadPost
+import com.quangln2.customfeed.data.models.MyPost
 import com.quangln2.customfeed.databinding.FeedCardBinding
 import com.quangln2.customfeed.databinding.FeedItemBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
+import com.quangln2.customfeed.others.utils.DownloadUtils
 import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
@@ -39,7 +40,7 @@ class FeedListAdapter(
     private var context: Context,
     private val eventFeedCallback: EventFeedCallback
 ) :
-    ListAdapter<UploadPost, RecyclerView.ViewHolder>(
+    ListAdapter<MyPost, RecyclerView.ViewHolder>(
         AsyncDifferConfig.Builder(FeedListDiffCallback())
             .setBackgroundThreadExecutor(Executors.newSingleThreadExecutor())
             .build()
@@ -58,7 +59,8 @@ class FeedListAdapter(
 
     inner class FeedItemViewHolder constructor(private val binding: FeedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: UploadPost, context: Context) {
+        fun bind(item: MyPost, context: Context) {
+            println("Id: ${item.feedId}")
             binding.loadingCircularIndicator.visibility = View.VISIBLE
             if (binding.customGridGroup.size > 0) {
                 binding.loadingCircularIndicator.visibility = View.GONE
@@ -101,9 +103,9 @@ class FeedListAdapter(
             }
 
             CoroutineScope(Dispatchers.IO).launch {
-                for (i in 0 until item.imagesAndVideos.size) {
-                    if (i >= 8 && item.imagesAndVideos.size > 9) {
-                        val numbersOfAddedImages = item.imagesAndVideos.size - 9
+                for (i in 0 until item.resources.size) {
+                    if (i >= 8 && item.resources.size > 9) {
+                        val numbersOfAddedImages = item.resources.size - 9
                         val viewChild = CustomLayer(context)
                         viewChild.setOnClickListener {
                             eventFeedCallback.onClickViewMore(item.feedId)
@@ -115,8 +117,12 @@ class FeedListAdapter(
                         break
                     }
 
-                    val value = item.imagesAndVideos[i]
-                    if (value.contains("mp4")) {
+                    val value = if(DownloadUtils.doesLocalFileExist(item.resources[i].url, context) && DownloadUtils.isValidFile(item.resources[i].url, context, item.resources[i].size)) {
+                        DownloadUtils.getTemporaryFilePath(item.resources[i].url, context)
+                    } else {
+                        item.resources[i].url
+                    }
+                    if (value is String && value.contains("mp4")) {
                         withContext(Dispatchers.Main) {
                             val videoView = LoadingVideoView(context, value)
                             videoView.layoutParams = LinearLayout.LayoutParams(
@@ -149,6 +155,7 @@ class FeedListAdapter(
                                         target: Target<Drawable>?,
                                         isFirstResource: Boolean
                                     ): Boolean {
+                                        binding.loadingCircularIndicator.visibility = View.VISIBLE
                                         return false
                                     }
 
@@ -225,20 +232,20 @@ class FeedListAdapter(
 
 }
 
-class FeedListDiffCallback : DiffUtil.ItemCallback<UploadPost>() {
-    override fun areItemsTheSame(oldItem: UploadPost, newItem: UploadPost): Boolean {
+class FeedListDiffCallback : DiffUtil.ItemCallback<MyPost>() {
+    override fun areItemsTheSame(oldItem: MyPost, newItem: MyPost): Boolean {
         return oldItem.feedId == newItem.feedId
     }
 
     override fun areContentsTheSame(
-        oldItem: UploadPost,
-        newItem: UploadPost
+        oldItem: MyPost,
+        newItem: MyPost
     ): Boolean {
-        if (oldItem.imagesAndVideos.size != newItem.imagesAndVideos.size) {
+        if (oldItem.resources.size != newItem.resources.size) {
             return false
         }
-        for (i in 0 until oldItem.imagesAndVideos.size) {
-            if (oldItem.imagesAndVideos[i] != newItem.imagesAndVideos[i]) {
+        for (i in 0 until oldItem.resources.size) {
+            if (oldItem.resources[i] != newItem.resources[i]) {
                 return false
             }
         }

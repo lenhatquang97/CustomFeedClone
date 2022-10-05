@@ -3,6 +3,7 @@ package com.quangln2.customfeed
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.StrictMode
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -16,6 +17,9 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
         viewBinding = ActivityMainBinding.inflate(LayoutInflater.from(this))
         setContentView(viewBinding.root)
+
+        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+        StrictMode.setThreadPolicy(policy)
 
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             val permissionCheck = ContextCompat.checkSelfPermission(

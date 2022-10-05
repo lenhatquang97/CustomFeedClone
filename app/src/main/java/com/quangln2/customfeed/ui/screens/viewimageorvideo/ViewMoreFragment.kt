@@ -18,9 +18,10 @@ import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
-import com.quangln2.customfeed.data.models.UploadPost
+import com.quangln2.customfeed.data.models.MyPost
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentViewMoreBinding
+import com.quangln2.customfeed.others.utils.DownloadUtils
 import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
@@ -39,7 +40,7 @@ class ViewMoreFragment : Fragment() {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
-    private lateinit var item: UploadPost
+    private lateinit var item: MyPost
     private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
 
     private fun fetchPostById(id: String) {
@@ -51,8 +52,9 @@ class ViewMoreFragment : Fragment() {
         Glide.with(requireContext()).load(item.avatar).apply(requestOptions).into(binding.myAvatarImage)
 
         CoroutineScope(Dispatchers.IO).launch {
-            for (i in 0 until item.imagesAndVideos.size) {
-                val value = item.imagesAndVideos[i]
+            for (i in 0 until item.resources.size) {
+                val existsLocal = DownloadUtils.doesLocalFileExist(item.resources[i].url, requireContext()) && DownloadUtils.isValidFile(item.resources[i].url, requireContext(), item.resources[i].size)
+                val value = if(existsLocal) DownloadUtils.getTemporaryFilePath(item.resources[i].url, requireContext()) else item.resources[i].url
                 if (value.contains("mp4")) {
                     withContext(Dispatchers.Main) {
                         val imageView = ImageView(context)

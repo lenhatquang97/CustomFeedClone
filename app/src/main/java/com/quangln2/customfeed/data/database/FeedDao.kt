@@ -20,4 +20,7 @@ interface FeedDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM my_post WHERE feed_id = :feed_id)")
     fun existsWithId(feed_id: String): Int
+
+    @Query("SELECT * FROM my_post WHERE feed_id = :feed_id")
+    fun getFeedWithId(feed_id: String): MyPost
 }

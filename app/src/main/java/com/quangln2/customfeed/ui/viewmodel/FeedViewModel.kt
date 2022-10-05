@@ -9,10 +9,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
+import com.quangln2.customfeed.data.models.MyPost
 import com.quangln2.customfeed.data.models.UploadPost
 import com.quangln2.customfeed.domain.*
+import com.quangln2.customfeed.others.utils.DownloadUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -32,8 +36,8 @@ class FeedViewModel(
     var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
     val uriLists: LiveData<MutableList<Uri>> = _uriLists
 
-    private var _uploadLists = MutableLiveData<MutableList<UploadPost>>().apply { value = mutableListOf() }
-    val uploadLists: LiveData<MutableList<UploadPost>> = _uploadLists
+    private var _uploadLists = MutableLiveData<MutableList<MyPost>>().apply { value = mutableListOf() }
+    val uploadLists: LiveData<MutableList<MyPost>> = _uploadLists
 
     private var _isUploading = MutableLiveData<Boolean>().apply { value = false }
     val isUploading: LiveData<Boolean> = _isUploading
@@ -58,48 +62,78 @@ class FeedViewModel(
         })
     }
 
-    fun getAllFeeds() {
+    fun downloadAllResourcesWithUpdate(context: Context, uploadPosts: List<UploadPost>){
+        viewModelScope.launch(Dispatchers.IO){
+            for (item in uploadPosts){
+                for(urlObj in item.imagesAndVideos){
+                    DownloadUtils.downloadResource(urlObj, context)
+                }
+            }
+
+        }
+    }
+
+    fun getAllFeeds(context: Context) {
         getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
-                val ls = mutableListOf<UploadPost>()
+                val ls = mutableListOf<MyPost>()
                 if (response.code() == 200) {
                     val body = response.body()
-                    Log.d("GetAllFeeds", "Success")
-                    ls.add(UploadPost().copy(feedId = "none"))
-                    if(body != null){
-                        ls.addAll(body)
-                        viewModelScope.launch(Dispatchers.IO){
-                            for (item in body){
-                                insertDatabaseUseCase(convertFromUploadPostToMyPost(item))
+                    ls.add(MyPost().copy(feedId = "none"))
+                    viewModelScope.launch(Dispatchers.Main){
+                        val offlinePosts = getAllInDatabaseUseCase().first()
+                        if(body != null){
+                            for(i in 0 until body.size){
+                                ls.add(convertFromUploadPostToMyPost(body[i], offlinePosts))
                             }
+                            _uploadLists.value = ls.toMutableList()
+                            withContext(Dispatchers.IO){
+                                val listExcluedWithNone = ls.filter { it.feedId != "none" }
+                                for (item in listExcluedWithNone){
+                                    insertDatabaseUseCase(item)
+                                }
+                            }
+                            downloadAllResourcesWithUpdate(context, body)
                         }
                     }
-
-
                 } else {
-                    ls.add(UploadPost().copy(feedId = "none"))
+                    ls.add(MyPost().copy(feedId = "none"))
+                    viewModelScope.launch(Dispatchers.Main){
+                        val offlinePosts = getAllInDatabaseUseCase().first()
+                        for(item in offlinePosts){
+                            ls.add(item)
+                        }
+                        _uploadLists.value = ls.toMutableList()
+                    }
                 }
-                _uploadLists.value = ls.toMutableList()
             }
 
             override fun onFailure(call: Call<MutableList<UploadPost>>, t: Throwable) {
                 Log.d("GetAllFeeds", "Failure")
                 println(t.cause?.message)
-                val ls = mutableListOf<UploadPost>()
-                ls.add(UploadPost().copy(feedId = "none"))
-                _uploadLists.value = ls.toMutableList()
+                val ls = mutableListOf<MyPost>()
+                ls.add(MyPost().copy(feedId = "none"))
+                viewModelScope.launch(Dispatchers.Main){
+                    val offlinePosts = getAllInDatabaseUseCase().first()
+                    for(item in offlinePosts){
+                        ls.add(item)
+                    }
+                    _uploadLists.value = ls.toMutableList()
+                }
+
+
             }
 
         })
     }
 
-    fun getFeedItem(feedId: String): UploadPost {
+    fun getFeedItem(feedId: String): MyPost {
         val ls = _uploadLists.value
         if (ls != null) {
             val indexOfFirst = ls.indexOfFirst { it.feedId == feedId }
             return ls[indexOfFirst]
         }
-        return UploadPost().copy(feedId = "none")
+        return MyPost().copy(feedId = "none")
 
     }
 

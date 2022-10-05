@@ -10,4 +10,6 @@ data class UploadPost(
     @SerializedName("createdTime") var createdTime: String = Date().time.toString(),
     @SerializedName("caption") var caption: String = "",
     @SerializedName("imagesAndVideos") var imagesAndVideos: MutableList<String> = mutableListOf(),
-)
+    //Transient
+    @Transient var localPaths: MutableList<String> = mutableListOf()
+    )

@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.MediaStore
+import java.util.*
 
 object FileUtils {
     fun getRealPathFromURI(contentURI: Uri, context: Context): String? {
@@ -25,7 +26,7 @@ object FileUtils {
     }
 
     fun convertUnixTimestampToTime(unixTimestamp: String): String {
-        val date = java.util.Date(unixTimestamp.toLong())
+        val date = if (unixTimestamp.isEmpty()) Date() else java.util.Date(unixTimestamp.toLong())
         val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm")
         sdf.timeZone = java.util.TimeZone.getTimeZone("GMT+7")
         return sdf.format(date)
