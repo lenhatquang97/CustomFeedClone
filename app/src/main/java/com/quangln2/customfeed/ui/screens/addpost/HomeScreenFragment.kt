@@ -26,12 +26,13 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
-import com.quangln2.customfeed.ui.customview.CustomLayer
-import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
+import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
+import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
 import com.quangln2.customfeed.others.utils.FileUtils
+import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
@@ -45,8 +46,12 @@ import java.util.*
 class HomeScreenFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeScreenBinding
+
+    private val database by lazy {
+        FeedDatabase.getFeedDatabase(requireContext())
+    }
     private val viewModel: FeedViewModel by activityViewModels {
-        ViewModelFactory(FeedRepository(LocalDataSourceImpl(), RemoteDataSourceImpl()))
+        ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
     private var listOfViews: MutableList<View> = mutableListOf()
 

@@ -11,7 +11,25 @@ data class MyPost(
     @ColumnInfo(name="avatar") var avatar: String,
     @ColumnInfo(name="created_time") var createdTime: String,
     @ColumnInfo(name="caption") var caption: String,
-    var resources: MutableList<OfflineResource>
+    @ColumnInfo(name="resources") var resources: MutableList<OfflineResource>
 ){
     constructor(): this("","","","","", mutableListOf())
+
+    override fun equals(other: Any?): Boolean {
+        if(other is MyPost){
+            val sameFeedId = feedId == other.feedId
+            val sameName = name == other.name
+            val sameAvatar = avatar == other.avatar
+            val sameCreatedTime = createdTime == other.createdTime
+            val sameCaption = caption == other.caption
+            val sameResources = resources.size == other.resources.size
+            for((a,b) in resources.zip(other.resources)){
+                if(a != b){
+                    return false
+                }
+            }
+            return sameFeedId && sameName && sameAvatar && sameCreatedTime && sameCaption && sameResources
+        }
+        return false
+    }
 }

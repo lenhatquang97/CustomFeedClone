@@ -7,11 +7,12 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeed.data.models.UploadPost
-import com.quangln2.customfeed.domain.DeleteFeedUseCase
-import com.quangln2.customfeed.domain.GetAllFeedsUseCase
-import com.quangln2.customfeed.domain.UploadMultipartBuilderUseCase
-import com.quangln2.customfeed.domain.UploadPostUseCase
+import com.quangln2.customfeed.domain.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -22,7 +23,11 @@ class FeedViewModel(
     val uploadPostUseCase: UploadPostUseCase,
     val getAllFeedsUseCase: GetAllFeedsUseCase,
     val deleteFeedUseCase: DeleteFeedUseCase,
-    val uploadMultipartBuilderUseCase: UploadMultipartBuilderUseCase
+    val uploadMultipartBuilderUseCase: UploadMultipartBuilderUseCase,
+    val insertDatabaseUseCase: InsertDatabaseUseCase,
+    val updateDatabaseUseCase: UpdateDatabaseUseCase,
+    val deleteDatabaseUseCase: DeleteDatabaseUseCase,
+    val getAllInDatabaseUseCase: GetAllInDatabaseUseCase
 ) : ViewModel() {
     var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
     val uriLists: LiveData<MutableList<Uri>> = _uriLists
@@ -58,9 +63,19 @@ class FeedViewModel(
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
                 val ls = mutableListOf<UploadPost>()
                 if (response.code() == 200) {
+                    val body = response.body()
                     Log.d("GetAllFeeds", "Success")
                     ls.add(UploadPost().copy(feedId = "none"))
-                    ls.addAll(response.body()!!)
+                    if(body != null){
+                        ls.addAll(body)
+                        viewModelScope.launch(Dispatchers.IO){
+                            for (item in body){
+                                insertDatabaseUseCase(convertFromUploadPostToMyPost(item))
+                            }
+                        }
+                    }
+
+
                 } else {
                     ls.add(UploadPost().copy(feedId = "none"))
                 }

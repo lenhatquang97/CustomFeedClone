@@ -17,4 +17,7 @@ interface FeedDao {
 
     @Delete
     fun delete(myPost: MyPost)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM my_post WHERE feed_id = :feed_id)")
+    fun existsWithId(feed_id: String): Int
 }

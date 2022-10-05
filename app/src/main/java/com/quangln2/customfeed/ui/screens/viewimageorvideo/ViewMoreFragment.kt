@@ -15,11 +15,12 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.quangln2.customfeed.R
-import com.quangln2.customfeed.databinding.FragmentViewMoreBinding
+import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.models.UploadPost
 import com.quangln2.customfeed.data.repository.FeedRepository
+import com.quangln2.customfeed.databinding.FragmentViewMoreBinding
 import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
@@ -30,9 +31,14 @@ import kotlinx.coroutines.withContext
 
 class ViewMoreFragment : Fragment() {
     private lateinit var binding: FragmentViewMoreBinding
-    private val viewModel: FeedViewModel by activityViewModels {
-        ViewModelFactory(FeedRepository(LocalDataSourceImpl(), RemoteDataSourceImpl()))
+
+    private val database by lazy {
+        FeedDatabase.getFeedDatabase(requireContext())
     }
+    private val viewModel: FeedViewModel by activityViewModels {
+        ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
+    }
+
     private lateinit var item: UploadPost
     private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
 

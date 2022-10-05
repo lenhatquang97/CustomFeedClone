@@ -2,11 +2,8 @@ package com.quangln2.customfeed.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.quangln2.customfeed.domain.DeleteFeedUseCase
-import com.quangln2.customfeed.domain.GetAllFeedsUseCase
-import com.quangln2.customfeed.domain.UploadMultipartBuilderUseCase
-import com.quangln2.customfeed.domain.UploadPostUseCase
 import com.quangln2.customfeed.data.repository.FeedRepository
+import com.quangln2.customfeed.domain.*
 
 @Suppress("UNCHECKED_CAST")
 class ViewModelFactory constructor(private val feedRepository: FeedRepository) :
@@ -19,7 +16,11 @@ class ViewModelFactory constructor(private val feedRepository: FeedRepository) :
                         UploadPostUseCase(feedRepository),
                         GetAllFeedsUseCase(feedRepository),
                         DeleteFeedUseCase(feedRepository),
-                        UploadMultipartBuilderUseCase(feedRepository)
+                        UploadMultipartBuilderUseCase(feedRepository),
+                        InsertDatabaseUseCase(feedRepository),
+                        UpdateDatabaseUseCase(feedRepository),
+                        DeleteDatabaseUseCase(feedRepository),
+                        GetAllInDatabaseUseCase(feedRepository)
                     )
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

@@ -2,16 +2,41 @@ package com.quangln2.customfeed.data.datasource.local
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import com.quangln2.customfeed.data.constants.ConstantClass
+import com.quangln2.customfeed.data.database.FeedDao
+import com.quangln2.customfeed.data.models.MyPost
 import com.quangln2.customfeed.others.utils.FileUtils
+import kotlinx.coroutines.flow.Flow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 import java.util.*
 
-class LocalDataSourceImpl : LocalDataSource {
+class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
+    @Suppress("RedundantSuspendModifier")
+    @WorkerThread
+    override suspend fun insert(myPost: MyPost) {
+        if(feedDao.existsWithId(myPost.feedId) == 0) {
+            feedDao.insert(myPost)
+        } else {
+            feedDao.update(myPost)
+        }
+    }
+
+    override fun getAll(): Flow<List<MyPost>> = feedDao.getAll()
+
+    @Suppress("RedundantSuspendModifier")
+    @WorkerThread
+    override suspend fun update(myPost: MyPost) = feedDao.update(myPost)
+
+    @Suppress("RedundantSuspendModifier")
+    @WorkerThread
+    override suspend fun delete(myPost: MyPost) = feedDao.delete(myPost)
+
+
     override fun uploadMultipartBuilder(
         caption: String,
         uriLists: LiveData<MutableList<Uri>>,

@@ -4,18 +4,34 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-import okhttp3.*
+import com.quangln2.customfeed.others.singleton.RetrofitSetup.downloadClient
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Request
+import okhttp3.Response
 import java.io.*
 
+
 object DownloadUtils {
-    fun downloadImage(imageUrl: String, context: Context){
+    fun downloadResource(url: String, context: Context){
+        val mimeType = getMimeType(url)
+        if(mimeType != null){
+            if(mimeType.contains("image")){
+                downloadImage(url, context)
+            } else if(mimeType.contains("video")){
+                downloadVideo(url, context)
+            }
+        }
+    }
+    private fun downloadImage(imageUrl: String, context: Context){
         val fileName = URLUtil.guessFileName(imageUrl, null, null)
-        val file = File(context.filesDir, fileName)
+        val file = File(context.cacheDir, fileName)
         Glide.with(context).load(imageUrl).into(
             object : CustomTarget<Drawable>(){
                 override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
@@ -36,12 +52,11 @@ object DownloadUtils {
         )
     }
 
-    fun downloadVideo(videoUrl: String, context: Context){
-        val client = OkHttpClient()
+    private fun downloadVideo(videoUrl: String, context: Context){
         val req = Request.Builder().url(videoUrl).build()
         val fileName = URLUtil.guessFileName(videoUrl, null, null)
-        val file = File(context.filesDir, fileName)
-        client.newCall(req).enqueue(object : Callback {
+        val file = File(context.cacheDir, fileName)
+        downloadClient.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
             }
@@ -59,7 +74,7 @@ object DownloadUtils {
 
     }
 
-    fun write(inputStream: InputStream?, outputStream: FileOutputStream): Long {
+    private fun write(inputStream: InputStream?, outputStream: FileOutputStream): Long {
         BufferedInputStream(inputStream).use { input ->
             val dataBuffer = ByteArray(4 * 1024)
             var readBytes: Int
@@ -70,5 +85,13 @@ object DownloadUtils {
             }
             return totalBytes
         }
+    }
+    private fun getMimeType(url: String?): String? {
+        var type: String? = null
+        val extension = MimeTypeMap.getFileExtensionFromUrl(url)
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+        }
+        return type
     }
 }

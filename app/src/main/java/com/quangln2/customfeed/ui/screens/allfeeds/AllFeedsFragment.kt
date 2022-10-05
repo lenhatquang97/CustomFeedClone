@@ -14,13 +14,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.R
+import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.controllers.VideoPlayed
+import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
+import com.quangln2.customfeed.others.utils.DownloadUtils
 import com.quangln2.customfeed.ui.customview.CustomGridGroup
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
@@ -33,17 +36,18 @@ import kotlinx.coroutines.launch
 class AllFeedsFragment : Fragment() {
     private lateinit var binding: FragmentAllFeedsBinding
     private lateinit var adapterVal: FeedListAdapter
+
+    private val database by lazy {
+        FeedDatabase.getFeedDatabase(requireContext())
+    }
     private val viewModel: FeedViewModel by activityViewModels {
-        ViewModelFactory(FeedRepository(LocalDataSourceImpl(), RemoteDataSourceImpl()))
+        ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.getAllFeeds()
-
-        //Download Image
-        //DownloadUtils.downloadImage(ConstantClass.IMAGE_SAMPLE_LINK, requireContext())
-        //DownloadUtils.downloadVideo(ConstantClass.VIDEO_SAMPLE_LINK, requireContext())
+        DownloadUtils.downloadResource(ConstantClass.VIDEO_SAMPLE_LINK, requireContext())
     }
 
     override fun onCreateView(
