@@ -1,7 +1,6 @@
 package com.quangln2.customfeed
 
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import android.view.LayoutInflater
@@ -21,7 +20,8 @@ class MainActivity : AppCompatActivity() {
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+        //TODO: Full fix for read external storage check
+        if (true) {
             val permissionCheck = ContextCompat.checkSelfPermission(
                 applicationContext,
                 android.Manifest.permission.READ_EXTERNAL_STORAGE
