@@ -94,18 +94,13 @@ class ViewMoreFragment : Fragment() {
             }
         }
     }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val id = arguments?.getString("id")
-        if (id != null && id.isNotEmpty()) fetchPostById(id)
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentViewMoreBinding.inflate(inflater, container, false)
+        val id = arguments?.getString("id")
+        if (id != null && id.isNotEmpty()) fetchPostById(id)
         return binding.root
     }
 }
