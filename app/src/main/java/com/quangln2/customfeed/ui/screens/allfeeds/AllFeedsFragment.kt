@@ -89,6 +89,11 @@ class AllFeedsFragment : Fragment() {
             }
         }
 
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            viewModel.getAllFeeds(requireContext())
+            binding.swipeRefreshLayout.isRefreshing = false
+        }
+
         return binding.root
     }
 

@@ -80,20 +80,19 @@ class FeedViewModel(
                 if (response.code() == 200) {
                     val body = response.body()
                     ls.add(MyPost().copy(feedId = "none"))
-                    viewModelScope.launch(Dispatchers.Main){
+                    viewModelScope.launch(Dispatchers.IO){
                         val offlinePosts = getAllInDatabaseUseCase().first()
                         if(body != null){
                             for(i in 0 until body.size){
                                 ls.add(convertFromUploadPostToMyPost(body[i], offlinePosts))
                             }
-                            _uploadLists.value = ls.toMutableList()
+                            _uploadLists.postValue(ls.toMutableList())
+
                             withContext(Dispatchers.IO){
-                                val listExcluedWithNone = ls.filter { it.feedId != "none" }
-                                for (item in listExcluedWithNone){
-                                    insertDatabaseUseCase(item)
-                                }
+                                val listExcludedWithNone = ls.filter { it.feedId != "none" }
+                                for (item in listExcludedWithNone) insertDatabaseUseCase(item)
+                                downloadAllResourcesWithUpdate(context, body)
                             }
-                            downloadAllResourcesWithUpdate(context, body)
                         }
                     }
                 } else {
