@@ -57,6 +57,7 @@ class FeedViewModel(
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 Log.d("UploadFile", "Failure")
                 println(t.cause?.message)
+                _isUploading.value = false
             }
 
         })

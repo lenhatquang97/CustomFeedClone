@@ -80,7 +80,7 @@ class LoadingVideoView @JvmOverloads constructor(
         player.prepare()
     }
 
-    fun initPlayer(){
+    private fun initPlayer(){
         player = ExoPlayer.Builder(context).build()
         playerView.player = player
 
@@ -132,7 +132,6 @@ class LoadingVideoView @JvmOverloads constructor(
         isReleased = true
 
         player.release()
-
     }
 
 

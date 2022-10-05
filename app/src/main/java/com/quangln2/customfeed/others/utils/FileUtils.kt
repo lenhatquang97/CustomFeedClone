@@ -1,12 +1,16 @@
 package com.quangln2.customfeed.others.utils
 
+import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import java.util.*
 
 object FileUtils {
@@ -42,5 +46,12 @@ object FileUtils {
         val bitmap = retriever.getFrameAtTime(100)
         retriever.release()
         return BitmapDrawable(context.resources, bitmap)
+    }
+    fun getPermissionForStorage(context: Context, activity: Activity){
+        val permissionCheck = ContextCompat.checkSelfPermission(context,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+        }
     }
 }

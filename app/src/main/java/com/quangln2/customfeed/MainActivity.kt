@@ -1,13 +1,11 @@
 package com.quangln2.customfeed
 
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.StrictMode
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.quangln2.customfeed.databinding.ActivityMainBinding
+import com.quangln2.customfeed.others.utils.FileUtils
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
@@ -20,18 +18,6 @@ class MainActivity : AppCompatActivity() {
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
-        //TODO: Full fix for read external storage check
-        if (true) {
-            val permissionCheck = ContextCompat.checkSelfPermission(
-                applicationContext,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE
-            )
-            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                    this, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                    1
-                )
-            }
-        }
+        FileUtils.getPermissionForStorage(applicationContext, this)
     }
 }

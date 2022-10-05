@@ -66,4 +66,12 @@ class ViewFullVideoFragment : Fragment() {
         player.setMediaItem(mediaItem)
         player.prepare()
     }
+
+    override fun onStop() {
+        super.onStop()
+        val url = arguments?.getString("url")
+        if(url != null && url.contains("mp4")){
+            player.release()
+        }
+    }
 }
