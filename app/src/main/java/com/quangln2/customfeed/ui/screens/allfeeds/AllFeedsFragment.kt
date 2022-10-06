@@ -81,17 +81,29 @@ class AllFeedsFragment : Fragment() {
         })
 
         viewModel.uploadLists.observe(viewLifecycleOwner) {
+            println("Concerte ${viewModel.feedLoadingCode.value}")
             if (it != null && it.size > 1) {
                 binding.noPostId.root.visibility = View.INVISIBLE
                 adapterVal.submitList(it.toMutableList())
             } else {
-                binding.noPostId.root.visibility = View.VISIBLE
+                if(viewModel.feedLoadingCode.value != null){
+                    if(viewModel.feedLoadingCode.value!! != 200 && viewModel.feedLoadingCode.value!! != 0) {
+                        binding.noPostId.root.visibility = View.VISIBLE
+                        binding.noPostId.alertView.visibility = View.VISIBLE
+                        binding.noPostId.imageView.visibility = View.INVISIBLE
+                        binding.noPostId.textNote.text = "Sorry that we can't load your feed cache. Swipe down to try again.\n Exception code: ${viewModel.feedLoadingCode.value}"
+                    }
+                }
             }
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
+            binding.noPostId.alertView.visibility = View.INVISIBLE
+            binding.noPostId.imageView.visibility = View.VISIBLE
+            binding.noPostId.textNote.text = "Loading"
             viewModel.getAllFeeds(requireContext())
             binding.swipeRefreshLayout.isRefreshing = false
+
         }
 
         return binding.root
@@ -179,7 +191,7 @@ class AllFeedsFragment : Fragment() {
                                 //Play next video in list
                                 for (i in videoIndex until customGridGroup.size) {
                                     val nextView = customGridGroup.getChildAt(i)
-                                    if (nextView is LoadingVideoView && i != videoIndex) {
+                                    if (nextView is LoadingVideoView && i != videoIndex && i < 9) {
                                         FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
                                         playVideo()
                                         break

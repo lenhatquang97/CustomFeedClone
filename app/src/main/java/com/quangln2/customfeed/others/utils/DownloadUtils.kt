@@ -100,6 +100,7 @@ object DownloadUtils {
                     val fout = FileOutputStream(file)
                     write(response.body!!.byteStream(), fout)
                     fout.close()
+                    response.close()
                 } else {
                     Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
                 }

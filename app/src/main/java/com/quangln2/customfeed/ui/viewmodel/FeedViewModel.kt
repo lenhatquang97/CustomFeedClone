@@ -42,6 +42,11 @@ class FeedViewModel(
     private var _isUploading = MutableLiveData<Boolean>().apply { value = false }
     val isUploading: LiveData<Boolean> = _isUploading
 
+    private var _feedLoadingCode = MutableLiveData<Int>().apply { value = 0 }
+    val feedLoadingCode: LiveData<Int> = _feedLoadingCode
+
+
+
     fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context) {
         _isUploading.value = true
         uploadPostUseCase(requestBody).enqueue(object : Callback<ResponseBody> {
@@ -87,8 +92,8 @@ class FeedViewModel(
                             for(i in 0 until body.size){
                                 ls.add(convertFromUploadPostToMyPost(body[i], offlinePosts))
                             }
+                            _feedLoadingCode.postValue(response.code())
                             _uploadLists.postValue(ls.toMutableList())
-
                             withContext(Dispatchers.IO){
                                 val listExcludedWithNone = ls.filter { it.feedId != "none" }
                                 for (item in listExcludedWithNone) insertDatabaseUseCase(item)
@@ -103,6 +108,7 @@ class FeedViewModel(
                         for(item in offlinePosts){
                             ls.add(item)
                         }
+                        _feedLoadingCode.value = response.code()
                         _uploadLists.value = ls.toMutableList()
                     }
                 }
@@ -118,7 +124,9 @@ class FeedViewModel(
                     for(item in offlinePosts){
                         ls.add(item)
                     }
+                    _feedLoadingCode.value = -1
                     _uploadLists.value = ls.toMutableList()
+
                 }
 
 
