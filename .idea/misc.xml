@@ -22,6 +22,7 @@
         <entry key="app/src/main/res/layout/image_video_view.xml" value="0.10677083333333333" />
         <entry key="app/src/main/res/layout/loading_video_view.xml" value="0.1049682617187501" />
         <entry key="app/src/main/res/layout/no_post_screen.xml" value="0.16906127929687503" />
+        <entry key="app/src/main/res/layout/video_thumbnail_view.xml" value="0.18854166666666666" />
       </map>
     </option>
   </component>

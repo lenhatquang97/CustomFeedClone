@@ -13,13 +13,16 @@ fun convertFromUploadPostToMyPost(uploadPost: UploadPost, oldPost: List<MyPost>)
     myPost.name = uploadPost.name
     myPost.caption = uploadPost.caption
     myPost.createdTime = uploadPost.createdTime
-    for(i in 0 until uploadPost.imagesAndVideos.size){
-        val value = uploadPost.imagesAndVideos[i]
-        val fileSize = DownloadUtils.fileSizeFromInternet(value)
-        val anotherSize = oldPost.find { it.feedId == uploadPost.feedId }?.resources?.find { it.url == value }?.size
-        val actualFileSize = if (anotherSize != null && anotherSize > fileSize) anotherSize else fileSize
-        myPost.resources.add(OfflineResource(value, "", actualFileSize, 0L, DownloadStatus.NONE))
+    if(uploadPost.imagesAndVideos != null && uploadPost.imagesAndVideos.size > 0){
+        for(i in 0 until uploadPost.imagesAndVideos.size){
+            val value = uploadPost.imagesAndVideos[i]
+            val fileSize = DownloadUtils.fileSizeFromInternet(value)
+            val anotherSize = oldPost.find { it.feedId == uploadPost.feedId }?.resources?.find { it.url == value }?.size
+            val actualFileSize = if (anotherSize != null && anotherSize > fileSize) anotherSize else fileSize
+            myPost.resources.add(OfflineResource(value, "", actualFileSize, 0L, DownloadStatus.NONE))
+        }
     }
+
 
     return myPost
 }

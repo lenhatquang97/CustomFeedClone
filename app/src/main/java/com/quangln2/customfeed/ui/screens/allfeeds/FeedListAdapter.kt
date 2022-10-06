@@ -101,6 +101,10 @@ class FeedListAdapter(
                 binding.learnMore.visibility = View.VISIBLE
                 binding.learnLess.visibility = View.GONE
             }
+            if(item.resources.size == 0){
+                binding.loadingCircularIndicator.visibility = View.GONE
+                binding.customGridGroup.visibility = View.GONE
+            }
 
             CoroutineScope(Dispatchers.IO).launch {
                 for (i in 0 until item.resources.size) {
@@ -122,7 +126,7 @@ class FeedListAdapter(
                     } else {
                         item.resources[i].url
                     }
-                    if (value is String && value.contains("mp4")) {
+                    if (value.contains("mp4")) {
                         withContext(Dispatchers.Main) {
                             val videoView = LoadingVideoView(context, value)
                             videoView.layoutParams = LinearLayout.LayoutParams(
@@ -249,7 +253,7 @@ class FeedListDiffCallback : DiffUtil.ItemCallback<MyPost>() {
                 return false
             }
         }
-        return oldItem.feedId == newItem.feedId
+        return oldItem.feedId == newItem.feedId && oldItem.caption == newItem.caption && oldItem.avatar == newItem.avatar && oldItem.name == newItem.name && oldItem.createdTime == newItem.createdTime
     }
 
 

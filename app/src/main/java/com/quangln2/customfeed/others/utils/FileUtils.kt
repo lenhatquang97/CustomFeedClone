@@ -31,7 +31,7 @@ object FileUtils {
 
     fun convertUnixTimestampToTime(unixTimestamp: String): String {
         val date = if (unixTimestamp.isEmpty()) Date() else java.util.Date(unixTimestamp.toLong())
-        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm")
+        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy - HH:mm")
         sdf.timeZone = java.util.TimeZone.getTimeZone("GMT+7")
         return sdf.format(date)
     }

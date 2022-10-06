@@ -118,10 +118,12 @@
     <com.quangln2.customfeed.ui.customview.CustomGridGroup
         android:id="@+id/customGridGroup"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:padding="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/learn_less" />
+        app:layout_constraintTop_toBottomOf="@id/learn_less"
+        app:layout_constraintBottom_toTopOf="@id/delete_button"
+        />
 
     <ImageButton
         android:id="@+id/delete_button"

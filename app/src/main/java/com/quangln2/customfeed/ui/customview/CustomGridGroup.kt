@@ -24,7 +24,7 @@ class CustomGridGroup : ViewGroup {
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         if (childCount >= 1) {
             val firstChild = getChildAt(0)
-            if (firstChild is ImageView) {
+            if (firstChild is ImageView || firstChild is VideoThumbnailView) {
                 if (firstWidth > firstHeight) {
                     drawHorizontalGrid()
                 } else {

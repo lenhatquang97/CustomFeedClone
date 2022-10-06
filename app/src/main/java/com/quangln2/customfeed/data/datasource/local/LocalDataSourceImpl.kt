@@ -34,7 +34,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    override suspend fun delete(myPost: MyPost) = feedDao.delete(myPost)
+    override suspend fun delete(id: String) = feedDao.delete(id)
 
 
     override fun uploadMultipartBuilder(

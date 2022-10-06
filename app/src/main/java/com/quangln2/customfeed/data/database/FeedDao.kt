@@ -1,6 +1,9 @@
 package com.quangln2.customfeed.data.database
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
 import com.quangln2.customfeed.data.models.MyPost
 import kotlinx.coroutines.flow.Flow
 
@@ -15,8 +18,8 @@ interface FeedDao {
     @Update
     fun update(myPost: MyPost)
 
-    @Delete
-    fun delete(myPost: MyPost)
+    @Query("DELETE FROM my_post WHERE feed_id = :id")
+    fun delete(id: String)
 
     @Query("SELECT EXISTS(SELECT 1 FROM my_post WHERE feed_id = :feed_id)")
     fun existsWithId(feed_id: String): Int

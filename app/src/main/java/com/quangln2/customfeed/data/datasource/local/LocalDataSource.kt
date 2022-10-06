@@ -17,5 +17,5 @@ interface LocalDataSource {
     suspend fun insert(myPost: MyPost)
     fun getAll(): Flow<List<MyPost>>
     suspend fun update(myPost: MyPost)
-    suspend fun delete(myPost: MyPost)
+    suspend fun delete(id: String)
 }

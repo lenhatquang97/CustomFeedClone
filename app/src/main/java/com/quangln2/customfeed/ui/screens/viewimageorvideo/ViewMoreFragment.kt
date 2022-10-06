@@ -89,7 +89,9 @@ class ViewMoreFragment : Fragment() {
                                 imageView.setImageDrawable(resource)
                             }
                         })
-                    binding.extendedCustomGridGroup.addView(imageView)
+                    withContext(Dispatchers.Main){
+                        binding.extendedCustomGridGroup.addView(imageView)
+                    }
                 }
             }
         }

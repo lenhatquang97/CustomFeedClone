@@ -54,7 +54,13 @@ class AllFeedsFragment : Fragment() {
     ): View {
         binding = FragmentAllFeedsBinding.inflate(inflater, container, false)
         val eventCallback = object : EventFeedCallback {
-            override fun onDeleteItem(id: String) = viewModel.deleteFeed(id)
+            override fun onDeleteItem(id: String) {
+                val adapterDeleted = fun(position: Int) {
+                    adapterVal.notifyItemRemoved(position)
+                }
+                viewModel.deleteFeed(id, adapterDeleted)
+
+            }
             override fun onClickAddPost() =
                 findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment)
 
@@ -72,6 +78,7 @@ class AllFeedsFragment : Fragment() {
         binding.allFeeds.apply {
             adapter = adapterVal
             layoutManager = linearLayoutManager
+            animation = null
         }
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {

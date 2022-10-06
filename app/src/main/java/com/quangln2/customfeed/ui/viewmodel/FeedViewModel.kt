@@ -45,6 +45,9 @@ class FeedViewModel(
     private var _feedLoadingCode = MutableLiveData<Int>().apply { value = 0 }
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
+    private var _feedUploadingCode = MutableLiveData<Int>().apply { value = 0 }
+    val feedUploadingCode: LiveData<Int> = _feedUploadingCode
+
 
 
     fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context) {
@@ -55,13 +58,15 @@ class FeedViewModel(
                     println(response.body())
                     Log.d("UploadFile", "Success")
                     Toast.makeText(context, "Upload Success", Toast.LENGTH_SHORT).show()
-                    _isUploading.value = false
                 }
+                _feedUploadingCode.value = response.code()
+                _isUploading.value = false
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 Log.d("UploadFile", "Failure")
                 println(t.cause?.message)
+                _feedUploadingCode.value = -1
                 _isUploading.value = false
             }
 
@@ -71,6 +76,7 @@ class FeedViewModel(
     fun downloadAllResourcesWithUpdate(context: Context, uploadPosts: List<UploadPost>){
         viewModelScope.launch(Dispatchers.IO){
             for (item in uploadPosts){
+                if(item.imagesAndVideos == null) continue
                 for(urlObj in item.imagesAndVideos){
                     DownloadUtils.downloadResource(urlObj, context)
                 }
@@ -145,13 +151,18 @@ class FeedViewModel(
 
     }
 
-    fun deleteFeed(id: String) {
+    fun deleteFeed(id: String, adapterDeleted: (Int) -> Unit) {
         deleteFeedUseCase(id).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.code() == 200) {
+                    viewModelScope.launch(Dispatchers.IO){
+                        deleteDatabaseUseCase(id)
+                    }
                     val ls = uploadLists.value
-                    ls?.removeIf { it.feedId == id }
-                    _uploadLists.value = ls?.toMutableList()
+                    val index = ls?.indexOfFirst { it.feedId == id }
+                    _uploadLists.value = ls?.filter { it.feedId != id }?.toMutableList()
+                    if (index != null) adapterDeleted(index)
+
                 }
             }
 

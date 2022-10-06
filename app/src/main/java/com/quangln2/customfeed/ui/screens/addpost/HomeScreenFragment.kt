@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
-import android.widget.VideoView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -31,8 +30,8 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
-import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.CustomLayer
+import com.quangln2.customfeed.ui.customview.VideoThumbnailView
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
@@ -79,21 +78,16 @@ class HomeScreenFragment : Fragment() {
                                     listOfViews.add(imageView)
                                     if (listOfViews.size >= 10) listOfViews[8] = CustomLayer(requireContext())
                                 } else if (mimeType.startsWith("video/")) {
-                                    val videoView = VideoView(requireContext())
-                                    videoView.apply {
-                                        layoutParams = ViewGroup.LayoutParams(
-                                            ViewGroup.LayoutParams.MATCH_PARENT,
-                                            ViewGroup.LayoutParams.MATCH_PARENT
-                                        )
-                                        setVideoURI(uri)
-                                        setBackgroundDrawable(FileUtils.getVideoThumbnail(uri, requireContext()))
-                                        setOnClickListener {
-                                            videoView.setBackgroundDrawable(null)
-                                            videoView.seekTo(0)
-                                            videoView.start()
-                                        }
-                                    }
                                     withContext(Dispatchers.Main) {
+                                        val videoView = VideoThumbnailView(requireContext(), uri.toString())
+                                        videoView.apply {
+                                            layoutParams = ViewGroup.LayoutParams(
+                                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                                ViewGroup.LayoutParams.MATCH_PARENT
+                                            )
+                                            playButton.visibility = View.VISIBLE
+                                        }
+
                                         listOfViews.add(videoView)
                                         if (listOfViews.size >= 10) {
                                             listOfViews[8] = CustomLayer(requireContext())
@@ -140,27 +134,41 @@ class HomeScreenFragment : Fragment() {
 
 
     private fun uploadFiles() {
-        if (viewModel.uriLists.value?.isEmpty()!!) return
+        if (viewModel.uriLists.value!= null && viewModel.uriLists.value?.isNotEmpty()!!){
+            val uriListsForCompressing = compressImagesAndVideos(viewModel.uriLists.value!!)
+            if (viewModel.uriLists.value?.isEmpty()!!) {
+                Toast.makeText(requireContext(), "No file to upload", Toast.LENGTH_SHORT).show()
+                return
+            }
 
-        val uriListsForCompressing = compressImagesAndVideos(viewModel.uriLists.value!!)
-
-        println(uriListsForCompressing.value!!.joinToString { it.toString() })
-
-        if (viewModel.uriLists.value?.isEmpty()!!) {
-            Toast.makeText(requireContext(), "No file to upload", Toast.LENGTH_SHORT).show()
-            return
+            val parts = viewModel.uploadMultipartBuilder(
+                binding.textField.editText?.text.toString(),
+                uriListsForCompressing,
+                requireContext()
+            )
+            try {
+                viewModel.uploadFiles(parts, requireContext())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else {
+            val parts = viewModel.uploadMultipartBuilder(
+                binding.textField.editText?.text.toString(),
+                MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() },
+                requireContext()
+            )
+            try {
+                viewModel.uploadFiles(parts, requireContext())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
-        val parts = viewModel.uploadMultipartBuilder(
-            binding.textField.editText?.text.toString(),
-            uriListsForCompressing,
-            requireContext()
-        )
-        try {
-            viewModel.uploadFiles(parts, requireContext())
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+
+
+
+
+
 
 
     }
