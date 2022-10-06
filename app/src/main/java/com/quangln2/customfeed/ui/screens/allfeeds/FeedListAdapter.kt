@@ -224,11 +224,6 @@ class FeedListAdapter(
         }
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-
-    }
-
 
     override fun getItemId(position: Int): Long {
         return getItem(position).feedId.hashCode().toLong()

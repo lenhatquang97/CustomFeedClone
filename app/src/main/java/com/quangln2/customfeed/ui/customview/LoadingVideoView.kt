@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
-import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -23,6 +22,7 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var soundButton: ImageView
     lateinit var playerView: PlayerView
     lateinit var player: ExoPlayer
+
     var url = ""
     var isMute = false
     var isReleased = false
@@ -43,6 +43,7 @@ class LoadingVideoView @JvmOverloads constructor(
         soundButton = view.findViewById(R.id.sound_button)
         playerView = view.findViewById(R.id.player_view)
 
+
         soundButton.setOnClickListener {
             if (isMute) {
                 soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_on))
@@ -62,7 +63,7 @@ class LoadingVideoView @JvmOverloads constructor(
         player = ExoPlayer.Builder(context).build()
         playerView.player = player
 
-        player.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+        //player.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
 
         player.addListener(
             object : Player.Listener {
@@ -81,6 +82,8 @@ class LoadingVideoView @JvmOverloads constructor(
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
+
+        //playerView.background = FileUtils.getVideoThumbnail(Uri.parse(url), context, "")
     }
 
     private fun initPlayer(){
@@ -107,13 +110,14 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
         val width = MeasureSpec.getSize(widthMeasureSpec)
         val height = MeasureSpec.getSize(heightMeasureSpec)
 
         playerView.layoutParams.width = width
         playerView.layoutParams.height = height
         setMeasuredDimension(width, height)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -140,6 +144,8 @@ class LoadingVideoView @JvmOverloads constructor(
 
         player.release()
     }
+
+
 
 
 
