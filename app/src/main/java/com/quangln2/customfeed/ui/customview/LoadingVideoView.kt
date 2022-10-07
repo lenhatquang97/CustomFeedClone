@@ -22,7 +22,6 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var soundButton: ImageView
     lateinit var playerView: PlayerView
     lateinit var player: ExoPlayer
-
     var url = ""
     var isMute = false
     var isReleased = false
@@ -44,6 +43,7 @@ class LoadingVideoView @JvmOverloads constructor(
         playerView = view.findViewById(R.id.player_view)
 
 
+
         soundButton.setOnClickListener {
             if (isMute) {
                 soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_on))
@@ -63,8 +63,6 @@ class LoadingVideoView @JvmOverloads constructor(
         player = ExoPlayer.Builder(context).build()
         playerView.player = player
 
-        //player.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
-
         player.addListener(
             object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
@@ -78,12 +76,13 @@ class LoadingVideoView @JvmOverloads constructor(
 
             }
         )
-
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
 
-        //playerView.background = FileUtils.getVideoThumbnail(Uri.parse(url), context, "")
+
+        //playerView.background =
+        //(playerView.videoSurfaceView as SurfaceView).setZOrderOnTop(true)
     }
 
     private fun initPlayer(){
@@ -142,7 +141,9 @@ class LoadingVideoView @JvmOverloads constructor(
         currentPosition = player.currentPosition
         isReleased = true
 
+
         player.release()
+
     }
 
 

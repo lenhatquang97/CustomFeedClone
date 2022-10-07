@@ -13,6 +13,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.util.*
 
+
 object FileUtils {
     fun getRealPathFromURI(contentURI: Uri, context: Context): String? {
         val result: String?
@@ -45,6 +46,7 @@ object FileUtils {
         }
         val bitmap = retriever.getFrameAtTime(100)
         retriever.release()
+
         return BitmapDrawable(context.resources, bitmap)
     }
     fun getPermissionForStorage(context: Context, activity: Activity){

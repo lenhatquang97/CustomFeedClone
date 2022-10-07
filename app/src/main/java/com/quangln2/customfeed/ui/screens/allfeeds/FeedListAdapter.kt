@@ -224,7 +224,6 @@ class FeedListAdapter(
         }
     }
 
-
     override fun getItemId(position: Int): Long {
         return getItem(position).feedId.hashCode().toLong()
     }

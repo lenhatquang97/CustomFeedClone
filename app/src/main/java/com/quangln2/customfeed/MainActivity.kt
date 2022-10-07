@@ -25,12 +25,7 @@ class MainActivity : AppCompatActivity() {
 
         FileUtils.getPermissionForStorage(applicationContext, this)
 
-        val isConnected = connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo!!.isConnected
-        if(!isConnected) {
-            Snackbar.make(viewBinding.root, "No Internet connection. Switch to Offline mode", Snackbar.LENGTH_LONG).show()
-        }
-
-        connectivityManager.registerDefaultNetworkCallback(
+         connectivityManager.registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: android.net.Network) {
                     super.onAvailable(network)

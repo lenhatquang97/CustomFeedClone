@@ -82,12 +82,17 @@ class AllFeedsFragment : Fragment() {
         }
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                val itemPosition = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
-                scrollToPlayVideoInPosition(itemPosition, linearLayoutManager)
+                val manager = recyclerView.layoutManager
+                if(manager is LinearLayoutManager){
+                    val itemPosition = manager.findFirstCompletelyVisibleItemPosition()
+                    scrollToPlayVideoInPosition(itemPosition, manager)
+                }
+
             }
         })
 
         viewModel.uploadLists.observe(viewLifecycleOwner) {
+            binding.noPostId.root.visibility = View.VISIBLE
             println("Concerte ${viewModel.feedLoadingCode.value}")
             if (it != null && it.size > 1) {
                 binding.noPostId.root.visibility = View.INVISIBLE
