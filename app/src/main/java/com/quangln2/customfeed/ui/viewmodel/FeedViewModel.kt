@@ -105,6 +105,9 @@ class FeedViewModel(
                                 for (item in listExcludedWithNone) insertDatabaseUseCase(item)
                                 downloadAllResourcesWithUpdate(context, body)
                             }
+                        } else{
+                            _feedLoadingCode.postValue(response.code())
+                            _uploadLists.postValue(ls.toMutableList())
                         }
                     }
                 } else {
@@ -131,7 +134,15 @@ class FeedViewModel(
                         ls.add(item)
                     }
                     _feedLoadingCode.value = -1
-                    _uploadLists.value = ls.toMutableList()
+                    val firstItemImport = ls.first()
+                    val remainingItems = ls.filter { it.feedId != firstItemImport.feedId }
+                    val sortedList = remainingItems.sortedWith(
+                        compareByDescending<MyPost> { it.createdTime.toLong() }
+                    ) .toMutableList()
+                    val newLists = mutableListOf<MyPost>()
+                    newLists.add(firstItemImport)
+                    newLists.addAll(sortedList)
+                    _uploadLists.value = newLists.toMutableList()
 
                 }
 

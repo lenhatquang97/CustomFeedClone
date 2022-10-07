@@ -1,6 +1,7 @@
 package com.quangln2.customfeed
 
 import android.app.Application
+import com.cloudinary.android.MediaManager
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
@@ -10,6 +11,8 @@ class CustomFeedApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         updateAndroidSecurityProvider()
+
+        MediaManager.init(this)
     }
 
     private fun updateAndroidSecurityProvider() {

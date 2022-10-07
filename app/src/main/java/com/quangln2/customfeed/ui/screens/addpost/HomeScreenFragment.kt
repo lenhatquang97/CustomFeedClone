@@ -121,7 +121,7 @@ class HomeScreenFragment : Fragment() {
                 if (mimeTypeForMultipart.startsWith("image/")) {
                     val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
                     val out = FileOutputStream(file)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, out)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, out)
                     result.add(file.toUri())
                 } else if (mimeTypeForMultipart.startsWith("video/")) {
                     result.add(uri)

@@ -94,7 +94,9 @@ class AllFeedsFragment : Fragment() {
         viewModel.uploadLists.observe(viewLifecycleOwner) {
             binding.noPostId.root.visibility = View.VISIBLE
             println("Concerte ${viewModel.feedLoadingCode.value}")
-            if (it != null && it.size > 1) {
+            val condition1 = it != null && it.size >=1 && viewModel.feedLoadingCode.value == 200
+            val condition2 = it != null && it.size >=2
+            if (condition1 || condition2) {
                 binding.noPostId.root.visibility = View.INVISIBLE
                 adapterVal.submitList(it.toMutableList())
             } else {
