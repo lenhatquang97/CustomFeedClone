@@ -60,7 +60,6 @@ class FeedListAdapter(
     inner class FeedItemViewHolder constructor(private val binding: FeedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: MyPost, context: Context) {
-            println("Id: ${item.feedId}")
             binding.loadingCircularIndicator.visibility = View.VISIBLE
             if (binding.customGridGroup.size > 0) {
                 binding.loadingCircularIndicator.visibility = View.GONE
@@ -88,7 +87,10 @@ class FeedListAdapter(
             }
 
             binding.deleteButton.setOnClickListener {
-                eventFeedCallback.onDeleteItem(item.feedId)
+                val position = adapterPosition
+                val itr = currentList[position]
+
+                eventFeedCallback.onDeleteItem(itr.feedId)
             }
 
             binding.learnMore.setOnClickListener {
@@ -134,7 +136,10 @@ class FeedListAdapter(
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
                             videoView.setOnClickListener {
-                                eventFeedCallback.onClickVideoView(value)
+                                println("Click video ${item.resources.map { it.url }.toList()}")
+                                eventFeedCallback.onClickVideoView(item.resources[i].url,
+                                    item.resources.map{ it.url }.toList() as ArrayList<String>
+                                )
                             }
                             binding.loadingCircularIndicator.visibility = View.INVISIBLE
                             binding.customGridGroup.addView(videoView)
@@ -148,8 +153,11 @@ class FeedListAdapter(
                         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
                         imageView.setOnClickListener {
-                            eventFeedCallback.onClickVideoView(value)
+                            eventFeedCallback.onClickVideoView(item.resources[i].url,
+                                item.resources.map { it.url }.toList() as ArrayList<String>
+                                )
                         }
+
                         withContext(Dispatchers.Main) {
                             Glide.with(context).load(value).listener(
                                 object : RequestListener<Drawable> {
@@ -196,7 +204,13 @@ class FeedListAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return position
+        val item = currentList[position]
+        return item.feedId.hashCode()
+    }
+
+    override fun getItemId(position: Int): Long {
+        val id = currentList[position].feedId
+        return id.hashCode().toLong()
     }
 
     override fun onCreateViewHolder(
@@ -204,7 +218,7 @@ class FeedListAdapter(
         viewType: Int
     ): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        if (viewType == 0) {
+        if (viewType == "none".hashCode()) {
             val binding = FeedCardBinding.inflate(layoutInflater, parent, false)
             return this.AddNewItemViewHolder(binding)
         } else {
@@ -220,34 +234,20 @@ class FeedListAdapter(
         } else {
             val item = getItem(position)
             (holder as FeedItemViewHolder).bind(item, context)
-
         }
     }
-
-    override fun getItemId(position: Int): Long {
-        return getItem(position).feedId.hashCode().toLong()
-    }
-
 }
 
 class FeedListDiffCallback : DiffUtil.ItemCallback<MyPost>() {
     override fun areItemsTheSame(oldItem: MyPost, newItem: MyPost): Boolean {
-        return oldItem.feedId == newItem.feedId
+        return oldItem == newItem
     }
 
     override fun areContentsTheSame(
         oldItem: MyPost,
         newItem: MyPost
     ): Boolean {
-        if (oldItem.resources.size != newItem.resources.size) {
-            return false
-        }
-        for (i in 0 until oldItem.resources.size) {
-            if (oldItem.resources[i] != newItem.resources[i]) {
-                return false
-            }
-        }
-        return oldItem.feedId == newItem.feedId && oldItem.caption == newItem.caption && oldItem.avatar == newItem.avatar && oldItem.name == newItem.name && oldItem.createdTime == newItem.createdTime
+        return oldItem.feedId == newItem.feedId && oldItem.caption == newItem.caption && oldItem.resources == newItem.resources && oldItem.createdTime == newItem.createdTime
     }
 
 

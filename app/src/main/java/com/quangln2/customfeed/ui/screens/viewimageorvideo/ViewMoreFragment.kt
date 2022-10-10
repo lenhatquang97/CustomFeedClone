@@ -62,7 +62,10 @@ class ViewMoreFragment : Fragment() {
                         imageView.setOnClickListener {
                             findNavController().navigate(
                                 R.id.action_allFeedsFragment_to_viewFullVideoFragment,
-                                Bundle().apply { putString("url", value) })
+                                Bundle().apply {
+                                    putString("url", item.resources[i].url)
+                                    putStringArrayList("listOfUrls", item.resources.map { it.url }.toList() as ArrayList<String>)
+                                })
                         }
                         binding.extendedCustomGridGroup.addView(imageView)
                     }
@@ -77,7 +80,10 @@ class ViewMoreFragment : Fragment() {
                     imageView.setOnClickListener {
                         findNavController().navigate(
                             R.id.action_viewMoreFragment_to_viewFullVideoFragment,
-                            Bundle().apply { putString("url", value) })
+                            Bundle().apply {
+                                putString("url", item.resources[i].url)
+                                putStringArrayList("listOfUrls", item.resources.map { it.url }.toList() as ArrayList<String>)
+                            })
                     }
                     Glide.with(requireContext()).load(value).apply(requestOptions)
                         .into(object : SimpleTarget<Drawable>() {

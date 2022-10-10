@@ -3,20 +3,16 @@ package com.quangln2.customfeed.ui.screens.addpost
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -30,6 +26,7 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
+import com.quangln2.customfeed.others.utils.FileUtils.compressImagesAndVideos
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.VideoThumbnailView
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
@@ -37,9 +34,6 @@ import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
-import java.util.*
 
 
 class HomeScreenFragment : Fragment() {
@@ -112,30 +106,11 @@ class HomeScreenFragment : Fragment() {
         }
     }
 
-    private fun compressImagesAndVideos(uriLists: MutableList<Uri>): LiveData<MutableList<Uri>> {
-        val result: MutableList<Uri> = mutableListOf()
-        for (uri in uriLists) {
-            val mimeTypeForMultipart = context?.contentResolver?.getType(uri)
-            val file = File(requireContext().filesDir, "${UUID.randomUUID().toString()}.jpg")
-            if (mimeTypeForMultipart != null) {
-                if (mimeTypeForMultipart.startsWith("image/")) {
-                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
-                    val out = FileOutputStream(file)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, out)
-                    result.add(file.toUri())
-                } else if (mimeTypeForMultipart.startsWith("video/")) {
-                    result.add(uri)
-                }
-            }
-        }
-
-        return MutableLiveData<MutableList<Uri>>().apply { value = result }
-    }
 
 
     private fun uploadFiles() {
         if (viewModel.uriLists.value!= null && viewModel.uriLists.value?.isNotEmpty()!!){
-            val uriListsForCompressing = compressImagesAndVideos(viewModel.uriLists.value!!)
+            val uriListsForCompressing = compressImagesAndVideos(viewModel.uriLists.value!!, requireContext())
             if (viewModel.uriLists.value?.isEmpty()!!) {
                 Toast.makeText(requireContext(), "No file to upload", Toast.LENGTH_SHORT).show()
                 return

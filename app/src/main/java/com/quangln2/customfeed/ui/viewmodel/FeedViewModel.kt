@@ -15,6 +15,7 @@ import com.quangln2.customfeed.domain.*
 import com.quangln2.customfeed.others.utils.DownloadUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
@@ -47,6 +48,7 @@ class FeedViewModel(
 
     private var _feedUploadingCode = MutableLiveData<Int>().apply { value = 0 }
     val feedUploadingCode: LiveData<Int> = _feedUploadingCode
+
 
 
 
@@ -85,9 +87,33 @@ class FeedViewModel(
         }
     }
 
+    private fun loadCache(){
+        val ls = mutableListOf<MyPost>()
+        ls.add(MyPost().copy(feedId = "none"))
+        viewModelScope.launch(Dispatchers.Main){
+            val offlinePosts = getAllInDatabaseUseCase().last()
+            for(item in offlinePosts){
+                ls.add(item)
+            }
+            _feedLoadingCode.value = -1
+            val firstItemImport = ls.first()
+            val remainingItems = ls.filter { it.feedId != firstItemImport.feedId }
+            val sortedList = remainingItems.sortedWith(
+                compareByDescending<MyPost> { it.createdTime.toLong() }
+            ) .toMutableList()
+            val newLists = mutableListOf<MyPost>()
+            newLists.add(firstItemImport)
+            newLists.addAll(sortedList)
+            _uploadLists.value = newLists.toMutableList()
+
+        }
+    }
+
     fun getAllFeeds(context: Context) {
         getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
+                loadCache()
+
                 val ls = mutableListOf<MyPost>()
                 if (response.code() == 200) {
                     val body = response.body()
@@ -111,42 +137,14 @@ class FeedViewModel(
                         }
                     }
                 } else {
-                    ls.add(MyPost().copy(feedId = "none"))
-                    viewModelScope.launch(Dispatchers.Main){
-                        val offlinePosts = getAllInDatabaseUseCase().first()
-                        for(item in offlinePosts){
-                            ls.add(item)
-                        }
-                        _feedLoadingCode.value = response.code()
-                        _uploadLists.value = ls.toMutableList()
-                    }
+                    loadCache()
                 }
             }
 
             override fun onFailure(call: Call<MutableList<UploadPost>>, t: Throwable) {
                 Log.d("GetAllFeeds", "Failure")
                 println(t.cause?.message)
-                val ls = mutableListOf<MyPost>()
-                ls.add(MyPost().copy(feedId = "none"))
-                viewModelScope.launch(Dispatchers.Main){
-                    val offlinePosts = getAllInDatabaseUseCase().first()
-                    for(item in offlinePosts){
-                        ls.add(item)
-                    }
-                    _feedLoadingCode.value = -1
-                    val firstItemImport = ls.first()
-                    val remainingItems = ls.filter { it.feedId != firstItemImport.feedId }
-                    val sortedList = remainingItems.sortedWith(
-                        compareByDescending<MyPost> { it.createdTime.toLong() }
-                    ) .toMutableList()
-                    val newLists = mutableListOf<MyPost>()
-                    newLists.add(firstItemImport)
-                    newLists.addAll(sortedList)
-                    _uploadLists.value = newLists.toMutableList()
-
-                }
-
-
+                loadCache()
             }
 
         })
@@ -162,7 +160,7 @@ class FeedViewModel(
 
     }
 
-    fun deleteFeed(id: String, adapterDeleted: (Int) -> Unit) {
+    fun deleteFeed(id: String) {
         deleteFeedUseCase(id).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.code() == 200) {
@@ -170,9 +168,9 @@ class FeedViewModel(
                         deleteDatabaseUseCase(id)
                     }
                     val ls = uploadLists.value
-                    val index = ls?.indexOfFirst { it.feedId == id }
-                    _uploadLists.value = ls?.filter { it.feedId != id }?.toMutableList()
-                    if (index != null) adapterDeleted(index)
+                    val filteredList = ls?.filter { it.feedId != id }
+
+                    _uploadLists.value = filteredList?.toMutableList()
 
                 }
             }

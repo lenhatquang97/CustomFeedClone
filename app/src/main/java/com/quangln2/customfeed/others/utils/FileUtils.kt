@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.media.MediaMetadataRetriever
@@ -11,6 +12,11 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 
 
@@ -55,5 +61,25 @@ object FileUtils {
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
         }
+    }
+
+    fun compressImagesAndVideos(uriLists: MutableList<Uri>, context: Context): LiveData<MutableList<Uri>> {
+        val result: MutableList<Uri> = mutableListOf()
+        for (uri in uriLists) {
+            val mimeTypeForMultipart = context.contentResolver?.getType(uri)
+            val file = File(context.filesDir, "${UUID.randomUUID().toString()}.jpg")
+            if (mimeTypeForMultipart != null) {
+                if (mimeTypeForMultipart.startsWith("image/")) {
+                    val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                    val out = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, out)
+                    result.add(file.toUri())
+                } else if (mimeTypeForMultipart.startsWith("video/")) {
+                    result.add(uri)
+                }
+            }
+        }
+
+        return MutableLiveData<MutableList<Uri>>().apply { value = result }
     }
 }

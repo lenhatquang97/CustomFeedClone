@@ -19,7 +19,6 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
     override suspend fun insert(myPost: MyPost) {
-        println(feedDao.existsWithId(myPost.feedId))
         if(feedDao.existsWithId(myPost.feedId) == 0) {
             feedDao.insert(myPost)
         } else {

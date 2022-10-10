@@ -54,19 +54,18 @@ class AllFeedsFragment : Fragment() {
     ): View {
         binding = FragmentAllFeedsBinding.inflate(inflater, container, false)
         val eventCallback = object : EventFeedCallback {
-            override fun onDeleteItem(id: String) {
-                val adapterDeleted = fun(position: Int) {
-                    adapterVal.notifyItemRemoved(position)
-                }
-                viewModel.deleteFeed(id, adapterDeleted)
-
+            override fun onDeleteItem(id: String){
+                viewModel.deleteFeed(id)
             }
             override fun onClickAddPost() =
                 findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment)
 
-            override fun onClickVideoView(url: String) = findNavController().navigate(
+            override fun onClickVideoView(value: String, listOfUrls: ArrayList<String>) = findNavController().navigate(
                 R.id.action_allFeedsFragment_to_viewFullVideoFragment,
-                Bundle().apply { putString("url", url) })
+                Bundle().apply {
+                    putString("value", value)
+                    putStringArrayList("listOfUrls", listOfUrls)
+                })
 
             override fun onClickViewMore(id: String) = findNavController().navigate(
                 R.id.action_allFeedsFragment_to_viewMoreFragment,
@@ -75,6 +74,7 @@ class AllFeedsFragment : Fragment() {
 
         adapterVal = FeedListAdapter(requireContext(), eventCallback)
         val linearLayoutManager = LinearLayoutManager(requireContext())
+
         binding.allFeeds.apply {
             adapter = adapterVal
             layoutManager = linearLayoutManager
@@ -93,7 +93,6 @@ class AllFeedsFragment : Fragment() {
 
         viewModel.uploadLists.observe(viewLifecycleOwner) {
             binding.noPostId.root.visibility = View.VISIBLE
-            println("Concerte ${viewModel.feedLoadingCode.value}")
             val condition1 = it != null && it.size >=1 && viewModel.feedLoadingCode.value == 200
             val condition2 = it != null && it.size >=2
             if (condition1 || condition2) {
