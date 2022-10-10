@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.Player
@@ -58,18 +59,37 @@ class AllFeedsFragment : Fragment() {
                 viewModel.deleteFeed(id)
             }
             override fun onClickAddPost() =
-                findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment)
+                findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment, null, navOptions {
+                    anim {
+                        enter = android.R.animator.fade_in
+                        exit = android.R.animator.fade_out
+                    }
+                })
 
             override fun onClickVideoView(value: String, listOfUrls: ArrayList<String>) = findNavController().navigate(
                 R.id.action_allFeedsFragment_to_viewFullVideoFragment,
                 Bundle().apply {
                     putString("value", value)
                     putStringArrayList("listOfUrls", listOfUrls)
-                })
+                },
+                navOptions {
+                    anim {
+                        enter = android.R.animator.fade_in
+                        exit = android.R.animator.fade_out
+                    }
+                }
+            )
 
             override fun onClickViewMore(id: String) = findNavController().navigate(
                 R.id.action_allFeedsFragment_to_viewMoreFragment,
-                Bundle().apply { putString("id", id) })
+                Bundle().apply { putString("id", id) },
+                navOptions {
+                    anim {
+                        enter = android.R.animator.fade_in
+                        exit = android.R.animator.fade_out
+                    }
+                }
+            )
         }
 
         adapterVal = FeedListAdapter(requireContext(), eventCallback)

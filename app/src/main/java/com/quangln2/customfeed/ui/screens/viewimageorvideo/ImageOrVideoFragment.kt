@@ -72,8 +72,9 @@ class ImageOrVideoFragment : Fragment() {
         player.prepare()
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onDestroy() {
+        super.onDestroy()
+        println("Destroy")
         val url = arguments?.getString("url")
         if(url != null && url.contains("mp4")){
             player.release()

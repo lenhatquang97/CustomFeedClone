@@ -9,6 +9,7 @@ import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
@@ -65,7 +66,14 @@ class ViewMoreFragment : Fragment() {
                                 Bundle().apply {
                                     putString("url", item.resources[i].url)
                                     putStringArrayList("listOfUrls", item.resources.map { it.url }.toList() as ArrayList<String>)
-                                })
+                                },
+                                navOptions {
+                                    anim {
+                                        enter = android.R.animator.fade_in
+                                        exit = android.R.animator.fade_out
+                                    }
+                                }
+                            )
                         }
                         binding.extendedCustomGridGroup.addView(imageView)
                     }
@@ -83,7 +91,14 @@ class ViewMoreFragment : Fragment() {
                             Bundle().apply {
                                 putString("url", item.resources[i].url)
                                 putStringArrayList("listOfUrls", item.resources.map { it.url }.toList() as ArrayList<String>)
-                            })
+                            },
+                            navOptions {
+                                anim {
+                                    enter = android.R.animator.fade_in
+                                    exit = android.R.animator.fade_out
+                                }
+                            }
+                        )
                     }
                     Glide.with(requireContext()).load(value).apply(requestOptions)
                         .into(object : SimpleTarget<Drawable>() {

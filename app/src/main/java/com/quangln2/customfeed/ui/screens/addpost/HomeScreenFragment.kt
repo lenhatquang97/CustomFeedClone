@@ -16,6 +16,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
@@ -177,7 +178,12 @@ class HomeScreenFragment : Fragment() {
         }
         binding.buttonGetAllPosts.setOnClickListener {
             listOfViews.clear()
-            findNavController().navigate(R.id.action_homeScreenFragment_to_allFeedsFragment)
+            findNavController().navigate(R.id.action_homeScreenFragment_to_allFeedsFragment, null, navOptions {
+                anim {
+                    enter = android.R.animator.fade_in
+                    exit = android.R.animator.fade_out
+                }
+            })
 
         }
 
