@@ -23,7 +23,6 @@ import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
-import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.databinding.FeedCardBinding
 import com.quangln2.customfeed.databinding.FeedItemBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
@@ -213,7 +212,7 @@ class FeedListAdapter(
 
     override fun getItemViewType(position: Int): Int {
         val item = currentList[position]
-        return item.typeOfPost.value
+        return item.typeOfPost.hashCode()
     }
 
     override fun getItemId(position: Int): Long {
@@ -226,7 +225,7 @@ class FeedListAdapter(
         viewType: Int
     ): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        if (viewType == TypeOfPost.ADD_NEW_POST.value) {
+        if (viewType == "AddNewPost".hashCode()) {
             val binding = FeedCardBinding.inflate(layoutInflater, parent, false)
             return this.AddNewItemViewHolder(binding)
         } else {
@@ -239,7 +238,7 @@ class FeedListAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         val itemType = getItemViewType(position)
-        if (itemType == TypeOfPost.ADD_NEW_POST.value) {
+        if (itemType == "AddNewPost".hashCode()) {
             (holder as AddNewItemViewHolder).bind(context)
         } else {
             println("Bind item $position ${item.feedId}")

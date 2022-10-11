@@ -139,19 +139,15 @@ class HomeScreenFragment : Fragment() {
             resultLauncher.launch(pickerIntent)
         }
         binding.buttonSubmitToServer.setOnClickListener {
-            findNavController().navigate(R.id.action_homeScreenFragment_to_allFeedsFragment)
-            uploadFiles()
-        }
-        binding.buttonGetAllPosts.setOnClickListener {
-            listOfViews.clear()
             findNavController().navigate(R.id.action_homeScreenFragment_to_allFeedsFragment, null, navOptions {
                 anim {
                     enter = android.R.animator.fade_in
                     exit = android.R.animator.fade_out
                 }
             })
-
+            uploadFiles()
         }
+
 
         viewModel.uriLists.observe(viewLifecycleOwner) {
             if (listOfViews.size != 0) {

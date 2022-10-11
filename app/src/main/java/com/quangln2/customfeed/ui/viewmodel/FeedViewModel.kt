@@ -18,7 +18,6 @@ import com.quangln2.customfeed.data.models.UploadWorkerModel
 import com.quangln2.customfeed.data.models.datamodel.MyPost
 import com.quangln2.customfeed.data.models.datamodel.UploadPost
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
-import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.domain.*
 import com.quangln2.customfeed.domain.workmanager.UploadFileWorker
 import com.quangln2.customfeed.others.utils.DownloadUtils
@@ -146,7 +145,7 @@ class FeedViewModel(
             val indexOfFirst = ls.indexOfFirst { it.feedId == feedId }
             return MyPostRender.convertMyPostToMyPostRender(ls[indexOfFirst])
         }
-        return MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+        return MyPostRender.convertMyPostToMyPostRender(MyPost(), "AddNewPost")
 
     }
 

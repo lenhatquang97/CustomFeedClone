@@ -137,24 +137,6 @@
 
             </com.quangln2.customfeed.ui.customview.CustomGridGroup>
 
-
-
-
-
-
-            <ImageButton
-                android:id="@+id/buttonGetAllPosts"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:minWidth="48dp"
-                android:minHeight="48dp"
-                android:padding="16dp"
-                android:src="@drawable/news_feed"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/toolbar"
-                tools:ignore="SpeakableTextPresentCheck" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>

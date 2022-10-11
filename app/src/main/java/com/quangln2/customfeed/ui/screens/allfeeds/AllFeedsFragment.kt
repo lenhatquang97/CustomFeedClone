@@ -22,7 +22,6 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.models.datamodel.MyPost
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
-import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
@@ -122,7 +121,7 @@ class AllFeedsFragment : Fragment() {
             if (condition1 || condition2) {
                 binding.noPostId.root.visibility = View.INVISIBLE
                 val listsOfPostRender = mutableListOf<MyPostRender>()
-                listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(MyPost().copy(feedId = "none"), TypeOfPost.ADD_NEW_POST))
+                listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(MyPost().copy(feedId = "none"), "AddNewPost"))
                 it.forEach { itr -> listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(itr)) }
                 println("Render size: ${listsOfPostRender.joinToString { it.caption }}")
                 adapterVal.submitList(listsOfPostRender.toMutableList())
