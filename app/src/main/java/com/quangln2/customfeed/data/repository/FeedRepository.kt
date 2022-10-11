@@ -2,11 +2,10 @@ package com.quangln2.customfeed.data.repository
 
 import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.LiveData
 import com.quangln2.customfeed.data.datasource.local.LocalDataSource
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSource
-import com.quangln2.customfeed.data.models.MyPost
-import com.quangln2.customfeed.data.models.UploadPost
+import com.quangln2.customfeed.data.models.datamodel.MyPost
+import com.quangln2.customfeed.data.models.datamodel.UploadPost
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -18,7 +17,7 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
     fun deleteFeed(id: String): Call<ResponseBody> = remoteDataSource.deleteFeed(id)
     fun uploadMultipartBuilder(
         caption: String,
-        uriLists: LiveData<MutableList<Uri>>,
+        uriLists: MutableList<Uri>,
         context: Context
     ): List<MultipartBody.Part> = localDataSource.uploadMultipartBuilder(caption, uriLists, context)
 

@@ -25,8 +25,12 @@ class ImageOrVideoFragment : Fragment() {
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
         val position = arguments?.getInt("position")
 
-        if(listOfUrls != null && position != null){
-            val url = if(DownloadUtils.doesLocalFileExist(listOfUrls[position], requireContext())) DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext()) else listOfUrls[position]
+        if (listOfUrls != null && position != null) {
+            val url = if (DownloadUtils.doesLocalFileExist(
+                    listOfUrls[position],
+                    requireContext()
+                )
+            ) DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext()) else listOfUrls[position]
             if (url.contains(".mp4")) {
                 binding.fullVideoView.visibility = View.VISIBLE
                 binding.fullImageView.visibility = View.GONE
@@ -76,7 +80,7 @@ class ImageOrVideoFragment : Fragment() {
         super.onDestroy()
         println("Destroy")
         val url = arguments?.getString("url")
-        if(url != null && url.contains("mp4")){
+        if (url != null && url.contains("mp4")) {
             player.release()
         }
     }

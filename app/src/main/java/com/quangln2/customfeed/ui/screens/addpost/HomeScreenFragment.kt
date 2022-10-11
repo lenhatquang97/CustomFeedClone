@@ -3,17 +3,14 @@ package com.quangln2.customfeed.ui.screens.addpost
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
@@ -27,7 +24,6 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
-import com.quangln2.customfeed.others.utils.FileUtils.compressImagesAndVideos
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.VideoThumbnailView
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
@@ -108,45 +104,14 @@ class HomeScreenFragment : Fragment() {
     }
 
 
-
     private fun uploadFiles() {
-        if (viewModel.uriLists.value!= null && viewModel.uriLists.value?.isNotEmpty()!!){
-            val uriListsForCompressing = compressImagesAndVideos(viewModel.uriLists.value!!, requireContext())
-            if (viewModel.uriLists.value?.isEmpty()!!) {
-                Toast.makeText(requireContext(), "No file to upload", Toast.LENGTH_SHORT).show()
-                return
-            }
-
-            val parts = viewModel.uploadMultipartBuilder(
-                binding.textField.editText?.text.toString(),
-                uriListsForCompressing,
-                requireContext()
-            )
-            try {
-                viewModel.uploadFiles(parts, requireContext())
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        if (viewModel.uriLists.value != null && viewModel.uriLists.value?.isNotEmpty()!!) {
+            val caption = binding.textField.editText?.text.toString()
+            viewModel.uploadFiles(caption, viewModel.uriLists.value!!, requireContext())
         } else {
-            val parts = viewModel.uploadMultipartBuilder(
-                binding.textField.editText?.text.toString(),
-                MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() },
-                requireContext()
-            )
-            try {
-                viewModel.uploadFiles(parts, requireContext())
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            val caption = binding.textField.editText?.text.toString()
+            viewModel.uploadFiles(caption, mutableListOf(), requireContext())
         }
-
-
-
-
-
-
-
-
     }
 
 
@@ -159,7 +124,7 @@ class HomeScreenFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentHomeScreenBinding.inflate(inflater, container, false)
 
         val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
@@ -174,6 +139,7 @@ class HomeScreenFragment : Fragment() {
             resultLauncher.launch(pickerIntent)
         }
         binding.buttonSubmitToServer.setOnClickListener {
+            findNavController().navigate(R.id.action_homeScreenFragment_to_allFeedsFragment)
             uploadFiles()
         }
         binding.buttonGetAllPosts.setOnClickListener {
@@ -200,10 +166,6 @@ class HomeScreenFragment : Fragment() {
                     binding.customGridGroup.addView(viewChild)
                 }
             }
-        }
-
-        viewModel.isUploading.observe(viewLifecycleOwner) {
-            binding.progressBar.visibility = if (it) View.VISIBLE else View.GONE
         }
 
         return binding.root

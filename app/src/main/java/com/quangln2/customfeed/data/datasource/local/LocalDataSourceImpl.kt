@@ -3,15 +3,14 @@ package com.quangln2.customfeed.data.datasource.local
 import android.content.Context
 import android.net.Uri
 import androidx.annotation.WorkerThread
-import androidx.lifecycle.LiveData
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.database.FeedDao
-import com.quangln2.customfeed.data.models.MyPost
+import com.quangln2.customfeed.data.models.datamodel.MyPost
 import com.quangln2.customfeed.others.utils.FileUtils
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.util.*
 
@@ -19,7 +18,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
     override suspend fun insert(myPost: MyPost) {
-        if(feedDao.existsWithId(myPost.feedId) == 0) {
+        if (feedDao.existsWithId(myPost.feedId) == 0) {
             feedDao.insert(myPost)
         } else {
             feedDao.update(myPost)
@@ -39,7 +38,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
 
     override fun uploadMultipartBuilder(
         caption: String,
-        uriLists: LiveData<MutableList<Uri>>,
+        uriLists: MutableList<Uri>,
         context: Context
     ): List<MultipartBody.Part> {
         val builder = MultipartBody.Builder()
@@ -50,15 +49,16 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
         builder.addFormDataPart("createdTime", System.currentTimeMillis().toString())
         builder.addFormDataPart("caption", caption)
 
-        for (uriItr in uriLists.value!!) {
+        for (uriItr in uriLists) {
             val tmp = FileUtils.getRealPathFromURI(uriItr, context)
             if (tmp != null) {
                 val file = File(tmp)
-                val requestFile = RequestBody.create(
-                    if (uriItr.toString()
-                            .contains("mp4")
-                    ) "video/*".toMediaTypeOrNull() else "image/*".toMediaTypeOrNull(), file
-                )
+                val requestFile = file
+                    .asRequestBody(
+                        if (uriItr.toString()
+                                .contains("mp4")
+                        ) "video/*".toMediaTypeOrNull() else "image/*".toMediaTypeOrNull()
+                    )
                 builder.addFormDataPart("upload", file.name, requestFile)
             }
         }

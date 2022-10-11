@@ -1,6 +1,7 @@
 package com.quangln2.customfeed.data.controllers
 
 import android.view.View
+import androidx.lifecycle.MutableLiveData
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import java.util.*
 
@@ -10,6 +11,8 @@ data class VideoPlayed(
 )
 
 object FeedController {
+    var isLoading = MutableLiveData<Boolean>().apply { value = false }
+
     var videoQueue: Queue<VideoPlayed> = LinkedList()
     fun safeRemoveFromQueue() {
         if (videoQueue.size > 0) {

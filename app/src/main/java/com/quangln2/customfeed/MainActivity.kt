@@ -14,6 +14,7 @@ class MainActivity : AppCompatActivity() {
     private val connectivityManager by lazy {
         getSystemService(ConnectivityManager::class.java)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
@@ -25,7 +26,7 @@ class MainActivity : AppCompatActivity() {
 
         FileUtils.getPermissionForStorage(applicationContext, this)
 
-         connectivityManager.registerDefaultNetworkCallback(
+        connectivityManager.registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: android.net.Network) {
                     super.onAvailable(network)

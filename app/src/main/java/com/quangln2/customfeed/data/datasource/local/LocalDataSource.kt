@@ -2,15 +2,14 @@ package com.quangln2.customfeed.data.datasource.local
 
 import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.LiveData
-import com.quangln2.customfeed.data.models.MyPost
+import com.quangln2.customfeed.data.models.datamodel.MyPost
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MultipartBody
 
 interface LocalDataSource {
     fun uploadMultipartBuilder(
         caption: String,
-        uriLists: LiveData<MutableList<Uri>>,
+        uriLists: MutableList<Uri>,
         context: Context
     ): List<MultipartBody.Part>
 

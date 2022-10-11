@@ -22,7 +22,8 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.quangln2.customfeed.data.constants.ConstantClass
-import com.quangln2.customfeed.data.models.MyPost
+import com.quangln2.customfeed.data.models.uimodel.MyPostRender
+import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.databinding.FeedCardBinding
 import com.quangln2.customfeed.databinding.FeedItemBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
@@ -40,7 +41,7 @@ class FeedListAdapter(
     private var context: Context,
     private val eventFeedCallback: EventFeedCallback
 ) :
-    ListAdapter<MyPost, RecyclerView.ViewHolder>(
+    ListAdapter<MyPostRender, RecyclerView.ViewHolder>(
         AsyncDifferConfig.Builder(FeedListDiffCallback())
             .setBackgroundThreadExecutor(Executors.newSingleThreadExecutor())
             .build()
@@ -59,7 +60,7 @@ class FeedListAdapter(
 
     inner class FeedItemViewHolder constructor(private val binding: FeedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: MyPost, context: Context) {
+        fun bind(item: MyPostRender, context: Context) {
             binding.loadingCircularIndicator.visibility = View.VISIBLE
             if (binding.customGridGroup.size > 0) {
                 binding.loadingCircularIndicator.visibility = View.GONE
@@ -103,7 +104,7 @@ class FeedListAdapter(
                 binding.learnMore.visibility = View.VISIBLE
                 binding.learnLess.visibility = View.GONE
             }
-            if(item.resources.size == 0){
+            if (item.resources.size == 0) {
                 binding.loadingCircularIndicator.visibility = View.GONE
                 binding.customGridGroup.visibility = View.GONE
             }
@@ -123,7 +124,11 @@ class FeedListAdapter(
                         break
                     }
 
-                    val value = if(DownloadUtils.doesLocalFileExist(item.resources[i].url, context) && DownloadUtils.isValidFile(item.resources[i].url, context, item.resources[i].size)) {
+                    val value = if (DownloadUtils.doesLocalFileExist(
+                            item.resources[i].url,
+                            context
+                        ) && DownloadUtils.isValidFile(item.resources[i].url, context, item.resources[i].size)
+                    ) {
                         DownloadUtils.getTemporaryFilePath(item.resources[i].url, context)
                     } else {
                         item.resources[i].url
@@ -137,8 +142,9 @@ class FeedListAdapter(
                             )
                             videoView.setOnClickListener {
                                 println("Click video ${item.resources.map { it.url }.toList()}")
-                                eventFeedCallback.onClickVideoView(item.resources[i].url,
-                                    item.resources.map{ it.url }.toList() as ArrayList<String>
+                                eventFeedCallback.onClickVideoView(
+                                    item.resources[i].url,
+                                    item.resources.map { it.url }.toList() as ArrayList<String>
                                 )
                             }
                             binding.loadingCircularIndicator.visibility = View.INVISIBLE
@@ -153,9 +159,10 @@ class FeedListAdapter(
                         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
                         imageView.setOnClickListener {
-                            eventFeedCallback.onClickVideoView(item.resources[i].url,
+                            eventFeedCallback.onClickVideoView(
+                                item.resources[i].url,
                                 item.resources.map { it.url }.toList() as ArrayList<String>
-                                )
+                            )
                         }
 
                         withContext(Dispatchers.Main) {
@@ -203,9 +210,10 @@ class FeedListAdapter(
 
     }
 
+
     override fun getItemViewType(position: Int): Int {
         val item = currentList[position]
-        return item.feedId.hashCode()
+        return item.typeOfPost.value
     }
 
     override fun getItemId(position: Int): Long {
@@ -218,7 +226,7 @@ class FeedListAdapter(
         viewType: Int
     ): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        if (viewType == "none".hashCode()) {
+        if (viewType == TypeOfPost.ADD_NEW_POST.value) {
             val binding = FeedCardBinding.inflate(layoutInflater, parent, false)
             return this.AddNewItemViewHolder(binding)
         } else {
@@ -229,25 +237,27 @@ class FeedListAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (position == 0) {
+        val item = getItem(position)
+        val itemType = getItemViewType(position)
+        if (itemType == TypeOfPost.ADD_NEW_POST.value) {
             (holder as AddNewItemViewHolder).bind(context)
         } else {
-            val item = getItem(position)
+            println("Bind item $position ${item.feedId}")
             (holder as FeedItemViewHolder).bind(item, context)
         }
     }
 }
 
-class FeedListDiffCallback : DiffUtil.ItemCallback<MyPost>() {
-    override fun areItemsTheSame(oldItem: MyPost, newItem: MyPost): Boolean {
+class FeedListDiffCallback : DiffUtil.ItemCallback<MyPostRender>() {
+    override fun areItemsTheSame(oldItem: MyPostRender, newItem: MyPostRender): Boolean {
         return oldItem == newItem
     }
 
     override fun areContentsTheSame(
-        oldItem: MyPost,
-        newItem: MyPost
+        oldItem: MyPostRender,
+        newItem: MyPostRender
     ): Boolean {
-        return oldItem.feedId == newItem.feedId && oldItem.caption == newItem.caption && oldItem.resources == newItem.resources && oldItem.createdTime == newItem.createdTime
+        return oldItem.typeOfPost == newItem.typeOfPost && oldItem.feedId == newItem.feedId && oldItem.caption == newItem.caption && oldItem.resources == newItem.resources && oldItem.createdTime == newItem.createdTime
     }
 
 

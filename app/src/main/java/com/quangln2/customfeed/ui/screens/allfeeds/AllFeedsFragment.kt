@@ -20,6 +20,9 @@ import com.quangln2.customfeed.data.controllers.VideoPlayed
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
+import com.quangln2.customfeed.data.models.datamodel.MyPost
+import com.quangln2.customfeed.data.models.uimodel.MyPostRender
+import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
@@ -55,9 +58,10 @@ class AllFeedsFragment : Fragment() {
     ): View {
         binding = FragmentAllFeedsBinding.inflate(inflater, container, false)
         val eventCallback = object : EventFeedCallback {
-            override fun onDeleteItem(id: String){
+            override fun onDeleteItem(id: String) {
                 viewModel.deleteFeed(id)
             }
+
             override fun onClickAddPost() =
                 findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment, null, navOptions {
                     anim {
@@ -103,7 +107,7 @@ class AllFeedsFragment : Fragment() {
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager
-                if(manager is LinearLayoutManager){
+                if (manager is LinearLayoutManager) {
                     val itemPosition = manager.findFirstCompletelyVisibleItemPosition()
                     scrollToPlayVideoInPosition(itemPosition, manager)
                 }
@@ -113,18 +117,23 @@ class AllFeedsFragment : Fragment() {
 
         viewModel.uploadLists.observe(viewLifecycleOwner) {
             binding.noPostId.root.visibility = View.VISIBLE
-            val condition1 = it != null && it.size >=1 && viewModel.feedLoadingCode.value == 200
-            val condition2 = it != null && it.size >=2
+            val condition1 = it != null && it.size >= 1 && viewModel.feedLoadingCode.value == 200
+            val condition2 = it != null && it.size >= 2
             if (condition1 || condition2) {
                 binding.noPostId.root.visibility = View.INVISIBLE
-                adapterVal.submitList(it.toMutableList())
+                val listsOfPostRender = mutableListOf<MyPostRender>()
+                listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(MyPost().copy(feedId = "none"), TypeOfPost.ADD_NEW_POST))
+                it.forEach { itr -> listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(itr)) }
+                println("Render size: ${listsOfPostRender.joinToString { it.caption }}")
+                adapterVal.submitList(listsOfPostRender.toMutableList())
             } else {
-                if(viewModel.feedLoadingCode.value != null){
-                    if(viewModel.feedLoadingCode.value!! != 200 && viewModel.feedLoadingCode.value!! != 0) {
+                if (viewModel.feedLoadingCode.value != null) {
+                    if (viewModel.feedLoadingCode.value!! != 200 && viewModel.feedLoadingCode.value!! != 0) {
                         binding.noPostId.root.visibility = View.VISIBLE
                         binding.noPostId.alertView.visibility = View.VISIBLE
                         binding.noPostId.imageView.visibility = View.INVISIBLE
-                        binding.noPostId.textNote.text = "Sorry that we can't load your feed cache. Swipe down to try again.\n Exception code: ${viewModel.feedLoadingCode.value}"
+                        binding.noPostId.textNote.text =
+                            "Sorry that we can't load your feed cache. Swipe down to try again.\n Exception code: ${viewModel.feedLoadingCode.value}"
                     }
                 }
             }
@@ -137,6 +146,11 @@ class AllFeedsFragment : Fragment() {
             viewModel.getAllFeeds(requireContext())
             binding.swipeRefreshLayout.isRefreshing = false
 
+        }
+
+
+        FeedController.isLoading.observe(viewLifecycleOwner){
+            binding.loadingCard.root.visibility = if(it) View.VISIBLE else View.GONE
         }
 
         return binding.root
@@ -166,7 +180,7 @@ class AllFeedsFragment : Fragment() {
 
         if (firstCondition || secondCondition) {
             val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
-            if(customGridGroup != null){
+            if (customGridGroup != null) {
                 lifecycleScope.launch(Dispatchers.Main) {
                     for (i in 0 until customGridGroup.size) {
                         val view = customGridGroup.getChildAt(i)
@@ -177,7 +191,7 @@ class AllFeedsFragment : Fragment() {
                     } else if (FeedController.videoQueue.size > 1) {
                         Log.d("CustomFeed", "Queue size ${FeedController.videoQueue.size}")
                         Log.d("CustomFeed", FeedController.videoQueue.joinToString { it.toString() })
-                        if(!checkWhetherHaveMoreThanTwoVideosInPost()) {
+                        if (!checkWhetherHaveMoreThanTwoVideosInPost()) {
                             pauseVideo()
                             playVideo()
                         }
@@ -196,7 +210,7 @@ class AllFeedsFragment : Fragment() {
         if (mainItemIndex != null && videoIndex != null && anotherMainItemIndex != null && anotherVideoIndex != null) {
             FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
             FeedController.videoQueue.add(VideoPlayed(anotherMainItemIndex, anotherVideoIndex))
-            if(mainItemIndex == anotherMainItemIndex) return true
+            if (mainItemIndex == anotherMainItemIndex) return true
         }
         return false
     }

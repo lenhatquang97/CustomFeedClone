@@ -19,7 +19,7 @@ import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
-import com.quangln2.customfeed.data.models.MyPost
+import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentViewMoreBinding
 import com.quangln2.customfeed.others.utils.DownloadUtils
@@ -41,7 +41,7 @@ class ViewMoreFragment : Fragment() {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
-    private lateinit var item: MyPost
+    private lateinit var item: MyPostRender
     private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
 
     private fun fetchPostById(id: String) {
@@ -54,8 +54,14 @@ class ViewMoreFragment : Fragment() {
 
         CoroutineScope(Dispatchers.IO).launch {
             for (i in 0 until item.resources.size) {
-                val existsLocal = DownloadUtils.doesLocalFileExist(item.resources[i].url, requireContext()) && DownloadUtils.isValidFile(item.resources[i].url, requireContext(), item.resources[i].size)
-                val value = if(existsLocal) DownloadUtils.getTemporaryFilePath(item.resources[i].url, requireContext()) else item.resources[i].url
+                val existsLocal = DownloadUtils.doesLocalFileExist(
+                    item.resources[i].url,
+                    requireContext()
+                ) && DownloadUtils.isValidFile(item.resources[i].url, requireContext(), item.resources[i].size)
+                val value = if (existsLocal) DownloadUtils.getTemporaryFilePath(
+                    item.resources[i].url,
+                    requireContext()
+                ) else item.resources[i].url
                 if (value.contains("mp4")) {
                     withContext(Dispatchers.Main) {
                         val imageView = ImageView(context)
@@ -65,7 +71,10 @@ class ViewMoreFragment : Fragment() {
                                 R.id.action_allFeedsFragment_to_viewFullVideoFragment,
                                 Bundle().apply {
                                     putString("url", item.resources[i].url)
-                                    putStringArrayList("listOfUrls", item.resources.map { it.url }.toList() as ArrayList<String>)
+                                    putStringArrayList(
+                                        "listOfUrls",
+                                        item.resources.map { it.url }.toList() as ArrayList<String>
+                                    )
                                 },
                                 navOptions {
                                     anim {
@@ -90,7 +99,10 @@ class ViewMoreFragment : Fragment() {
                             R.id.action_viewMoreFragment_to_viewFullVideoFragment,
                             Bundle().apply {
                                 putString("url", item.resources[i].url)
-                                putStringArrayList("listOfUrls", item.resources.map { it.url }.toList() as ArrayList<String>)
+                                putStringArrayList(
+                                    "listOfUrls",
+                                    item.resources.map { it.url }.toList() as ArrayList<String>
+                                )
                             },
                             navOptions {
                                 anim {
@@ -110,13 +122,14 @@ class ViewMoreFragment : Fragment() {
                                 imageView.setImageDrawable(resource)
                             }
                         })
-                    withContext(Dispatchers.Main){
+                    withContext(Dispatchers.Main) {
                         binding.extendedCustomGridGroup.addView(imageView)
                     }
                 }
             }
         }
     }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

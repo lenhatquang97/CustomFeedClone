@@ -1,6 +1,6 @@
 package com.quangln2.customfeed.data.datasource.remote
 
-import com.quangln2.customfeed.data.models.UploadPost
+import com.quangln2.customfeed.data.models.datamodel.UploadPost
 import com.quangln2.customfeed.others.singleton.RetrofitSetup
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody

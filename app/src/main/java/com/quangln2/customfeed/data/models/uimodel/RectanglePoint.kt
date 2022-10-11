@@ -1,4 +1,4 @@
-package com.quangln2.customfeed.data.models
+package com.quangln2.customfeed.data.models.uimodel
 
 class APoint(var x: Float, var y: Float) {
     fun set(x: Float, y: Float) {

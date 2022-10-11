@@ -3,15 +3,24 @@ package com.quangln2.customfeed.ui.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import com.google.gson.Gson
+import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
-import com.quangln2.customfeed.data.models.MyPost
-import com.quangln2.customfeed.data.models.UploadPost
+import com.quangln2.customfeed.data.models.UploadWorkerModel
+import com.quangln2.customfeed.data.models.datamodel.MyPost
+import com.quangln2.customfeed.data.models.datamodel.UploadPost
+import com.quangln2.customfeed.data.models.uimodel.MyPostRender
+import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.domain.*
+import com.quangln2.customfeed.domain.workmanager.UploadFileWorker
 import com.quangln2.customfeed.others.utils.DownloadUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -46,40 +55,30 @@ class FeedViewModel(
     private var _feedLoadingCode = MutableLiveData<Int>().apply { value = 0 }
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
-    private var _feedUploadingCode = MutableLiveData<Int>().apply { value = 0 }
-    val feedUploadingCode: LiveData<Int> = _feedUploadingCode
 
 
+    fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
+        FeedController.isLoading.value = true
 
+        val uriStringLists = uriLists.map { it.toString() }
+        val uploadWorkerModel = UploadWorkerModel(caption, uriStringLists)
 
-    fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context) {
-        _isUploading.value = true
-        uploadPostUseCase(requestBody).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if (response.code() == 200) {
-                    println(response.body())
-                    Log.d("UploadFile", "Success")
-                    Toast.makeText(context, "Upload Success", Toast.LENGTH_SHORT).show()
-                }
-                _feedUploadingCode.value = response.code()
-                _isUploading.value = false
-            }
+        val jsonString = Gson().toJson(uploadWorkerModel)
+        val inputData = Data.Builder().putString("jsonString", jsonString).build()
 
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.d("UploadFile", "Failure")
-                println(t.cause?.message)
-                _feedUploadingCode.value = -1
-                _isUploading.value = false
-            }
+        val oneTimeWorkRequest = OneTimeWorkRequest.Builder(UploadFileWorker::class.java)
+            .setInputData(inputData)
+            .build()
 
-        })
+        val workManager = WorkManager.getInstance(context).beginUniqueWork("ForegroundWorker", ExistingWorkPolicy.APPEND_OR_REPLACE, oneTimeWorkRequest)
+        workManager.enqueue()
     }
 
-    fun downloadAllResourcesWithUpdate(context: Context, uploadPosts: List<UploadPost>){
-        viewModelScope.launch(Dispatchers.IO){
-            for (item in uploadPosts){
-                if(item.imagesAndVideos == null) continue
-                for(urlObj in item.imagesAndVideos){
+    fun downloadAllResourcesWithUpdate(context: Context, uploadPosts: List<UploadPost>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            for (item in uploadPosts) {
+                if (item.imagesAndVideos == null) continue
+                for (urlObj in item.imagesAndVideos) {
                     DownloadUtils.downloadResource(urlObj, context)
                 }
             }
@@ -87,24 +86,15 @@ class FeedViewModel(
         }
     }
 
-    private fun loadCache(){
+    private fun loadCache() {
         val ls = mutableListOf<MyPost>()
-        ls.add(MyPost().copy(feedId = "none"))
-        viewModelScope.launch(Dispatchers.Main){
+        viewModelScope.launch(Dispatchers.Main) {
             val offlinePosts = getAllInDatabaseUseCase().last()
-            for(item in offlinePosts){
+            for (item in offlinePosts) {
                 ls.add(item)
             }
             _feedLoadingCode.value = -1
-            val firstItemImport = ls.first()
-            val remainingItems = ls.filter { it.feedId != firstItemImport.feedId }
-            val sortedList = remainingItems.sortedWith(
-                compareByDescending<MyPost> { it.createdTime.toLong() }
-            ) .toMutableList()
-            val newLists = mutableListOf<MyPost>()
-            newLists.add(firstItemImport)
-            newLists.addAll(sortedList)
-            _uploadLists.value = newLists.toMutableList()
+            _uploadLists.value = ls.toMutableList()
 
         }
     }
@@ -113,31 +103,31 @@ class FeedViewModel(
         getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
                 loadCache()
-
-                val ls = mutableListOf<MyPost>()
                 if (response.code() == 200) {
+                    val ls = mutableListOf<MyPost>()
                     val body = response.body()
-                    ls.add(MyPost().copy(feedId = "none"))
-                    viewModelScope.launch(Dispatchers.IO){
+                    viewModelScope.launch(Dispatchers.IO) {
                         val offlinePosts = getAllInDatabaseUseCase().first()
-                        if(body != null){
-                            for(i in 0 until body.size){
-                                ls.add(convertFromUploadPostToMyPost(body[i], offlinePosts))
+                        if (body != null) {
+                            body.forEach {
+                                val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
+                                ls.add(itemConverted)
                             }
-                            _feedLoadingCode.postValue(response.code())
-                            _uploadLists.postValue(ls.toMutableList())
-                            withContext(Dispatchers.IO){
-                                val listExcludedWithNone = ls.filter { it.feedId != "none" }
-                                for (item in listExcludedWithNone) insertDatabaseUseCase(item)
+                            println("ls: ${ls.joinToString { it.caption }}")
+                            withContext(Dispatchers.Main){
+                                _feedLoadingCode.value = response.code()
+                                _uploadLists.value = ls.toMutableList()
+                            }
+
+                            withContext(Dispatchers.IO) {
+                                ls.forEach { insertDatabaseUseCase(it) }
                                 downloadAllResourcesWithUpdate(context, body)
                             }
-                        } else{
+                        } else {
                             _feedLoadingCode.postValue(response.code())
                             _uploadLists.postValue(ls.toMutableList())
                         }
                     }
-                } else {
-                    loadCache()
                 }
             }
 
@@ -150,13 +140,13 @@ class FeedViewModel(
         })
     }
 
-    fun getFeedItem(feedId: String): MyPost {
+    fun getFeedItem(feedId: String): MyPostRender {
         val ls = _uploadLists.value
         if (ls != null) {
             val indexOfFirst = ls.indexOfFirst { it.feedId == feedId }
-            return ls[indexOfFirst]
+            return MyPostRender.convertMyPostToMyPostRender(ls[indexOfFirst])
         }
-        return MyPost().copy(feedId = "none")
+        return MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
 
     }
 
@@ -164,7 +154,7 @@ class FeedViewModel(
         deleteFeedUseCase(id).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.code() == 200) {
-                    viewModelScope.launch(Dispatchers.IO){
+                    viewModelScope.launch(Dispatchers.IO) {
                         deleteDatabaseUseCase(id)
                     }
                     val ls = uploadLists.value
@@ -185,7 +175,7 @@ class FeedViewModel(
 
     fun uploadMultipartBuilder(
         caption: String,
-        uriLists: LiveData<MutableList<Uri>>,
+        uriLists: MutableList<Uri>,
         context: Context
     ): List<MultipartBody.Part> {
         return uploadMultipartBuilderUseCase(caption, uriLists, context)

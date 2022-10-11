@@ -13,8 +13,6 @@ import android.provider.MediaStore
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -55,21 +53,24 @@ object FileUtils {
 
         return BitmapDrawable(context.resources, bitmap)
     }
-    fun getPermissionForStorage(context: Context, activity: Activity){
-        val permissionCheck = ContextCompat.checkSelfPermission(context,
-            android.Manifest.permission.READ_EXTERNAL_STORAGE)
+
+    fun getPermissionForStorage(context: Context, activity: Activity) {
+        val permissionCheck = ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        )
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
         }
     }
 
-    fun compressImagesAndVideos(uriLists: MutableList<Uri>, context: Context): LiveData<MutableList<Uri>> {
+    fun compressImagesAndVideos(uriLists: MutableList<Uri>, context: Context): MutableList<Uri> {
         val result: MutableList<Uri> = mutableListOf()
         for (uri in uriLists) {
             val mimeTypeForMultipart = context.contentResolver?.getType(uri)
-            val file = File(context.filesDir, "${UUID.randomUUID().toString()}.jpg")
             if (mimeTypeForMultipart != null) {
                 if (mimeTypeForMultipart.startsWith("image/")) {
+                    val file = File(context.filesDir, "${UUID.randomUUID()}.jpg")
                     val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
                     val out = FileOutputStream(file)
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 50, out)
@@ -80,6 +81,6 @@ object FileUtils {
             }
         }
 
-        return MutableLiveData<MutableList<Uri>>().apply { value = result }
+        return result
     }
 }

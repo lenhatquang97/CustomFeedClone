@@ -6,7 +6,7 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.VideoView
-import com.quangln2.customfeed.data.models.RectanglePoint
+import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
 
 class ExtendedCustomGridGroup : ViewGroup {
     private val rectangles = mutableListOf<RectanglePoint>()
@@ -15,9 +15,9 @@ class ExtendedCustomGridGroup : ViewGroup {
     var firstWidth = 0
     var firstHeight = 0
 
-    constructor(context: Context) : super(context) {}
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {}
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {}
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     @SuppressLint("DrawAllocation")
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {

@@ -1,4 +1,4 @@
-package com.quangln2.customfeed.data.models
+package com.quangln2.customfeed.data.models.datamodel
 
 import com.google.gson.annotations.SerializedName
 import java.util.*
@@ -12,4 +12,4 @@ data class UploadPost(
     @SerializedName("imagesAndVideos") var imagesAndVideos: MutableList<String> = mutableListOf(),
     //Transient
     @Transient var localPaths: MutableList<String> = mutableListOf()
-    )
+)

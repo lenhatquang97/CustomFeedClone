@@ -7,7 +7,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 class FullImageVideoAdapter(
     private val fragment: Fragment,
     private val listOfUrls: ArrayList<String>
-    ): FragmentStateAdapter(fragment){
+) : FragmentStateAdapter(fragment) {
     override fun getItemCount(): Int {
         return listOfUrls.size
     }

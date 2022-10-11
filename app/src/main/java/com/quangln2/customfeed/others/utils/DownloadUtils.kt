@@ -1,4 +1,3 @@
-
 package com.quangln2.customfeed.others.utils
 
 import android.content.Context
@@ -26,56 +25,58 @@ object DownloadUtils {
         return response.body?.contentLength() ?: 0
     }
 
-    fun doesLocalFileExist(url: String, context: Context): Boolean{
+    fun doesLocalFileExist(url: String, context: Context): Boolean {
         val fileName = URLUtil.guessFileName(url, null, null)
         val file = File(context.cacheDir, fileName)
         return file.exists()
     }
-    fun isValidFile(url: String, context: Context, anotherSize: Long): Boolean{
+
+    fun isValidFile(url: String, context: Context, anotherSize: Long): Boolean {
         val fileName = URLUtil.guessFileName(url, null, null)
         val file = File(context.cacheDir, fileName)
-        if(!file.exists()) return false
-        try{
-            if(file.length() == anotherSize && anotherSize != 0L){
+        if (!file.exists()) return false
+        try {
+            if (file.length() == anotherSize && anotherSize != 0L) {
                 return true
             } else {
                 file.delete()
             }
-        } catch(e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
         return false
     }
 
-    fun getTemporaryFilePath(url: String, context: Context): String{
+    fun getTemporaryFilePath(url: String, context: Context): String {
         val fileName = URLUtil.guessFileName(url, null, null)
         val file = File(context.cacheDir, fileName)
         return file.absolutePath
     }
 
-    fun downloadResource(url: String, context: Context){
-        if(doesLocalFileExist(url, context)) return
+    fun downloadResource(url: String, context: Context) {
+        if (doesLocalFileExist(url, context)) return
         val mimeType = getMimeType(url)
-        if(mimeType != null){
-            if(mimeType.contains("image")){
+        if (mimeType != null) {
+            if (mimeType.contains("image")) {
                 downloadImage(url, context)
-            } else if(mimeType.contains("video")){
+            } else if (mimeType.contains("video")) {
                 downloadVideo(url, context)
             }
         }
     }
-    private fun downloadImage(imageUrl: String, context: Context){
+
+    private fun downloadImage(imageUrl: String, context: Context) {
         val fileName = URLUtil.guessFileName(imageUrl, null, null)
         val file = File(context.cacheDir, fileName)
         Glide.with(context).load(imageUrl).into(
-            object : CustomTarget<Drawable>(){
+            object : CustomTarget<Drawable>() {
                 override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                    try{
+                    try {
                         val bitmap = (resource as BitmapDrawable).bitmap
                         val fout = FileOutputStream(file)
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fout)
                         fout.close()
-                    } catch (e: Exception){
+                    } catch (e: Exception) {
                         Toast.makeText(context, "Oh no", Toast.LENGTH_SHORT).show()
                         e.printStackTrace()
                     }
@@ -87,7 +88,7 @@ object DownloadUtils {
         )
     }
 
-    private fun downloadVideo(videoUrl: String, context: Context){
+    private fun downloadVideo(videoUrl: String, context: Context) {
         val req = Request.Builder().url(videoUrl).build()
         val fileName = URLUtil.guessFileName(videoUrl, null, null)
         val file = File(context.cacheDir, fileName)
@@ -95,8 +96,9 @@ object DownloadUtils {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
             }
+
             override fun onResponse(call: Call, response: Response) {
-                if(response.isSuccessful){
+                if (response.isSuccessful) {
                     val fout = FileOutputStream(file)
                     write(response.body!!.byteStream(), fout)
                     fout.close()
@@ -122,6 +124,7 @@ object DownloadUtils {
             return totalBytes
         }
     }
+
     private fun getMimeType(url: String?): String? {
         var type: String? = null
         val extension = MimeTypeMap.getFileExtensionFromUrl(url)

@@ -8,4 +8,7 @@
     <string name="get_all_posts">Get All Posts</string>
     <string name="send_to_server">Send To Server</string>
     <string name="avatar">Avatar</string>
+    <string name="channel_name">FeedPost</string>
+    <string name="channel_description">Post your feed</string>
+    <string name="channel_id">FeedPost</string>
 </resources>

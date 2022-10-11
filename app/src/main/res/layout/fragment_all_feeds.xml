@@ -5,28 +5,41 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.screens.allfeeds.AllFeedsFragment">
+    <include
+        android:id="@+id/no_post_id"
+        layout="@layout/no_post_screen" />
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:descendantFocusability="blocksDescendants">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/allFeeds"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <include
-                android:id="@+id/no_post_id"
-                android:visibility="invisible"
-                layout="@layout/no_post_screen"/>
+                android:id="@+id/loading_card"
+                android:visibility="gone"
+                layout="@layout/loading_card"
+                />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/allFeeds"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    />
+            </androidx.core.widget.NestedScrollView>
+
+
+
+
+
+        </LinearLayout>
+
 
 
 

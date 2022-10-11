@@ -9,13 +9,14 @@ import android.widget.ImageView
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.others.utils.FileUtils.getVideoThumbnail
 
-class VideoThumbnailView  @JvmOverloads constructor(
+class VideoThumbnailView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
     constructor(context: Context, url: String) : this(context) {
         this.url = url
         init()
     }
+
     var url = ""
     lateinit var thumbnailView: ImageView
     lateinit var playButton: ImageView
@@ -28,6 +29,7 @@ class VideoThumbnailView  @JvmOverloads constructor(
         thumbnailView.setImageDrawable(getVideoThumbnail(Uri.parse(url), context, ""))
 
     }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val width = MeasureSpec.getSize(widthMeasureSpec)

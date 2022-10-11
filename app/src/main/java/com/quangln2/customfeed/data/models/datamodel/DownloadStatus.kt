@@ -1,11 +1,11 @@
-package com.quangln2.customfeed.data.models
+package com.quangln2.customfeed.data.models.datamodel
 
 enum class DownloadStatus {
     NONE {
-         override fun toString(): String {
-             return "NONE"
-         }
-         },
+        override fun toString(): String {
+            return "NONE"
+        }
+    },
     DOWNLOADING {
         override fun toString(): String {
             return "Downloading"

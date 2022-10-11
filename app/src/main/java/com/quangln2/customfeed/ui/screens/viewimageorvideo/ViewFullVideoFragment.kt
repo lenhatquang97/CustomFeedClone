@@ -18,14 +18,12 @@ class ViewFullVideoFragment : Fragment() {
         binding = FragmentViewFullVideoBinding.inflate(inflater, container, false)
         val value = arguments?.getString("value")
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
-        if(value != null && listOfUrls!=null){
+        if (value != null && listOfUrls != null) {
             binding.viewPager.adapter = FullImageVideoAdapter(this, listOfUrls)
             binding.viewPager.setCurrentItem(listOfUrls.indexOf(value), false)
         }
         return binding.root
     }
-
-
 
 
 }

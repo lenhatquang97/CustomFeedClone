@@ -85,7 +85,7 @@ class LoadingVideoView @JvmOverloads constructor(
         //(playerView.videoSurfaceView as SurfaceView).setZOrderOnTop(true)
     }
 
-    private fun initPlayer(){
+    private fun initPlayer() {
         player = ExoPlayer.Builder(context).build()
         playerView.player = player
 
@@ -120,7 +120,7 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     fun playVideo() {
-        if(isReleased){
+        if (isReleased) {
             isReleased = false
             initPlayer()
             player.seekTo(currentPosition)
@@ -141,9 +141,6 @@ class LoadingVideoView @JvmOverloads constructor(
         player.release()
 
     }
-
-
-
 
 
 }
