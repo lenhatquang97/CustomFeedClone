@@ -21,13 +21,16 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
+import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
+import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.databinding.FeedCardBinding
 import com.quangln2.customfeed.databinding.FeedItemBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
 import com.quangln2.customfeed.others.utils.DownloadUtils
 import com.quangln2.customfeed.others.utils.FileUtils
+import com.quangln2.customfeed.ui.customview.CustomGridGroup
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import kotlinx.coroutines.CoroutineScope
@@ -63,11 +66,15 @@ class FeedListAdapter(
             binding.loadingCircularIndicator.visibility = View.VISIBLE
             if (binding.customGridGroup.size > 0) {
                 binding.loadingCircularIndicator.visibility = View.GONE
-                return
+                //return
             }
+            println("Bind item in ${item.feedId} ${item.caption}")
 
             binding.feedId.text = item.feedId
             binding.myName.text = item.name
+
+            println("Bind item out ${item.feedId} ${item.caption}")
+
             val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(200)
             Glide.with(context).load(item.avatar).apply(requestOptions).into(binding.myAvatarImage)
             binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
@@ -141,9 +148,13 @@ class FeedListAdapter(
                             )
                             videoView.setOnClickListener {
                                 println("Click video ${item.resources.map { it.url }.toList()}")
+                                val stringArr = ArrayList<String>()
+                                item.resources.forEach {
+                                    stringArr.add(it.url)
+                                }
                                 eventFeedCallback.onClickVideoView(
                                     item.resources[i].url,
-                                    item.resources.map { it.url }.toList() as ArrayList<String>
+                                    stringArr
                                 )
                             }
                             binding.loadingCircularIndicator.visibility = View.INVISIBLE
@@ -212,7 +223,7 @@ class FeedListAdapter(
 
     override fun getItemViewType(position: Int): Int {
         val item = currentList[position]
-        return item.typeOfPost.hashCode()
+        return item.typeOfPost.value
     }
 
     override fun getItemId(position: Int): Long {
@@ -225,7 +236,7 @@ class FeedListAdapter(
         viewType: Int
     ): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        if (viewType == "AddNewPost".hashCode()) {
+        if (viewType == TypeOfPost.ADD_NEW_POST.value) {
             val binding = FeedCardBinding.inflate(layoutInflater, parent, false)
             return this.AddNewItemViewHolder(binding)
         } else {
@@ -235,14 +246,30 @@ class FeedListAdapter(
 
     }
 
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        super.onViewRecycled(holder)
+        if (holder is FeedItemViewHolder) {
+            val customGridGroup = holder.itemView.findViewById<CustomGridGroup>(R.id.customGridGroup)
+            for(i in 0 until customGridGroup.size) {
+                val child = customGridGroup.getChildAt(i)
+                if (child is LoadingVideoView) {
+                    child.player.pause()
+                    child.player.release()
+                }
+            }
+            customGridGroup.removeAllViews()
+        }
+    }
+
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+
         val item = getItem(position)
         val itemType = getItemViewType(position)
-        if (itemType == "AddNewPost".hashCode()) {
+        if (itemType == TypeOfPost.ADD_NEW_POST.value) {
             (holder as AddNewItemViewHolder).bind(context)
         } else {
-            println("Bind item $position ${item.feedId}")
-            (holder as FeedItemViewHolder).bind(item, context)
+            (holder as FeedItemViewHolder).bind(item.copy(), context)
         }
     }
 }

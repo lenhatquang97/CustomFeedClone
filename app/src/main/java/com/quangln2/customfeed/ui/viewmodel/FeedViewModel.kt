@@ -18,12 +18,11 @@ import com.quangln2.customfeed.data.models.UploadWorkerModel
 import com.quangln2.customfeed.data.models.datamodel.MyPost
 import com.quangln2.customfeed.data.models.datamodel.UploadPost
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
+import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.domain.*
 import com.quangln2.customfeed.domain.workmanager.UploadFileWorker
 import com.quangln2.customfeed.others.utils.DownloadUtils
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
@@ -57,7 +56,7 @@ class FeedViewModel(
 
 
     fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
-        FeedController.isLoading.value = true
+        FeedController.isLoading.value = 1
 
         val uriStringLists = uriLists.map { it.toString() }
         val uploadWorkerModel = UploadWorkerModel(caption, uriStringLists)
@@ -87,36 +86,38 @@ class FeedViewModel(
 
     private fun loadCache() {
         val ls = mutableListOf<MyPost>()
-        viewModelScope.launch(Dispatchers.Main) {
-            val offlinePosts = getAllInDatabaseUseCase().last()
+        viewModelScope.launch(Dispatchers.IO){
+            val offlinePosts = getAllInDatabaseUseCase()
             for (item in offlinePosts) {
                 ls.add(item)
             }
-            _feedLoadingCode.value = -1
-            _uploadLists.value = ls.toMutableList()
-
+            _feedLoadingCode.postValue(-1)
+            _uploadLists.postValue(ls.toMutableList())
         }
+
+    }
+
+    fun getAllFeedsWithPreloadCache(context: Context){
+        loadCache()
+        getAllFeeds(context)
     }
 
     fun getAllFeeds(context: Context) {
         getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
-                loadCache()
                 if (response.code() == 200) {
                     val ls = mutableListOf<MyPost>()
                     val body = response.body()
                     viewModelScope.launch(Dispatchers.IO) {
-                        val offlinePosts = getAllInDatabaseUseCase().first()
+                        val offlinePosts = getAllInDatabaseUseCase()
                         if (body != null) {
                             body.forEach {
                                 val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
                                 ls.add(itemConverted)
                             }
                             println("ls: ${ls.joinToString { it.caption }}")
-                            withContext(Dispatchers.Main){
-                                _feedLoadingCode.value = response.code()
-                                _uploadLists.value = ls.toMutableList()
-                            }
+                            _feedLoadingCode.postValue(response.code())
+                            _uploadLists.postValue(ls.toMutableList())
 
                             withContext(Dispatchers.IO) {
                                 ls.forEach { insertDatabaseUseCase(it) }
@@ -145,7 +146,7 @@ class FeedViewModel(
             val indexOfFirst = ls.indexOfFirst { it.feedId == feedId }
             return MyPostRender.convertMyPostToMyPostRender(ls[indexOfFirst])
         }
-        return MyPostRender.convertMyPostToMyPostRender(MyPost(), "AddNewPost")
+        return MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
 
     }
 

@@ -65,7 +65,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
             uploadFiles(parts, applicationContext)
             Result.success()
         } catch (e: Exception) {
-            FeedController.isLoading.postValue(false)
+            FeedController.isLoading.postValue(0)
             builder.setProgress(0, 0, false)
             builder.setContentText("Upload failed")
             builder.setAutoCancel(true)
@@ -82,7 +82,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
             UploadPostUseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
         uploadPostUseCase(requestBody).enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                FeedController.isLoading.postValue(false)
+                FeedController.isLoading.postValue(0)
                 builder.setProgress(0, 0, false)
                 builder.setContentText("Upload successfully")
                 builder.setAutoCancel(true)
@@ -93,7 +93,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                FeedController.isLoading.postValue(false)
+                FeedController.isLoading.postValue(0)
                 builder.setProgress(0, 0, false)
                 builder.setContentText("Upload failed")
                 builder.setAutoCancel(true)

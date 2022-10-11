@@ -7,7 +7,6 @@ import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.database.FeedDao
 import com.quangln2.customfeed.data.models.datamodel.MyPost
 import com.quangln2.customfeed.others.utils.FileUtils
-import kotlinx.coroutines.flow.Flow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -24,8 +23,9 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
             feedDao.update(myPost)
         }
     }
-
-    override fun getAll(): Flow<List<MyPost>> = feedDao.getAll()
+    @Suppress("RedundantSuspendModifier")
+    @WorkerThread
+    override suspend fun getAll(): List<MyPost> = feedDao.getAll()
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread

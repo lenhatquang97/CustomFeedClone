@@ -5,12 +5,11 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.quangln2.customfeed.data.models.datamodel.MyPost
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FeedDao {
     @Query("SELECT * FROM my_post")
-    fun getAll(): Flow<List<MyPost>>
+    fun getAll(): List<MyPost>
 
     @Insert
     fun insert(myPost: MyPost)

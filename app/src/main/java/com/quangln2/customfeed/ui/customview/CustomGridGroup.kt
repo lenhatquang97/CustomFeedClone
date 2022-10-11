@@ -37,7 +37,7 @@ class CustomGridGroup : ViewGroup {
 
         for (i in 0 until itemNumber) {
             val child = getChildAt(i)
-            if (child is ViewGroup) {
+            if (child != null && child is ViewGroup) {
                 val width =
                     (rectangles[i].rightBottom.x.toInt()) - (rectangles[i].leftTop.x.toInt()) + 2 * contentPadding
                 val height =
@@ -49,14 +49,12 @@ class CustomGridGroup : ViewGroup {
                     rectangles[i].rightBottom.x.toInt() - contentPadding,
                     rectangles[i].rightBottom.y.toInt() - contentPadding
                 )
-            } else {
-                child.layout(
-                    rectangles[i].leftTop.x.toInt() + contentPadding,
-                    rectangles[i].leftTop.y.toInt() + contentPadding,
-                    rectangles[i].rightBottom.x.toInt() - contentPadding,
-                    rectangles[i].rightBottom.y.toInt() - contentPadding
-                )
-            }
+            } else child?.layout(
+                rectangles[i].leftTop.x.toInt() + contentPadding,
+                rectangles[i].leftTop.y.toInt() + contentPadding,
+                rectangles[i].rightBottom.x.toInt() - contentPadding,
+                rectangles[i].rightBottom.y.toInt() - contentPadding
+            )
 
 
         }
@@ -269,27 +267,6 @@ class CustomGridGroup : ViewGroup {
             }
         }
     }
-
-//    override fun measureChildWithMargins(
-//        child: View,
-//        parentWidthMeasureSpec: Int,
-//        widthUsed: Int,
-//        parentHeightMeasureSpec: Int,
-//        heightUsed: Int
-//    ) {
-//        val lp = child.layoutParams as MarginLayoutParams
-//        val childWidthMeasureSpec = getChildMeasureSpec(
-//            parentWidthMeasureSpec,
-//            widthUsed + lp.leftMargin + lp.rightMargin,
-//            lp.width
-//        )
-//        val childHeightMeasureSpec = getChildMeasureSpec(
-//            parentHeightMeasureSpec,
-//            heightUsed + lp.topMargin + lp.bottomMargin,
-//            lp.height
-//        )
-//        child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
-//    }
 
 
 }

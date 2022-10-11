@@ -11,7 +11,7 @@ data class VideoPlayed(
 )
 
 object FeedController {
-    var isLoading = MutableLiveData<Boolean>().apply { value = false }
+    var isLoading = MutableLiveData<Int>().apply { value = -1 }
 
     var videoQueue: Queue<VideoPlayed> = LinkedList()
     fun safeRemoveFromQueue() {
