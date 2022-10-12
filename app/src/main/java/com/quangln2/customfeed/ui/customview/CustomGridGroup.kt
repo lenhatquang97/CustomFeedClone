@@ -55,10 +55,7 @@ class CustomGridGroup : ViewGroup {
                 rectangles[i].rightBottom.x.toInt() - contentPadding,
                 rectangles[i].rightBottom.y.toInt() - contentPadding
             )
-
-
         }
-
 
     }
 

@@ -32,12 +32,10 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class FeedViewModel(
-    val uploadPostUseCase: UploadPostUseCase,
     val getAllFeedsUseCase: GetAllFeedsUseCase,
     val deleteFeedUseCase: DeleteFeedUseCase,
     val uploadMultipartBuilderUseCase: UploadMultipartBuilderUseCase,
     val insertDatabaseUseCase: InsertDatabaseUseCase,
-    val updateDatabaseUseCase: UpdateDatabaseUseCase,
     val deleteDatabaseUseCase: DeleteDatabaseUseCase,
     val getAllInDatabaseUseCase: GetAllInDatabaseUseCase
 ) : ViewModel() {
@@ -120,7 +118,9 @@ class FeedViewModel(
                             _uploadLists.postValue(ls.toMutableList())
 
                             withContext(Dispatchers.IO) {
-                                ls.forEach { insertDatabaseUseCase(it) }
+                                ls.forEach {
+                                    insertDatabaseUseCase(it)
+                                }
                                 downloadAllResourcesWithUpdate(context, body)
                             }
                         } else {

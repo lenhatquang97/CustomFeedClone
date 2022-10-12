@@ -13,12 +13,10 @@ class ViewModelFactory constructor(private val feedRepository: FeedRepository) :
             when {
                 isAssignableFrom(FeedViewModel::class.java) ->
                     FeedViewModel(
-                        UploadPostUseCase(feedRepository),
                         GetAllFeedsUseCase(feedRepository),
                         DeleteFeedUseCase(feedRepository),
                         UploadMultipartBuilderUseCase(feedRepository),
                         InsertDatabaseUseCase(feedRepository),
-                        UpdateDatabaseUseCase(feedRepository),
                         DeleteDatabaseUseCase(feedRepository),
                         GetAllInDatabaseUseCase(feedRepository)
                     )

@@ -62,22 +62,32 @@ class FeedListAdapter(
 
     inner class FeedItemViewHolder constructor(private val binding: FeedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: MyPostRender, context: Context) {
+        private fun prepare(){
             binding.loadingCircularIndicator.visibility = View.VISIBLE
             if (binding.customGridGroup.size > 0) {
                 binding.loadingCircularIndicator.visibility = View.GONE
-                //return
             }
-            println("Bind item in ${item.feedId} ${item.caption}")
+        }
+        private fun afterLoad(item: MyPostRender) {
+            if (item.resources.size == 0) {
+                binding.loadingCircularIndicator.visibility = View.GONE
+                binding.customGridGroup.visibility = View.GONE
+            } else {
+                binding.loadingCircularIndicator.visibility = View.GONE
+                binding.customGridGroup.visibility = View.VISIBLE
+            }
+        }
+
+        fun bind(item: MyPostRender, context: Context) {
+            prepare()
 
             binding.feedId.text = item.feedId
             binding.myName.text = item.name
-
-            println("Bind item out ${item.feedId} ${item.caption}")
+            binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
 
             val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(200)
             Glide.with(context).load(item.avatar).apply(requestOptions).into(binding.myAvatarImage)
-            binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
+
             if (item.caption.isEmpty()) {
                 binding.caption.visibility = View.GONE
             } else {
@@ -109,10 +119,6 @@ class FeedListAdapter(
                 binding.caption.text = item.caption.substring(0, 50) + "..."
                 binding.learnMore.visibility = View.VISIBLE
                 binding.learnLess.visibility = View.GONE
-            }
-            if (item.resources.size == 0) {
-                binding.loadingCircularIndicator.visibility = View.GONE
-                binding.customGridGroup.visibility = View.GONE
             }
 
             CoroutineScope(Dispatchers.IO).launch {
@@ -213,6 +219,8 @@ class FeedListAdapter(
                 }
 
             }
+            afterLoad(item)
+
 
 
         }
@@ -269,7 +277,7 @@ class FeedListAdapter(
         if (itemType == TypeOfPost.ADD_NEW_POST.value) {
             (holder as AddNewItemViewHolder).bind(context)
         } else {
-            (holder as FeedItemViewHolder).bind(item.copy(), context)
+            (holder as FeedItemViewHolder).bind(item, context)
         }
     }
 }

@@ -8,7 +8,7 @@ import com.quangln2.customfeed.data.models.datamodel.MyPost
 
 @Dao
 interface FeedDao {
-    @Query("SELECT * FROM my_post")
+    @Query("SELECT * FROM my_post ORDER BY CAST(created_time AS BIGINT) DESC")
     fun getAll(): List<MyPost>
 
     @Insert
