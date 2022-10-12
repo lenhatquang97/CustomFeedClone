@@ -21,6 +21,7 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var playButton: ImageView
     lateinit var soundButton: ImageView
     lateinit var playerView: PlayerView
+    lateinit var crossButton: ImageView
     lateinit var player: ExoPlayer
     var url = ""
     var isMute = false
@@ -41,6 +42,7 @@ class LoadingVideoView @JvmOverloads constructor(
         playButton = view.findViewById(R.id.play_button)
         soundButton = view.findViewById(R.id.sound_button)
         playerView = view.findViewById(R.id.player_view)
+        crossButton = view.findViewById(R.id.cross_x)
 
 
 

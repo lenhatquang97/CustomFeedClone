@@ -7,11 +7,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
@@ -24,13 +22,11 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
+import com.quangln2.customfeed.ui.customview.CustomImageView
 import com.quangln2.customfeed.ui.customview.CustomLayer
-import com.quangln2.customfeed.ui.customview.VideoThumbnailView
+import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 class HomeScreenFragment : Fragment() {
@@ -51,49 +47,63 @@ class HomeScreenFragment : Fragment() {
             if (data != null) {
                 if (data.clipData != null) {
                     val count = data.clipData!!.itemCount
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        for (i in 0 until count) {
-                            val uri = data.clipData!!.getItemAt(i).uri
-                            val mimeType = context?.contentResolver?.getType(uri)
-                            if (mimeType != null) {
-                                if (mimeType.startsWith("image/")) {
-                                    val imageView = ImageView(context)
-                                    imageView.apply {
-                                        layoutParams = ViewGroup.LayoutParams(
-                                            ViewGroup.LayoutParams.MATCH_PARENT,
-                                            ViewGroup.LayoutParams.MATCH_PARENT
-                                        )
-                                        scaleType = ImageView.ScaleType.CENTER_CROP
-                                        setImageURI(uri)
-                                    }
-                                    listOfViews.add(imageView)
-                                    if (listOfViews.size >= 10) listOfViews[8] = CustomLayer(requireContext())
-                                } else if (mimeType.startsWith("video/")) {
-                                    withContext(Dispatchers.Main) {
-                                        val videoView = VideoThumbnailView(requireContext(), uri.toString())
-                                        videoView.apply {
-                                            layoutParams = ViewGroup.LayoutParams(
-                                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                                ViewGroup.LayoutParams.MATCH_PARENT
-                                            )
-                                            playButton.visibility = View.VISIBLE
-                                        }
+                    for (i in 0 until count) {
+                        val uri = data.clipData!!.getItemAt(i).uri
+                        val mimeType = context?.contentResolver?.getType(uri)
+                        if (mimeType != null) {
+                            if (mimeType.startsWith("image/")) {
+//                                val imageView = ImageView(requireContext())
+//                                imageView.apply {
+//                                    layoutParams = ViewGroup.LayoutParams(
+//                                        ViewGroup.LayoutParams.MATCH_PARENT,
+//                                        ViewGroup.LayoutParams.MATCH_PARENT
+//                                    )
+//                                    scaleType = ImageView.ScaleType.CENTER_CROP
+//                                    setImageURI(uri)
+//                                }
 
-                                        listOfViews.add(videoView)
-                                        if (listOfViews.size >= 10) {
-                                            listOfViews[8] = CustomLayer(requireContext())
-                                        }
+                                val imageView = CustomImageView(requireContext(), uri.toString())
+                                imageView.apply {
+                                    layoutParams = ViewGroup.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT
+                                    )
+                                    crossButton.setOnClickListener {
+                                        listOfViews.remove(imageView)
+                                        binding.customGridGroup.removeView(imageView)
                                     }
                                 }
-                            }
 
-                            val clipItem = data.clipData!!.getItemAt(i)
-                            val uriForMultipart = clipItem.uri
-                            val ls = viewModel._uriLists.value
-                            ls?.add(uriForMultipart)
-                            viewModel._uriLists.postValue(ls?.toMutableList())
+                                listOfViews.add(imageView)
+                                if (listOfViews.size >= 10) listOfViews[8] = CustomLayer(requireContext())
+                            } else if (mimeType.startsWith("video/")) {
+                                val videoView = LoadingVideoView(requireContext(), uri.toString())
+                                videoView.apply {
+                                    layoutParams = ViewGroup.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT
+                                    )
+                                    playButton.visibility = View.VISIBLE
+                                    crossButton.visibility = View.VISIBLE
+                                    crossButton.setOnClickListener {
+                                        listOfViews.remove(videoView)
+                                        binding.customGridGroup.removeView(videoView)
+
+                                    }
+                                }
+
+                                listOfViews.add(videoView)
+                                if (listOfViews.size >= 10) {
+                                    listOfViews[8] = CustomLayer(requireContext())
+                                }
+                            }
                         }
 
+                        val clipItem = data.clipData!!.getItemAt(i)
+                        val uriForMultipart = clipItem.uri
+                        val ls = viewModel.uriLists.value
+                        ls?.add(uriForMultipart)
+                        viewModel._uriLists.value = ls?.toMutableList()
                     }
                 } else if (data.data != null) {
                     val imgPath = data.data!!.path
@@ -117,6 +127,11 @@ class HomeScreenFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel._uriLists.value?.clear()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
         viewModel._uriLists.value?.clear()
     }
 
@@ -159,6 +174,7 @@ class HomeScreenFragment : Fragment() {
                     binding.customGridGroup.addView(viewChild)
                     break
                 } else {
+                    println("View is: $viewChild")
                     binding.customGridGroup.addView(viewChild)
                 }
             }

@@ -23,38 +23,42 @@ class CustomGridGroup : ViewGroup {
     @SuppressLint("DrawAllocation")
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         if (childCount >= 1) {
-            val firstChild = getChildAt(0)
-            if (firstChild is ImageView || firstChild is VideoThumbnailView) {
-                if (firstWidth > firstHeight) {
-                    drawHorizontalGrid()
-                } else {
-                    drawVerticalGrid()
+            when(getChildAt(0)){
+                is ImageView, is VideoThumbnailView, is CustomImageView -> {
+                    if (firstWidth > firstHeight) {
+                        drawHorizontalGrid()
+                    } else {
+                        drawVerticalGrid()
+                    }
                 }
-            } else if (firstChild is VideoView || firstChild is LoadingVideoView) {
-                drawHorizontalGrid()
+                is VideoView, is LoadingVideoView -> {
+                    drawHorizontalGrid()
+                }
             }
         }
 
         for (i in 0 until itemNumber) {
             val child = getChildAt(i)
             if (child != null && child is ViewGroup) {
-                val width =
-                    (rectangles[i].rightBottom.x.toInt()) - (rectangles[i].leftTop.x.toInt()) + 2 * contentPadding
-                val height =
-                    (rectangles[i].rightBottom.y.toInt()) - (rectangles[i].leftTop.y.toInt()) + 2 * contentPadding
+                val width = (rectangles[i].rightBottom.x.toInt()) - (rectangles[i].leftTop.x.toInt()) + contentPadding
+                val height = (rectangles[i].rightBottom.y.toInt()) - (rectangles[i].leftTop.y.toInt()) + contentPadding
+
                 measureChild(child, width, height)
+
                 child.layout(
                     rectangles[i].leftTop.x.toInt() + contentPadding,
                     rectangles[i].leftTop.y.toInt() + contentPadding,
                     rectangles[i].rightBottom.x.toInt() - contentPadding,
                     rectangles[i].rightBottom.y.toInt() - contentPadding
                 )
-            } else child?.layout(
-                rectangles[i].leftTop.x.toInt() + contentPadding,
-                rectangles[i].leftTop.y.toInt() + contentPadding,
-                rectangles[i].rightBottom.x.toInt() - contentPadding,
-                rectangles[i].rightBottom.y.toInt() - contentPadding
-            )
+            } else {
+                child?.layout(
+                    rectangles[i].leftTop.x.toInt() + contentPadding,
+                    rectangles[i].leftTop.y.toInt() + contentPadding,
+                    rectangles[i].rightBottom.x.toInt() - contentPadding,
+                    rectangles[i].rightBottom.y.toInt() - contentPadding
+                )
+            }
         }
 
     }
