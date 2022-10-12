@@ -3,11 +3,13 @@ package com.quangln2.customfeed.ui.screens.addpost
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -41,6 +43,47 @@ class HomeScreenFragment : Fragment() {
     }
     private var listOfViews: MutableList<View> = mutableListOf()
 
+    private fun onHandleMoreImagesOrVideos(customView: View){
+        val imageAboutDeleted = listOfViews.indexOf(customView)
+        val (index, textValue) = hasCustomLayer()
+        println("index: $index, textValue: $textValue, imageAboutDeleted: $imageAboutDeleted")
+        if(index == -1 && textValue == -1) {
+            listOfViews.remove(customView)
+            binding.customGridGroup.removeView(customView)
+        } else {
+            if(textValue == 2) {
+                binding.customGridGroup.removeViewAt(imageAboutDeleted)
+                binding.customGridGroup.removeViewAt(index - 1)
+                listOfViews.removeAt(imageAboutDeleted)
+                listOfViews.removeAt(index - 1)
+                val start = index - 1
+                for (i in start until listOfViews.size) {
+                    val view = listOfViews[i]
+                    binding.customGridGroup.addView(view)
+                }
+
+
+            } else {
+                binding.customGridGroup.removeViewAt(imageAboutDeleted)
+                binding.customGridGroup.removeViewAt(index - 1)
+                listOfViews.removeAt(imageAboutDeleted)
+                listOfViews.removeAt(index - 1)
+                println("start: ${index-1} ${listOfViews.size}")
+
+                binding.customGridGroup.addView(listOfViews[index - 1])
+
+
+                val view = CustomLayer(requireContext())
+                view.addedImagesText.text = "+${textValue - 1}"
+                binding.customGridGroup.addView(view)
+                if (listOfViews.size >= 10) listOfViews.add(8, CustomLayer(requireContext()))
+
+
+
+            }
+        }
+    }
+
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val data: Intent? = result.data
@@ -52,16 +95,6 @@ class HomeScreenFragment : Fragment() {
                         val mimeType = context?.contentResolver?.getType(uri)
                         if (mimeType != null) {
                             if (mimeType.startsWith("image/")) {
-//                                val imageView = ImageView(requireContext())
-//                                imageView.apply {
-//                                    layoutParams = ViewGroup.LayoutParams(
-//                                        ViewGroup.LayoutParams.MATCH_PARENT,
-//                                        ViewGroup.LayoutParams.MATCH_PARENT
-//                                    )
-//                                    scaleType = ImageView.ScaleType.CENTER_CROP
-//                                    setImageURI(uri)
-//                                }
-
                                 val imageView = CustomImageView(requireContext(), uri.toString())
                                 imageView.apply {
                                     layoutParams = ViewGroup.LayoutParams(
@@ -69,13 +102,11 @@ class HomeScreenFragment : Fragment() {
                                         ViewGroup.LayoutParams.MATCH_PARENT
                                     )
                                     crossButton.setOnClickListener {
-                                        listOfViews.remove(imageView)
-                                        binding.customGridGroup.removeView(imageView)
+                                        onHandleMoreImagesOrVideos(imageView)
                                     }
                                 }
 
                                 listOfViews.add(imageView)
-                                if (listOfViews.size >= 10) listOfViews[8] = CustomLayer(requireContext())
                             } else if (mimeType.startsWith("video/")) {
                                 val videoView = LoadingVideoView(requireContext(), uri.toString())
                                 videoView.apply {
@@ -86,17 +117,13 @@ class HomeScreenFragment : Fragment() {
                                     playButton.visibility = View.VISIBLE
                                     crossButton.visibility = View.VISIBLE
                                     crossButton.setOnClickListener {
-                                        listOfViews.remove(videoView)
-                                        binding.customGridGroup.removeView(videoView)
-
+                                        onHandleMoreImagesOrVideos(videoView)
                                     }
                                 }
 
                                 listOfViews.add(videoView)
-                                if (listOfViews.size >= 10) {
-                                    listOfViews[8] = CustomLayer(requireContext())
-                                }
                             }
+                            if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1,-1)) listOfViews.add(8, CustomLayer(requireContext()))
                         }
 
                         val clipItem = data.clipData!!.getItemAt(i)
@@ -113,15 +140,31 @@ class HomeScreenFragment : Fragment() {
         }
     }
 
+    private fun hasCustomLayer(): Pair<Int, Int> {
+        for (i in 8 until binding.customGridGroup.childCount) {
+            val view = binding.customGridGroup.getChildAt(i)
+            if (view is CustomLayer) {
+                val text = view.addedImagesText.text.toString()
+                val value = text.substring(1, text.length).toInt()
+                return Pair(i, value)
+            }
+        }
+        return Pair(-1, -1)
+    }
+
 
     private fun uploadFiles() {
-        if (viewModel.uriLists.value != null && viewModel.uriLists.value?.isNotEmpty()!!) {
-            val caption = binding.textField.editText?.text.toString()
-            viewModel.uploadFiles(caption, viewModel.uriLists.value!!, requireContext())
-        } else {
-            val caption = binding.textField.editText?.text.toString()
-            viewModel.uploadFiles(caption, mutableListOf(), requireContext())
+        val mutableLists = mutableListOf<Uri>()
+        for(i in 0 until binding.customGridGroup.childCount) {
+            val view = binding.customGridGroup.getChildAt(i)
+            if(view is CustomImageView) {
+                mutableLists.add(view.url.toUri())
+            } else if(view is LoadingVideoView) {
+                mutableLists.add(view.url.toUri())
+            }
         }
+        val caption = binding.textField.editText?.text.toString()
+        viewModel.uploadFiles(caption, mutableLists, requireContext())
     }
 
 
