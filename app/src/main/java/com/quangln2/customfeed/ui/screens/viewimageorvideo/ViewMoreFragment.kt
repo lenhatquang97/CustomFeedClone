@@ -68,9 +68,9 @@ class ViewMoreFragment : Fragment() {
                         Glide.with(requireContext()).load(value).thumbnail(0.1f).apply(requestOptions).into(imageView)
                         imageView.setOnClickListener {
                             findNavController().navigate(
-                                R.id.action_allFeedsFragment_to_viewFullVideoFragment,
+                                R.id.action_viewMoreFragment_to_viewFullVideoFragment,
                                 Bundle().apply {
-                                    putString("url", item.resources[i].url)
+                                    putString("value", item.resources[i].url)
                                     putStringArrayList(
                                         "listOfUrls",
                                         item.resources.map { it.url }.toList() as ArrayList<String>
@@ -98,7 +98,7 @@ class ViewMoreFragment : Fragment() {
                         findNavController().navigate(
                             R.id.action_viewMoreFragment_to_viewFullVideoFragment,
                             Bundle().apply {
-                                putString("url", item.resources[i].url)
+                                putString("value", item.resources[i].url)
                                 putStringArrayList(
                                     "listOfUrls",
                                     item.resources.map { it.url }.toList() as ArrayList<String>

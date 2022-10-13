@@ -26,8 +26,8 @@ import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
-import com.quangln2.customfeed.ui.customview.CustomGridGroup
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
+import com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
 import kotlinx.coroutines.CoroutineScope

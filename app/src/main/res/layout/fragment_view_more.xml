@@ -79,7 +79,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/caption">
 
-            <com.quangln2.customfeed.ui.customview.ExtendedCustomGridGroup
+            <com.quangln2.customfeed.ui.customview.extendedcustomgrid.ExtendedCustomGridGroup
                 android:id="@+id/extendedCustomGridGroup"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />

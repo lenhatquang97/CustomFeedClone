@@ -155,8 +155,8 @@ class HomeScreenFragment : Fragment() {
 
     private fun uploadFiles() {
         val mutableLists = mutableListOf<Uri>()
-        for(i in 0 until binding.customGridGroup.childCount) {
-            val view = binding.customGridGroup.getChildAt(i)
+        for(i in 0 until listOfViews.size) {
+            val view = listOfViews[i]
             if(view is CustomImageView) {
                 mutableLists.add(view.url.toUri())
             } else if(view is LoadingVideoView) {

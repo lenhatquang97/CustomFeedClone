@@ -115,7 +115,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/learn_more" />
 
-    <com.quangln2.customfeed.ui.customview.CustomGridGroup
+    <com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
         android:id="@+id/customGridGroup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

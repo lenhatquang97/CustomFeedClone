@@ -30,9 +30,9 @@ import com.quangln2.customfeed.databinding.FeedItemBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
 import com.quangln2.customfeed.others.utils.DownloadUtils
 import com.quangln2.customfeed.others.utils.FileUtils
-import com.quangln2.customfeed.ui.customview.CustomGridGroup
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
+import com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
