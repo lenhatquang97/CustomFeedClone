@@ -42,13 +42,15 @@ class HomeScreenFragment : Fragment() {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
     private var listOfViews: MutableList<View> = mutableListOf()
+    private var listOfUris: MutableList<Uri> = mutableListOf()
 
     private fun onHandleMoreImagesOrVideos(customView: View){
         val imageAboutDeleted = listOfViews.indexOf(customView)
         val (index, textValue) = hasCustomLayer()
-        println("index: $index, textValue: $textValue, imageAboutDeleted: $imageAboutDeleted")
+
         if(index == -1 && textValue == -1) {
             listOfViews.remove(customView)
+            listOfUris.removeAt(imageAboutDeleted)
             binding.customGridGroup.removeView(customView)
         } else {
             if(textValue == 2) {
@@ -56,6 +58,10 @@ class HomeScreenFragment : Fragment() {
                 binding.customGridGroup.removeViewAt(index - 1)
                 listOfViews.removeAt(imageAboutDeleted)
                 listOfViews.removeAt(index - 1)
+
+                listOfUris.removeAt(imageAboutDeleted)
+                listOfUris.removeAt(index - 1)
+
                 val start = index - 1
                 for (i in start until listOfViews.size) {
                     val view = listOfViews[i]
@@ -68,6 +74,10 @@ class HomeScreenFragment : Fragment() {
                 binding.customGridGroup.removeViewAt(index - 1)
                 listOfViews.removeAt(imageAboutDeleted)
                 listOfViews.removeAt(index - 1)
+
+                listOfUris.removeAt(imageAboutDeleted)
+                listOfUris.removeAt(index - 1)
+
                 println("start: ${index-1} ${listOfViews.size}")
 
                 binding.customGridGroup.addView(listOfViews[index - 1])
@@ -76,7 +86,10 @@ class HomeScreenFragment : Fragment() {
                 val view = CustomLayer(requireContext())
                 view.addedImagesText.text = "+${textValue - 1}"
                 binding.customGridGroup.addView(view)
-                if (listOfViews.size >= 10) listOfViews.add(8, CustomLayer(requireContext()))
+                if (listOfViews.size >= 10) {
+                    listOfViews.add(8, CustomLayer(requireContext()))
+                    listOfUris.add(8, Uri.EMPTY)
+                }
 
 
 
@@ -107,6 +120,7 @@ class HomeScreenFragment : Fragment() {
                                     )
                                 }
                                 listOfViews.add(imageView)
+                                listOfUris.add(uri)
                             } else if (mimeType.startsWith("video/")) {
                                 val videoView = LoadingVideoView(requireContext(), uri.toString())
                                 videoView.apply {
@@ -122,8 +136,12 @@ class HomeScreenFragment : Fragment() {
                                 }
 
                                 listOfViews.add(videoView)
+                                listOfUris.add(uri)
                             }
-                            if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1,-1)) listOfViews.add(8, CustomLayer(requireContext()))
+                            if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1,-1)) {
+                                listOfViews.add(8, CustomLayer(requireContext()))
+                                listOfUris.add(8, Uri.EMPTY)
+                            }
                         }
 
                         val clipItem = data.clipData!!.getItemAt(i)
@@ -155,13 +173,10 @@ class HomeScreenFragment : Fragment() {
 
     private fun uploadFiles() {
         val mutableLists = mutableListOf<Uri>()
-        for(i in 0 until listOfViews.size) {
-//            val view = listOfViews[i]
-//            if(view is FrameLayout) {
-//                mutableLists.add(view.url.toUri())
-//            } else if(view is LoadingVideoView) {
-//                mutableLists.add(view.url.toUri())
-//            }
+        for(i in 0 until listOfUris.size) {
+            if(listOfUris[i] != Uri.EMPTY) {
+                mutableLists.add(listOfUris[i])
+            }
         }
         val caption = binding.textField.editText?.text.toString()
         viewModel.uploadFiles(caption, mutableLists, requireContext())
@@ -217,7 +232,6 @@ class HomeScreenFragment : Fragment() {
                     binding.customGridGroup.addView(viewChild)
                     break
                 } else {
-                    println("View is: $viewChild")
                     binding.customGridGroup.addView(viewChild)
                 }
             }
