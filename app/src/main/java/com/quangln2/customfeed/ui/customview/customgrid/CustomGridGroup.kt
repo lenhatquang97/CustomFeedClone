@@ -4,10 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.VideoView
 import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
-import com.quangln2.customfeed.ui.customview.CustomImageView
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.customview.VideoThumbnailView
 
@@ -33,7 +33,7 @@ class CustomGridGroup : ViewGroup {
             1 -> drawOneChild()
             2,3,4 -> {
                 when(getChildAt(0)){
-                    is ImageView, is VideoThumbnailView, is CustomImageView -> {
+                    is ImageView, is VideoThumbnailView, is FrameLayout -> {
                         if (firstWidth > firstHeight) {
                             drawHorizontalGridMoreThanTwoAndLessThanFour()
                         } else {
@@ -48,7 +48,7 @@ class CustomGridGroup : ViewGroup {
             }
             5 -> {
                 when(getChildAt(0)){
-                    is ImageView, is VideoThumbnailView, is CustomImageView -> {
+                    is ImageView, is VideoThumbnailView, is FrameLayout -> {
                         if (firstWidth > firstHeight) {
                             drawHorizontalGridWithFive()
                         } else {
@@ -64,7 +64,7 @@ class CustomGridGroup : ViewGroup {
             7 -> drawSevenChildren()
             8 -> {
                 when(getChildAt(0)){
-                    is ImageView, is VideoThumbnailView, is CustomImageView -> {
+                    is ImageView, is VideoThumbnailView, is FrameLayout -> {
                         if (firstWidth > firstHeight) {
                             drawHorizontalGridWithEight()
                         } else {

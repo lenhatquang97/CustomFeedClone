@@ -9,7 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.net.toUri
+import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -95,17 +95,17 @@ class HomeScreenFragment : Fragment() {
                         val mimeType = context?.contentResolver?.getType(uri)
                         if (mimeType != null) {
                             if (mimeType.startsWith("image/")) {
-                                val imageView = CustomImageView(requireContext(), uri.toString())
+                                val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
+                                imageView[1].setOnClickListener {
+                                    onHandleMoreImagesOrVideos(imageView)
+                                }
+
                                 imageView.apply {
                                     layoutParams = ViewGroup.LayoutParams(
                                         ViewGroup.LayoutParams.MATCH_PARENT,
                                         ViewGroup.LayoutParams.MATCH_PARENT
                                     )
-                                    crossButton.setOnClickListener {
-                                        onHandleMoreImagesOrVideos(imageView)
-                                    }
                                 }
-
                                 listOfViews.add(imageView)
                             } else if (mimeType.startsWith("video/")) {
                                 val videoView = LoadingVideoView(requireContext(), uri.toString())
@@ -156,12 +156,12 @@ class HomeScreenFragment : Fragment() {
     private fun uploadFiles() {
         val mutableLists = mutableListOf<Uri>()
         for(i in 0 until listOfViews.size) {
-            val view = listOfViews[i]
-            if(view is CustomImageView) {
-                mutableLists.add(view.url.toUri())
-            } else if(view is LoadingVideoView) {
-                mutableLists.add(view.url.toUri())
-            }
+//            val view = listOfViews[i]
+//            if(view is FrameLayout) {
+//                mutableLists.add(view.url.toUri())
+//            } else if(view is LoadingVideoView) {
+//                mutableLists.add(view.url.toUri())
+//            }
         }
         val caption = binding.textField.editText?.text.toString()
         viewModel.uploadFiles(caption, mutableLists, requireContext())
