@@ -25,11 +25,12 @@ class CustomFeedApplication : Application() {
         try {
             ProviderInstaller.installIfNeeded(this)
         } catch (e: GooglePlayServicesRepairableException) {
-            Log.d("Ignore",e.message.toString())
+            Log.d("Ignore", e.message.toString())
         } catch (e: GooglePlayServicesNotAvailableException) {
-            Log.d("Ignore",e.message.toString())
+            Log.d("Ignore", e.message.toString())
         }
     }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = getString(R.string.channel_name)

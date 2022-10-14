@@ -28,11 +28,11 @@ class CustomGridGroup : ViewGroup {
         itemNumber = childCount
         rectangles.clear()
 
-        when(childCount){
+        when (childCount) {
             0 -> return
             1 -> drawOneChild()
-            2,3,4 -> {
-                when(getChildAt(0)){
+            2, 3, 4 -> {
+                when (getChildAt(0)) {
                     is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
                         if (firstItemWidth >= firstItemHeight) {
                             drawHorizontalGridMoreThanTwoAndLessThanFour()
@@ -44,7 +44,7 @@ class CustomGridGroup : ViewGroup {
 
             }
             5 -> {
-                when(getChildAt(0)){
+                when (getChildAt(0)) {
                     is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
                         if (firstItemWidth >= firstItemHeight) {
                             drawHorizontalGridWithFive()
@@ -57,7 +57,7 @@ class CustomGridGroup : ViewGroup {
             6 -> drawSixChildren()
             7 -> drawSevenChildren()
             8 -> {
-                when(getChildAt(0)){
+                when (getChildAt(0)) {
                     is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
                         if (firstItemWidth >= firstItemHeight) {
                             drawHorizontalGridWithEight()

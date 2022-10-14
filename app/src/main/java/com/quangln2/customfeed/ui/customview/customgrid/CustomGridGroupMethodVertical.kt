@@ -2,7 +2,7 @@ package com.quangln2.customfeed.ui.customview.customgrid
 
 import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
 
-fun CustomGridGroup.drawVerticalGridMoreThanTwoAndLessThanFour(){
+fun CustomGridGroup.drawVerticalGridMoreThanTwoAndLessThanFour() {
     val widthRectangle = width.toFloat()
     val largeRectangle = RectanglePoint(0f, 0f, widthRectangle / 2, widthRectangle)
     val left = widthRectangle / 2
@@ -17,7 +17,7 @@ fun CustomGridGroup.drawVerticalGridMoreThanTwoAndLessThanFour(){
     }
 }
 
-fun CustomGridGroup.drawVerticalGridWithFive(){
+fun CustomGridGroup.drawVerticalGridWithFive() {
     val widthRectangle = width.toFloat()
     val firstRect = RectanglePoint(0f, 0f, widthRectangle / 2, 2 * widthRectangle / 3)
     val secondRect = RectanglePoint(widthRectangle / 2, 0f, widthRectangle, 2 * widthRectangle / 3)
@@ -34,7 +34,7 @@ fun CustomGridGroup.drawVerticalGridWithFive(){
     }
 }
 
-fun CustomGridGroup.drawVerticalGridWithEight(){
+fun CustomGridGroup.drawVerticalGridWithEight() {
     val widthRectangle = width.toFloat()
     val largestRect = RectanglePoint(0f, 0f, 1 * widthRectangle / 3, 2 * widthRectangle / 3)
     val firstRect = RectanglePoint(widthRectangle / 3, 0f, 2 * widthRectangle / 3, 1 * widthRectangle / 3)

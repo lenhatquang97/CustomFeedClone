@@ -71,20 +71,21 @@ class AllFeedsFragment : Fragment() {
                     }
                 })
 
-            override fun onClickVideoView(currentVideoPosition:Long, value: String, listOfUrls: ArrayList<String>) = findNavController().navigate(
-                R.id.action_allFeedsFragment_to_viewFullVideoFragment,
-                Bundle().apply {
-                    putLong("currentVideoPosition", currentVideoPosition)
-                    putString("value", value)
-                    putStringArrayList("listOfUrls", listOfUrls)
-                },
-                navOptions {
-                    anim {
-                        enter = android.R.animator.fade_in
-                        exit = android.R.animator.fade_out
+            override fun onClickVideoView(currentVideoPosition: Long, value: String, listOfUrls: ArrayList<String>) =
+                findNavController().navigate(
+                    R.id.action_allFeedsFragment_to_viewFullVideoFragment,
+                    Bundle().apply {
+                        putLong("currentVideoPosition", currentVideoPosition)
+                        putString("value", value)
+                        putStringArrayList("listOfUrls", listOfUrls)
+                    },
+                    navOptions {
+                        anim {
+                            enter = android.R.animator.fade_in
+                            exit = android.R.animator.fade_out
+                        }
                     }
-                }
-            )
+                )
 
             override fun onClickViewMore(id: String) = findNavController().navigate(
                 R.id.action_allFeedsFragment_to_viewMoreFragment,
@@ -108,17 +109,17 @@ class AllFeedsFragment : Fragment() {
         }
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                if(newState == RecyclerView.SCROLL_STATE_IDLE){
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
-                    if(firstVisibleItemPosition > 0){
-                        println("Idle $firstVisibleItemPosition")
+                    if (firstVisibleItemPosition > 0) {
                         val item = viewModel.uploadLists.value?.get(firstVisibleItemPosition - 1)
-                        if(item != null){
+                        if (item != null) {
                             viewModel.downloadResourceWithId(item.resources, requireContext())
                         }
                     }
                 }
             }
+
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager
                 if (manager is LinearLayoutManager) {
@@ -136,7 +137,12 @@ class AllFeedsFragment : Fragment() {
             if (condition1 || condition2) {
                 binding.noPostId.root.visibility = View.INVISIBLE
                 val listsOfPostRender = mutableListOf<MyPostRender>()
-                listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(MyPost().copy(feedId = "none"), TypeOfPost.ADD_NEW_POST))
+                listsOfPostRender.add(
+                    MyPostRender.convertMyPostToMyPostRender(
+                        MyPost().copy(feedId = "none"),
+                        TypeOfPost.ADD_NEW_POST
+                    )
+                )
                 it.forEach { itr -> listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(itr)) }
                 adapterVal.submitList(listsOfPostRender.toMutableList())
             } else {
@@ -156,10 +162,10 @@ class AllFeedsFragment : Fragment() {
         }
 
 
-        FeedController.isLoading.observe(viewLifecycleOwner){
+        FeedController.isLoading.observe(viewLifecycleOwner) {
             //1 means loading, 0 means complete loading, but -1 means undefined
-            binding.loadingCard.root.visibility = if(it == 1) View.VISIBLE else View.GONE
-            if(it == 0){
+            binding.loadingCard.root.visibility = if (it == 1) View.VISIBLE else View.GONE
+            if (it == 0) {
                 binding.swipeRefreshLayout.post {
                     binding.swipeRefreshLayout.isRefreshing = true
                 }

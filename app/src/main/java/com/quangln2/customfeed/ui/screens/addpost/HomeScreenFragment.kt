@@ -47,16 +47,16 @@ class HomeScreenFragment : Fragment() {
     private var listOfViews: MutableList<View> = mutableListOf()
     private var listOfUris: MutableList<Uri> = mutableListOf()
 
-    private fun onHandleMoreImagesOrVideos(customView: View){
+    private fun onHandleMoreImagesOrVideos(customView: View) {
         val imageAboutDeleted = listOfViews.indexOf(customView)
         val (index, textValue) = hasCustomLayer()
 
-        if(index == -1 && textValue == -1) {
+        if (index == -1 && textValue == -1) {
             listOfViews.remove(customView)
             listOfUris.removeAt(imageAboutDeleted)
             binding.customGridGroup.removeView(customView)
         } else {
-            if(textValue == 2) {
+            if (textValue == 2) {
                 binding.customGridGroup.removeViewAt(imageAboutDeleted)
                 binding.customGridGroup.removeViewAt(index - 1)
                 listOfViews.removeAt(imageAboutDeleted)
@@ -93,7 +93,6 @@ class HomeScreenFragment : Fragment() {
                 }
 
 
-
             }
         }
     }
@@ -111,7 +110,8 @@ class HomeScreenFragment : Fragment() {
                             if (mimeType.startsWith("image/")) {
                                 getFirstImageWidthAndHeight(i, uri)
 
-                                val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
+                                val imageView =
+                                    CustomImageView.generateCustomImageView(requireContext(), uri.toString())
                                 imageView[1].setOnClickListener {
                                     onHandleMoreImagesOrVideos(imageView)
                                 }
@@ -141,7 +141,7 @@ class HomeScreenFragment : Fragment() {
                                 listOfViews.add(videoView)
                                 listOfUris.add(uri)
                             }
-                            if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1,-1)) {
+                            if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1, -1)) {
                                 listOfViews.add(8, CustomLayer(requireContext()))
                                 listOfUris.add(8, Uri.EMPTY)
                             }
@@ -170,8 +170,8 @@ class HomeScreenFragment : Fragment() {
         return Pair(-1, -1)
     }
 
-    private fun getFirstImageWidthAndHeight(i: Int, uri: Uri){
-        if (i == 0){
+    private fun getFirstImageWidthAndHeight(i: Int, uri: Uri) {
+        if (i == 0) {
             var bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
             binding.customGridGroup.firstItemWidth = bitmap.getScaledWidth(DisplayMetrics.DENSITY_DEFAULT)
             binding.customGridGroup.firstItemHeight = bitmap.getScaledHeight(DisplayMetrics.DENSITY_DEFAULT)
@@ -183,8 +183,8 @@ class HomeScreenFragment : Fragment() {
 
     private fun uploadFiles() {
         val mutableLists = mutableListOf<Uri>()
-        for(i in 0 until listOfUris.size) {
-            if(listOfUris[i] != Uri.EMPTY) {
+        for (i in 0 until listOfUris.size) {
+            if (listOfUris[i] != Uri.EMPTY) {
                 mutableLists.add(listOfUris[i])
             }
         }
@@ -215,8 +215,9 @@ class HomeScreenFragment : Fragment() {
 
 
         binding.buttonChooseImageVideo.setOnClickListener {
-            val isStoragePermissionAllowed = FileUtils.getPermissionForStorageWithMultipleTimesDenial(requireContext(), this.requireActivity())
-            if(isStoragePermissionAllowed){
+            val isStoragePermissionAllowed =
+                FileUtils.getPermissionForStorageWithMultipleTimesDenial(requireContext(), this.requireActivity())
+            if (isStoragePermissionAllowed) {
                 val pickerIntent = Intent(Intent.ACTION_PICK)
                 pickerIntent.type = "*/*"
                 pickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)

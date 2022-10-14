@@ -34,8 +34,8 @@
 
 
         <TextView
-            style="@style/TextColor"
             android:id="@+id/my_name"
+            style="@style/TextColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
@@ -60,8 +60,8 @@
             />
 
         <TextView
-            style="@style/TextColor"
             android:id="@+id/caption"
+            style="@style/TextColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"

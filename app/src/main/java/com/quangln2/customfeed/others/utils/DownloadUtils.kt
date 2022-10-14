@@ -95,7 +95,7 @@ object DownloadUtils {
     }
 
     private fun downloadVideo(videoUrl: String, context: Context) {
-        try{
+        try {
             val req = Request.Builder().url(videoUrl).build()
             val fileName = URLUtil.guessFileName(videoUrl, null, null)
             val file = File(context.cacheDir, fileName)
@@ -143,7 +143,7 @@ object DownloadUtils {
         return type
     }
 
-     fun isNetworkConnected(context: Context): Boolean {
+    fun isNetworkConnected(context: Context): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val capabilities = cm.getNetworkCapabilities(cm.activeNetwork)
         if (capabilities != null) {

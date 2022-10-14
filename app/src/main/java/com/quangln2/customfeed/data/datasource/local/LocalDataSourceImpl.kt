@@ -28,6 +28,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
             feedDao.update(myPost)
         }
     }
+
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
     override suspend fun getAll(): List<MyPost> = feedDao.getAll()

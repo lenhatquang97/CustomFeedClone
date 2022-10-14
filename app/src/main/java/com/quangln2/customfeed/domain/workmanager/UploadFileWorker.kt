@@ -38,7 +38,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
 
     override fun doWork(): Result {
         builder.setProgress(0, 0, true)
-        with(NotificationManagerCompat.from(applicationContext)){
+        with(NotificationManagerCompat.from(applicationContext)) {
             notify(id, builder.build())
         }
 
@@ -69,7 +69,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
             builder.setProgress(0, 0, false)
             builder.setContentText("Upload failed")
             builder.setAutoCancel(true)
-            with(NotificationManagerCompat.from(applicationContext)){
+            with(NotificationManagerCompat.from(applicationContext)) {
                 notify(id, builder.build())
             }
             e.printStackTrace()
@@ -77,7 +77,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
         }
     }
 
-    private fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context){
+    private fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context) {
         val uploadPostUseCase =
             UploadPostUseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
         uploadPostUseCase(requestBody).enqueue(object : retrofit2.Callback<ResponseBody> {
@@ -86,7 +86,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
                 builder.setProgress(0, 0, false)
                 builder.setContentText("Upload successfully")
                 builder.setAutoCancel(true)
-                with(NotificationManagerCompat.from(context)){
+                with(NotificationManagerCompat.from(context)) {
                     notify(id, builder.build())
                 }
 
@@ -97,7 +97,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
                 builder.setProgress(0, 0, false)
                 builder.setContentText("Upload failed")
                 builder.setAutoCancel(true)
-                with(NotificationManagerCompat.from(context)){
+                with(NotificationManagerCompat.from(context)) {
                     notify(id, builder.build())
                 }
 

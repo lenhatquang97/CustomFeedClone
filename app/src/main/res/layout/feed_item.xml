@@ -37,8 +37,8 @@
 
 
     <TextView
-        style="@style/TextColor"
         android:id="@+id/my_name"
+        style="@style/TextColor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
@@ -63,8 +63,8 @@
         />
 
     <TextView
-        style="@style/TextColor"
         android:id="@+id/caption"
+        style="@style/TextColor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
@@ -104,22 +104,21 @@
         app:layout_constraintTop_toBottomOf="@id/learn_more" />
 
     <com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
-        android:layout_margin="8dp"
         android:id="@+id/customGridGroup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingVertical="8dp"
+        android:layout_margin="8dp"
         android:paddingHorizontal="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/learn_less"
+        android:paddingVertical="8dp"
         app:layout_constraintBottom_toTopOf="@id/delete_button"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/learn_less" />
 
     <View
-        android:visibility="gone"
         android:id="@+id/block_zone"
         android:layout_width="match_parent"
         android:layout_height="20dp"
+        android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@+id/customGridGroup" />
 
     <ImageButton

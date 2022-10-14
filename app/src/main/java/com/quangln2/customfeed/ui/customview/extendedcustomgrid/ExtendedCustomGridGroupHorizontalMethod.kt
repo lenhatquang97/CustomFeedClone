@@ -2,7 +2,7 @@ package com.quangln2.customfeed.ui.customview.extendedcustomgrid
 
 import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
 
-fun ExtendedCustomGridGroup.drawHorizontalGridMoreThanTwoAndLessThanFour(){
+fun ExtendedCustomGridGroup.drawHorizontalGridMoreThanTwoAndLessThanFour() {
     val widthGrid = width.toFloat()
     val largeRectangle = RectanglePoint(0f, 0f, widthGrid, widthGrid / 2)
     val top = widthGrid / 2
@@ -16,7 +16,8 @@ fun ExtendedCustomGridGroup.drawHorizontalGridMoreThanTwoAndLessThanFour(){
         rectangles.add(RectanglePoint(left, top, right, bottom))
     }
 }
-fun ExtendedCustomGridGroup.drawHorizontalGridWithFive(){
+
+fun ExtendedCustomGridGroup.drawHorizontalGridWithFive() {
     val widthGrid = width.toFloat()
     val firstRect = RectanglePoint(0f, 0f, widthGrid / 2, widthGrid / 2)
     val secondRect = RectanglePoint(0f, widthGrid / 2, widthGrid / 2, widthGrid)
@@ -32,7 +33,8 @@ fun ExtendedCustomGridGroup.drawHorizontalGridWithFive(){
         rectangles.add(RectanglePoint(left, top, right, bottom))
     }
 }
-fun ExtendedCustomGridGroup.drawHorizontalGridWithEight(){
+
+fun ExtendedCustomGridGroup.drawHorizontalGridWithEight() {
     val widthGrid = width.toFloat()
     val largestRect = RectanglePoint(0f, 0f, 2 * widthGrid / 3, 1 * widthGrid / 3)
     val firstRect = RectanglePoint(2 * widthGrid / 3, 0f, widthGrid, 1 * widthGrid / 3)

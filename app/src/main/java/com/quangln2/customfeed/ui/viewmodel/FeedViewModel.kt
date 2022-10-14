@@ -53,10 +53,9 @@ class FeedViewModel(
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
 
-
     fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
         //Handle no posts
-        if(caption.isEmpty() && uriLists.size == 0){
+        if (caption.isEmpty() && uriLists.size == 0) {
             Toast.makeText(context, "Please add some content", Toast.LENGTH_SHORT).show()
             return
         }
@@ -75,7 +74,8 @@ class FeedViewModel(
             .setInputData(inputData)
             .build()
 
-        val workManager = WorkManager.getInstance(context).beginUniqueWork("ForegroundWorker", ExistingWorkPolicy.APPEND_OR_REPLACE, oneTimeWorkRequest)
+        val workManager = WorkManager.getInstance(context)
+            .beginUniqueWork("ForegroundWorker", ExistingWorkPolicy.APPEND_OR_REPLACE, oneTimeWorkRequest)
         workManager.enqueue()
     }
 
@@ -93,7 +93,7 @@ class FeedViewModel(
 
     private fun loadCache() {
         val ls = mutableListOf<MyPost>()
-        viewModelScope.launch(Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             val offlinePosts = getAllInDatabaseUseCase()
             for (item in offlinePosts) {
                 ls.add(item)
@@ -104,7 +104,7 @@ class FeedViewModel(
 
     }
 
-    fun getAllFeedsWithPreloadCache(context: Context){
+    fun getAllFeedsWithPreloadCache(context: Context) {
         loadCache()
         getAllFeeds(context)
     }
@@ -175,7 +175,7 @@ class FeedViewModel(
         })
     }
 
-    fun downloadResourceWithId(resources: MutableList<OfflineResource>, context: Context){
+    fun downloadResourceWithId(resources: MutableList<OfflineResource>, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             for (urlObj in resources) {
                 DownloadUtils.downloadResource(urlObj.url, context)

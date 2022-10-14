@@ -23,11 +23,11 @@ class ExtendedCustomGridGroup : ViewGroup {
     @SuppressLint("DrawAllocation")
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         rectangles.clear()
-        when(childCount){
+        when (childCount) {
             0 -> return
             1 -> drawOneChild()
-            2,3,4 -> {
-                when(getChildAt(0)){
+            2, 3, 4 -> {
+                when (getChildAt(0)) {
                     is ImageView -> {
                         if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridMoreThanTwoAndLessThanFour()
@@ -42,7 +42,7 @@ class ExtendedCustomGridGroup : ViewGroup {
 
             }
             5 -> {
-                when(getChildAt(0)){
+                when (getChildAt(0)) {
                     is ImageView -> {
                         if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridWithFive()
@@ -58,7 +58,7 @@ class ExtendedCustomGridGroup : ViewGroup {
             6 -> drawSixChildren()
             7 -> drawSevenChildren()
             8 -> {
-                when(getChildAt(0)){
+                when (getChildAt(0)) {
                     is ImageView -> {
                         if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridWithEight()

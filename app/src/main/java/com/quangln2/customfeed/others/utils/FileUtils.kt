@@ -57,7 +57,7 @@ object FileUtils {
         return BitmapDrawable(context.resources, bitmap)
     }
 
-    fun getPermissionForStorage(context: Context, activity: Activity): Boolean{
+    fun getPermissionForStorage(context: Context, activity: Activity): Boolean {
         val permissionCheck = ContextCompat.checkSelfPermission(
             context,
             android.Manifest.permission.READ_EXTERNAL_STORAGE
@@ -70,13 +70,17 @@ object FileUtils {
         return true
     }
 
-    fun getPermissionForStorageWithMultipleTimesDenial(context: Context, activity: Activity): Boolean{
+    fun getPermissionForStorageWithMultipleTimesDenial(context: Context, activity: Activity): Boolean {
         val permissionCheck = ContextCompat.checkSelfPermission(
             context,
             android.Manifest.permission.READ_EXTERNAL_STORAGE
         )
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(context, "Note that when you deny more than twice, you need to accept permission from Settings", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                "Note that when you deny more than twice, you need to accept permission from Settings",
+                Toast.LENGTH_LONG
+            ).show()
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
             val uri: Uri = Uri.fromParts("package", context.packageName, null)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK

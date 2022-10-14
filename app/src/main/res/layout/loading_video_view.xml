@@ -3,30 +3,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/black">
+    android:background="@color/black"
+    android:orientation="vertical">
 
 
     <com.google.android.exoplayer2.ui.PlayerView
-        android:background="@color/black"
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
+        android:background="@color/black"
         app:resize_mode="zoom"
         app:surface_type="texture_view"
         app:use_controller="false" />
 
 
-
     <ImageView
-        android:visibility="invisible"
         android:id="@+id/cross_x"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right|top"
         android:layout_margin="8dp"
-        android:src="@drawable/remove_icon" />
+        android:src="@drawable/remove_icon"
+        android:visibility="invisible" />
 
 
     <ProgressBar
@@ -57,8 +56,6 @@
         android:layout_width="wrap_content"
         android:layout_height="10dp"
         android:layout_gravity="bottom" />
-
-
 
 
 </merge>

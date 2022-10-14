@@ -65,9 +65,10 @@ class FeedListAdapter(
 
     inner class FeedItemViewHolder constructor(private val binding: FeedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        private fun prepare(){
+        private fun prepare() {
 
         }
+
         private fun afterLoad(item: MyPostRender) {
             if (item.resources.size == 0) {
                 binding.customGridGroup.visibility = View.GONE
@@ -145,15 +146,19 @@ class FeedListAdapter(
                     }
                     if (value.contains("mp4")) {
                         withContext(Dispatchers.Main) {
-                            if(i == 0 && DownloadUtils.isNetworkConnected(context)){
-                                try{
-                                    withContext(Dispatchers.IO){
-                                        val urlParams = if(URLUtil.isValidUrl(value)) { value } else {""}
+                            if (i == 0 && DownloadUtils.isNetworkConnected(context)) {
+                                try {
+                                    withContext(Dispatchers.IO) {
+                                        val urlParams = if (URLUtil.isValidUrl(value)) {
+                                            value
+                                        } else {
+                                            ""
+                                        }
                                         val bitmap = FileUtils.getVideoThumbnail(value.toUri(), context, urlParams)
                                         binding.customGridGroup.firstItemWidth = bitmap.intrinsicWidth
                                         binding.customGridGroup.firstItemHeight = bitmap.intrinsicHeight
                                     }
-                                } catch (e: Exception){
+                                } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
 
@@ -175,7 +180,6 @@ class FeedListAdapter(
                                 )
                             }
                             binding.customGridGroup.addView(videoView)
-
 
 
                         }
@@ -245,7 +249,6 @@ class FeedListAdapter(
             afterLoad(item)
 
 
-
         }
 
 
@@ -281,7 +284,7 @@ class FeedListAdapter(
         super.onViewRecycled(holder)
         if (holder is FeedItemViewHolder) {
             val customGridGroup = holder.itemView.findViewById<CustomGridGroup>(R.id.customGridGroup)
-            for(i in 0 until customGridGroup.size) {
+            for (i in 0 until customGridGroup.size) {
                 val child = customGridGroup.getChildAt(i)
                 if (child is LoadingVideoView) {
                     child.player.pause()

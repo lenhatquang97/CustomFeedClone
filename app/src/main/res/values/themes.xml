@@ -7,6 +7,7 @@
         <item name="android:statusBarColor" tools:targetApi="l">@color/blue</item>
         <!-- Customize your theme here. -->
     </style>
+
     <style name="TextColor">
         <item name="android:textColor">@color/black</item>
     </style>
