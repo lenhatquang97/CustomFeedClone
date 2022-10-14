@@ -12,10 +12,12 @@ import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.databinding.FragmentImageOrVideoBinding
 import com.quangln2.customfeed.others.utils.DownloadUtils
 
+
 class ImageOrVideoFragment : Fragment() {
     private lateinit var binding: FragmentImageOrVideoBinding
     private lateinit var player: Player
     private var currentVideoPosition: Long = -1
+    private var urlTmp = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -73,6 +75,8 @@ class ImageOrVideoFragment : Fragment() {
 
 
     private fun initializeVideoForLoading(url: String) {
+        urlTmp = url
+
         player = ExoPlayer.Builder(requireContext()).build()
         binding.fullVideoView.player = player
         val mediaItem = MediaItem.fromUri(url)
@@ -85,8 +89,7 @@ class ImageOrVideoFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        val url = arguments?.getString("url")
-        if (url != null && url.contains("mp4")) {
+        if (urlTmp.contains("mp4")) {
             player.pause()
             player.release()
         }

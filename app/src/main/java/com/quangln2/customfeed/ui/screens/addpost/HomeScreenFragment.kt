@@ -26,6 +26,7 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
+import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.CustomImageView
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
@@ -214,11 +215,15 @@ class HomeScreenFragment : Fragment() {
 
 
         binding.buttonChooseImageVideo.setOnClickListener {
-            val pickerIntent = Intent(Intent.ACTION_PICK)
-            pickerIntent.type = "*/*"
-            pickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-            pickerIntent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
-            resultLauncher.launch(pickerIntent)
+            val isStoragePermissionAllowed = FileUtils.getPermissionForStorageWithMultipleTimesDenial(requireContext(), this.requireActivity())
+            if(isStoragePermissionAllowed){
+                val pickerIntent = Intent(Intent.ACTION_PICK)
+                pickerIntent.type = "*/*"
+                pickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                pickerIntent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+                resultLauncher.launch(pickerIntent)
+            }
+
         }
         binding.buttonSubmitToServer.setOnClickListener {
             findNavController().navigate(R.id.action_homeScreenFragment_to_allFeedsFragment, null, navOptions {

@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white">
+    style="@style/BackgroundColor"
+    >
 
     <androidx.cardview.widget.CardView
         android:id="@+id/my_avatar"
@@ -35,7 +36,9 @@
         android:text="@string/what_is_your_feeling"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/my_avatar"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        style="@style/TextColor"
+        />
 
     <View
         android:id="@+id/view"

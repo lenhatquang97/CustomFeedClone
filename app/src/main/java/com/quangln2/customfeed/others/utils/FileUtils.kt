@@ -2,6 +2,7 @@ package com.quangln2.customfeed.others.utils
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
@@ -10,6 +11,8 @@ import android.graphics.drawable.Drawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.MediaStore
+import android.provider.Settings
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -54,14 +57,35 @@ object FileUtils {
         return BitmapDrawable(context.resources, bitmap)
     }
 
-    fun getPermissionForStorage(context: Context, activity: Activity) {
+    fun getPermissionForStorage(context: Context, activity: Activity): Boolean{
         val permissionCheck = ContextCompat.checkSelfPermission(
             context,
             android.Manifest.permission.READ_EXTERNAL_STORAGE
         )
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+            return false
         }
+
+        return true
+    }
+
+    fun getPermissionForStorageWithMultipleTimesDenial(context: Context, activity: Activity): Boolean{
+        val permissionCheck = ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        )
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(context, "Note that when you deny more than twice, you need to accept permission from Settings", Toast.LENGTH_LONG).show()
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            val uri: Uri = Uri.fromParts("package", context.packageName, null)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.data = uri
+            context.startActivity(intent)
+            return false
+        }
+
+        return true
     }
 
     fun compressImagesAndVideos(uriLists: MutableList<Uri>, context: Context): MutableList<Uri> {
