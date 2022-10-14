@@ -34,13 +34,13 @@
 
 
         <TextView
+            style="@style/TextColor"
             android:id="@+id/my_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="16dp"
             android:text="Quang Le"
-            android:textColor="@color/black"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@id/my_avatar"
@@ -60,13 +60,13 @@
             />
 
         <TextView
+            style="@style/TextColor"
             android:id="@+id/caption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:paddingRight="32dp"
             android:text="How many people are there?"
-            android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/created_time" />
 
