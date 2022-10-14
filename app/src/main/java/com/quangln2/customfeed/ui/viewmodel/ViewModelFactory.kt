@@ -15,7 +15,6 @@ class ViewModelFactory constructor(private val feedRepository: FeedRepository) :
                     FeedViewModel(
                         GetAllFeedsUseCase(feedRepository),
                         DeleteFeedUseCase(feedRepository),
-                        UploadMultipartBuilderUseCase(feedRepository),
                         InsertDatabaseUseCase(feedRepository),
                         DeleteDatabaseUseCase(feedRepository),
                         GetAllInDatabaseUseCase(feedRepository)

@@ -5,8 +5,10 @@ import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.URLUtil
 import android.widget.ImageView
 import android.widget.LinearLayout
+import androidx.core.net.toUri
 import androidx.core.view.size
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
@@ -63,6 +65,7 @@ class FeedListAdapter(
     inner class FeedItemViewHolder constructor(private val binding: FeedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         private fun prepare(){
+            binding.loadingCircularIndicator.z = 1f
             binding.loadingCircularIndicator.visibility = View.VISIBLE
             if (binding.customGridGroup.size > 0) {
                 binding.loadingCircularIndicator.visibility = View.GONE
@@ -147,13 +150,19 @@ class FeedListAdapter(
                     }
                     if (value.contains("mp4")) {
                         withContext(Dispatchers.Main) {
+                            if(i == 0){
+                                val urlParams = if(URLUtil.isValidUrl(value)) { value } else {""}
+                                val bitmap = FileUtils.getVideoThumbnail(value.toUri(), context, urlParams)
+                                binding.customGridGroup.firstItemWidth = bitmap.intrinsicWidth
+                                binding.customGridGroup.firstItemHeight = bitmap.intrinsicHeight
+                            }
+
                             val videoView = LoadingVideoView(context, value)
                             videoView.layoutParams = LinearLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
                             videoView.setOnClickListener {
-                                println("Click video ${item.resources.map { it.url }.toList()}")
                                 val stringArr = ArrayList<String>()
                                 item.resources.forEach {
                                     stringArr.add(it.url)
@@ -207,8 +216,8 @@ class FeedListAdapter(
                                 }
                             ).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
                                 override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                                    binding.customGridGroup.firstWidth = resource.intrinsicWidth
-                                    binding.customGridGroup.firstHeight = resource.intrinsicHeight
+                                    binding.customGridGroup.firstItemWidth = resource.intrinsicWidth
+                                    binding.customGridGroup.firstItemHeight = resource.intrinsicHeight
                                     imageView.setImageDrawable(resource)
                                 }
 

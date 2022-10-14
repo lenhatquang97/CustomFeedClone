@@ -13,8 +13,8 @@ class ExtendedCustomGridGroup : ViewGroup {
     val rectangles = mutableListOf<RectanglePoint>()
     private val contentPadding = 5
 
-    var firstWidth = 0
-    var firstHeight = 0
+    var firstItemWidth = 0
+    var firstItemHeight = 0
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
@@ -29,7 +29,7 @@ class ExtendedCustomGridGroup : ViewGroup {
             2,3,4 -> {
                 when(getChildAt(0)){
                     is ImageView -> {
-                        if (firstWidth > firstHeight) {
+                        if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridMoreThanTwoAndLessThanFour()
                         } else {
                             drawVerticalGridMoreThanTwoAndLessThanFour()
@@ -44,7 +44,7 @@ class ExtendedCustomGridGroup : ViewGroup {
             5 -> {
                 when(getChildAt(0)){
                     is ImageView -> {
-                        if (firstWidth > firstHeight) {
+                        if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridWithFive()
                         } else {
                             drawVerticalGridWithFive()
@@ -60,7 +60,7 @@ class ExtendedCustomGridGroup : ViewGroup {
             8 -> {
                 when(getChildAt(0)){
                     is ImageView -> {
-                        if (firstWidth > firstHeight) {
+                        if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridWithEight()
                         } else {
                             drawVerticalGridWithEight()

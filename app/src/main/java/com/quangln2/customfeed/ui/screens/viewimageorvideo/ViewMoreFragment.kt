@@ -116,8 +116,8 @@ class ViewMoreFragment : Fragment() {
                         .into(object : SimpleTarget<Drawable>() {
                             override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                                 CoroutineScope(Dispatchers.Main).launch {
-                                    binding.extendedCustomGridGroup.firstWidth = resource.intrinsicWidth
-                                    binding.extendedCustomGridGroup.firstHeight = resource.intrinsicHeight
+                                    binding.extendedCustomGridGroup.firstItemWidth = resource.intrinsicWidth
+                                    binding.extendedCustomGridGroup.firstItemHeight = resource.intrinsicHeight
                                 }
                                 imageView.setImageDrawable(resource)
                             }

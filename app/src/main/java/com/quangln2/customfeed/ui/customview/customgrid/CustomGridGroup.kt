@@ -16,8 +16,8 @@ class CustomGridGroup : ViewGroup {
     private val contentPadding = 12
     private var itemNumber = 0
 
-    var firstWidth = 0
-    var firstHeight = 0
+    var firstItemWidth = 0
+    var firstItemHeight = 0
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
@@ -33,30 +33,24 @@ class CustomGridGroup : ViewGroup {
             1 -> drawOneChild()
             2,3,4 -> {
                 when(getChildAt(0)){
-                    is ImageView, is VideoThumbnailView, is FrameLayout -> {
-                        if (firstWidth > firstHeight) {
+                    is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
+                        if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridMoreThanTwoAndLessThanFour()
                         } else {
                             drawVerticalGridMoreThanTwoAndLessThanFour()
                         }
-                    }
-                    is VideoView, is LoadingVideoView -> {
-                        drawHorizontalGridMoreThanTwoAndLessThanFour()
                     }
                 }
 
             }
             5 -> {
                 when(getChildAt(0)){
-                    is ImageView, is VideoThumbnailView, is FrameLayout -> {
-                        if (firstWidth > firstHeight) {
+                    is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
+                        if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridWithFive()
                         } else {
                             drawVerticalGridWithFive()
                         }
-                    }
-                    is VideoView, is LoadingVideoView -> {
-                        drawHorizontalGridWithFive()
                     }
                 }
             }
@@ -64,15 +58,12 @@ class CustomGridGroup : ViewGroup {
             7 -> drawSevenChildren()
             8 -> {
                 when(getChildAt(0)){
-                    is ImageView, is VideoThumbnailView, is FrameLayout -> {
-                        if (firstWidth > firstHeight) {
+                    is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
+                        if (firstItemWidth > firstItemHeight) {
                             drawHorizontalGridWithEight()
                         } else {
                             drawVerticalGridWithEight()
                         }
-                    }
-                    is VideoView, is LoadingVideoView -> {
-                        drawHorizontalGridWithEight()
                     }
                 }
             }

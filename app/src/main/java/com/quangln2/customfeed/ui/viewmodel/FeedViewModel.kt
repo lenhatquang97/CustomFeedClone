@@ -3,6 +3,7 @@ package com.quangln2.customfeed.ui.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,7 +26,6 @@ import com.quangln2.customfeed.others.utils.DownloadUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -34,7 +34,6 @@ import retrofit2.Response
 class FeedViewModel(
     val getAllFeedsUseCase: GetAllFeedsUseCase,
     val deleteFeedUseCase: DeleteFeedUseCase,
-    val uploadMultipartBuilderUseCase: UploadMultipartBuilderUseCase,
     val insertDatabaseUseCase: InsertDatabaseUseCase,
     val deleteDatabaseUseCase: DeleteDatabaseUseCase,
     val getAllInDatabaseUseCase: GetAllInDatabaseUseCase
@@ -54,6 +53,14 @@ class FeedViewModel(
 
 
     fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
+        //Handle no posts
+        if(caption.isEmpty() && uriLists.size == 0){
+            Toast.makeText(context, "Please add some content", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+
+
         FeedController.isLoading.value = 1
 
         val uriStringLists = uriLists.map { it.toString() }
@@ -113,7 +120,7 @@ class FeedViewModel(
                                 val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
                                 ls.add(itemConverted)
                             }
-                            println("ls: ${ls.joinToString { it.caption }}")
+                            Log.d("FeedViewModel", "ls: ${ls.joinToString { it.caption }}")
                             _feedLoadingCode.postValue(response.code())
                             _uploadLists.postValue(ls.toMutableList())
 
@@ -132,8 +139,7 @@ class FeedViewModel(
             }
 
             override fun onFailure(call: Call<MutableList<UploadPost>>, t: Throwable) {
-                Log.d("GetAllFeeds", "Failure")
-                println(t.cause?.message)
+                Log.d("GetAllFeeds", "Failure ${t.cause?.message}")
                 loadCache()
             }
 
@@ -166,18 +172,9 @@ class FeedViewModel(
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.d("DeleteFeed", "Failure")
-                println(t.cause?.message)
+                Log.d("DeleteFeed", "Failure ${t.cause?.message}")
             }
 
         })
-    }
-
-    fun uploadMultipartBuilder(
-        caption: String,
-        uriLists: MutableList<Uri>,
-        context: Context
-    ): List<MultipartBody.Part> {
-        return uploadMultipartBuilderUseCase(caption, uriLists, context)
     }
 }

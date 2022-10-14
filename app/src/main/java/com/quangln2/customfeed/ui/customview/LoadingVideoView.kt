@@ -82,9 +82,6 @@ class LoadingVideoView @JvmOverloads constructor(
         player.setMediaItem(mediaItem)
         player.prepare()
 
-
-        //playerView.background =
-        //(playerView.videoSurfaceView as SurfaceView).setZOrderOnTop(true)
     }
 
     private fun initPlayer() {

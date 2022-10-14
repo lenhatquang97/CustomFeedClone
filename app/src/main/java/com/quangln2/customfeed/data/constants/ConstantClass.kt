@@ -4,7 +4,7 @@ object ConstantClass {
     const val NAME = "Quang Lê"
     const val AVATAR_LINK =
         "https://res.cloudinary.com/donnkxojy/image/upload/v1665126486/cld-sample-2.jpg"
-    const val DEFAULT_ENDPOINT = "https://85ef-171-244-166-188.ap.ngrok.io/"
+    const val DEFAULT_ENDPOINT = "https://d027-2a09-bac0-23-00-815-bf9.ap.ngrok.io/"
     const val IMAGE_SAMPLE_LINK =
         "https://res.cloudinary.com/my-personal-project/image/upload/v1663324958/cld-sample-4.jpg"
     const val VIDEO_SAMPLE_LINK =

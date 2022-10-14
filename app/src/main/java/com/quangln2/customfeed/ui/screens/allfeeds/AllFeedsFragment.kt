@@ -124,7 +124,6 @@ class AllFeedsFragment : Fragment() {
                 val listsOfPostRender = mutableListOf<MyPostRender>()
                 listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(MyPost().copy(feedId = "none"), TypeOfPost.ADD_NEW_POST))
                 it.forEach { itr -> listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(itr)) }
-                println("Render size: ${listsOfPostRender.joinToString { it.caption }}")
                 adapterVal.submitList(listsOfPostRender.toMutableList())
             } else {
                 if (viewModel.feedLoadingCode.value != null) {
@@ -137,6 +136,7 @@ class AllFeedsFragment : Fragment() {
                     }
                 }
             }
+            binding.swipeRefreshLayout.isRefreshing = false
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
@@ -144,8 +144,6 @@ class AllFeedsFragment : Fragment() {
             binding.noPostId.imageView.visibility = View.VISIBLE
             binding.noPostId.textNote.text = "Loading"
             viewModel.getAllFeeds(requireContext())
-            binding.swipeRefreshLayout.isRefreshing = false
-
         }
 
 
@@ -153,7 +151,10 @@ class AllFeedsFragment : Fragment() {
             //1 means loading, 0 means complete loading, but -1 means undefined
             binding.loadingCard.root.visibility = if(it == 1) View.VISIBLE else View.GONE
             if(it == 0){
-                viewModel.getAllFeeds(requireContext())
+                binding.swipeRefreshLayout.post {
+                    binding.swipeRefreshLayout.isRefreshing = true
+                }
+                binding.swipeRefreshLayout.performClick()
             }
         }
 

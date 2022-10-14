@@ -39,7 +39,6 @@ class CustomImageView {
             val imageView = ImageView(context)
             imageView.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-
             imageView.setImageURI(url.toUri())
             return imageView
         }

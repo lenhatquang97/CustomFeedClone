@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -78,8 +80,6 @@ class HomeScreenFragment : Fragment() {
                 listOfUris.removeAt(imageAboutDeleted)
                 listOfUris.removeAt(index - 1)
 
-                println("start: ${index-1} ${listOfViews.size}")
-
                 binding.customGridGroup.addView(listOfViews[index - 1])
 
 
@@ -108,6 +108,8 @@ class HomeScreenFragment : Fragment() {
                         val mimeType = context?.contentResolver?.getType(uri)
                         if (mimeType != null) {
                             if (mimeType.startsWith("image/")) {
+                                getFirstImageWidthAndHeight(i, uri)
+
                                 val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
                                 imageView[1].setOnClickListener {
                                     onHandleMoreImagesOrVideos(imageView)
@@ -150,9 +152,6 @@ class HomeScreenFragment : Fragment() {
                         ls?.add(uriForMultipart)
                         viewModel._uriLists.value = ls?.toMutableList()
                     }
-                } else if (data.data != null) {
-                    val imgPath = data.data!!.path
-                    println("Image path is: $imgPath")
                 }
             }
         }
@@ -168,6 +167,16 @@ class HomeScreenFragment : Fragment() {
             }
         }
         return Pair(-1, -1)
+    }
+
+    private fun getFirstImageWidthAndHeight(i: Int, uri: Uri){
+        if (i == 0){
+            var bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+            binding.customGridGroup.firstItemWidth = bitmap.getScaledWidth(DisplayMetrics.DENSITY_DEFAULT)
+            binding.customGridGroup.firstItemHeight = bitmap.getScaledHeight(DisplayMetrics.DENSITY_DEFAULT)
+            bitmap.recycle()
+            bitmap = null
+        }
     }
 
 

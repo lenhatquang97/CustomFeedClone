@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import com.cloudinary.android.MediaManager
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
@@ -12,6 +13,7 @@ import com.google.android.gms.security.ProviderInstaller
 
 
 class CustomFeedApplication : Application() {
+
     override fun onCreate() {
         super.onCreate()
         updateAndroidSecurityProvider()
@@ -22,13 +24,10 @@ class CustomFeedApplication : Application() {
     private fun updateAndroidSecurityProvider() {
         try {
             ProviderInstaller.installIfNeeded(this)
-            println("Installed security provider")
         } catch (e: GooglePlayServicesRepairableException) {
-            // Thrown when Google Play Services is not installed, up-to-date, or enabled
-            // Show dialog to allow users to install, update, or otherwise enable Google Play services.
-            // IGNORE
+            Log.d("Ignore",e.message.toString())
         } catch (e: GooglePlayServicesNotAvailableException) {
-
+            Log.d("Ignore",e.message.toString())
         }
     }
     private fun createNotificationChannel() {

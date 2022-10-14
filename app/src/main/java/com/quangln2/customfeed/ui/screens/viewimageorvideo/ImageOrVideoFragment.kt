@@ -68,6 +68,7 @@ class ImageOrVideoFragment : Fragment() {
         return binding.root
     }
 
+
     private fun initializeVideoForLoading(url: String) {
         player = ExoPlayer.Builder(requireContext()).build()
         binding.fullVideoView.player = player
@@ -76,11 +77,11 @@ class ImageOrVideoFragment : Fragment() {
         player.prepare()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        println("Destroy")
+    override fun onStop() {
+        super.onStop()
         val url = arguments?.getString("url")
         if (url != null && url.contains("mp4")) {
+            player.pause()
             player.release()
         }
     }
