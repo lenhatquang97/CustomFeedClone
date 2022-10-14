@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.widget.Toast
@@ -82,6 +84,10 @@ object DownloadUtils {
                     }
                 }
 
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                    super.onLoadFailed(errorDrawable)
+                }
+
                 override fun onLoadCleared(placeholder: Drawable?) {}
 
             }
@@ -89,27 +95,30 @@ object DownloadUtils {
     }
 
     private fun downloadVideo(videoUrl: String, context: Context) {
-        val req = Request.Builder().url(videoUrl).build()
-        val fileName = URLUtil.guessFileName(videoUrl, null, null)
-        val file = File(context.cacheDir, fileName)
-        downloadClient.newCall(req).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    val fout = FileOutputStream(file)
-                    write(response.body!!.byteStream(), fout)
-                    fout.close()
-                    response.close()
-                } else {
-                    Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
+        try{
+            val req = Request.Builder().url(videoUrl).build()
+            val fileName = URLUtil.guessFileName(videoUrl, null, null)
+            val file = File(context.cacheDir, fileName)
+            downloadClient.newCall(req).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
                 }
-            }
 
-        })
+                override fun onResponse(call: Call, response: Response) {
+                    if (response.isSuccessful) {
+                        val fout = FileOutputStream(file)
+                        write(response.body!!.byteStream(), fout)
+                        fout.close()
+                        response.close()
+                    } else {
+                        Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
+                    }
+                }
 
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun write(inputStream: InputStream?, outputStream: FileOutputStream): Long {
@@ -132,5 +141,20 @@ object DownloadUtils {
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
         }
         return type
+    }
+
+     fun isNetworkConnected(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities = cm.getNetworkCapabilities(cm.activeNetwork)
+        if (capabilities != null) {
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                return true
+            }
+        }
+        return false
     }
 }

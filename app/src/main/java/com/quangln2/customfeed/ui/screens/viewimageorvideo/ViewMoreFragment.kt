@@ -67,13 +67,17 @@ class ViewMoreFragment : Fragment() {
                         val imageView = ImageView(context)
                         Glide.with(requireContext()).load(value).thumbnail(0.1f).apply(requestOptions).into(imageView)
                         imageView.setOnClickListener {
+                            val urlArrayList = ArrayList<String>()
+                            item.resources.forEach {
+                                urlArrayList.add(it.url)
+                            }
                             findNavController().navigate(
                                 R.id.action_viewMoreFragment_to_viewFullVideoFragment,
                                 Bundle().apply {
                                     putString("value", item.resources[i].url)
                                     putStringArrayList(
                                         "listOfUrls",
-                                        item.resources.map { it.url }.toList() as ArrayList<String>
+                                        urlArrayList
                                     )
                                 },
                                 navOptions {
@@ -95,13 +99,17 @@ class ViewMoreFragment : Fragment() {
                     imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
                     imageView.setOnClickListener {
+                        val urlArrayList = ArrayList<String>()
+                        item.resources.forEach {
+                            urlArrayList.add(it.url)
+                        }
                         findNavController().navigate(
                             R.id.action_viewMoreFragment_to_viewFullVideoFragment,
                             Bundle().apply {
                                 putString("value", item.resources[i].url)
                                 putStringArrayList(
                                     "listOfUrls",
-                                    item.resources.map { it.url }.toList() as ArrayList<String>
+                                    urlArrayList
                                 )
                             },
                             navOptions {

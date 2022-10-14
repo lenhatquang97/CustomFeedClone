@@ -16,4 +16,5 @@ interface LocalDataSource {
     suspend fun getAll(): List<MyPost>
     suspend fun update(myPost: MyPost)
     suspend fun delete(id: String)
+    suspend fun getFeedWithId(feed_id: String): MyPost
 }

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.webkit.URLUtil
 import android.widget.ImageView
 import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.size
 import androidx.recyclerview.widget.AsyncDifferConfig
@@ -54,7 +55,7 @@ class FeedListAdapter(
     inner class AddNewItemViewHolder constructor(private val binding: FeedCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(context: Context) {
-            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
+            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(50)
             Glide.with(context).load(ConstantClass.AVATAR_LINK).apply(requestOptions).into(binding.circleAvatar)
             binding.root.setOnClickListener {
                 eventFeedCallback.onClickAddPost()
@@ -65,18 +66,12 @@ class FeedListAdapter(
     inner class FeedItemViewHolder constructor(private val binding: FeedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         private fun prepare(){
-            binding.loadingCircularIndicator.z = 1f
-            binding.loadingCircularIndicator.visibility = View.VISIBLE
-            if (binding.customGridGroup.size > 0) {
-                binding.loadingCircularIndicator.visibility = View.GONE
-            }
+
         }
         private fun afterLoad(item: MyPostRender) {
             if (item.resources.size == 0) {
-                binding.loadingCircularIndicator.visibility = View.GONE
                 binding.customGridGroup.visibility = View.GONE
             } else {
-                binding.loadingCircularIndicator.visibility = View.GONE
                 binding.customGridGroup.visibility = View.VISIBLE
             }
         }
@@ -88,7 +83,7 @@ class FeedListAdapter(
             binding.myName.text = item.name
             binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
 
-            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(200)
+            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
             Glide.with(context).load(item.avatar).apply(requestOptions).into(binding.myAvatarImage)
 
             if (item.caption.isEmpty()) {
@@ -150,13 +145,19 @@ class FeedListAdapter(
                     }
                     if (value.contains("mp4")) {
                         withContext(Dispatchers.Main) {
-                            if(i == 0){
-                                val urlParams = if(URLUtil.isValidUrl(value)) { value } else {""}
-                                val bitmap = FileUtils.getVideoThumbnail(value.toUri(), context, urlParams)
-                                binding.customGridGroup.firstItemWidth = bitmap.intrinsicWidth
-                                binding.customGridGroup.firstItemHeight = bitmap.intrinsicHeight
-                            }
+                            if(i == 0 && DownloadUtils.isNetworkConnected(context)){
+                                try{
+                                    withContext(Dispatchers.IO){
+                                        val urlParams = if(URLUtil.isValidUrl(value)) { value } else {""}
+                                        val bitmap = FileUtils.getVideoThumbnail(value.toUri(), context, urlParams)
+                                        binding.customGridGroup.firstItemWidth = bitmap.intrinsicWidth
+                                        binding.customGridGroup.firstItemHeight = bitmap.intrinsicHeight
+                                    }
+                                } catch (e: Exception){
+                                    e.printStackTrace()
+                                }
 
+                            }
                             val videoView = LoadingVideoView(context, value)
                             videoView.layoutParams = LinearLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -168,12 +169,15 @@ class FeedListAdapter(
                                     stringArr.add(it.url)
                                 }
                                 eventFeedCallback.onClickVideoView(
+                                    videoView.player.currentPosition,
                                     item.resources[i].url,
                                     stringArr
                                 )
                             }
-                            binding.loadingCircularIndicator.visibility = View.INVISIBLE
                             binding.customGridGroup.addView(videoView)
+
+
+
                         }
                     } else {
                         val imageView = ImageView(context)
@@ -183,12 +187,22 @@ class FeedListAdapter(
                         )
                         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
+
+
                         imageView.setOnClickListener {
+                            val urlArrayList = ArrayList<String>()
+                            item.resources.forEach {
+                                urlArrayList.add(it.url)
+                            }
                             eventFeedCallback.onClickVideoView(
+                                -1L,
                                 item.resources[i].url,
-                                item.resources.map { it.url }.toList() as ArrayList<String>
+                                urlArrayList
                             )
                         }
+
+                        val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
+                        imageView.setImageDrawable(drawable)
 
                         withContext(Dispatchers.Main) {
                             Glide.with(context).load(value).listener(
@@ -199,7 +213,8 @@ class FeedListAdapter(
                                         target: Target<Drawable>?,
                                         isFirstResource: Boolean
                                     ): Boolean {
-                                        binding.loadingCircularIndicator.visibility = View.VISIBLE
+                                        val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
+                                        imageView.setImageDrawable(drawable)
                                         return false
                                     }
 
@@ -210,7 +225,6 @@ class FeedListAdapter(
                                         dataSource: DataSource?,
                                         isFirstResource: Boolean
                                     ): Boolean {
-                                        binding.loadingCircularIndicator.visibility = View.INVISIBLE
                                         return false
                                     }
                                 }

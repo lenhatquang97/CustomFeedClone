@@ -15,6 +15,7 @@ import com.quangln2.customfeed.others.utils.DownloadUtils
 class ImageOrVideoFragment : Fragment() {
     private lateinit var binding: FragmentImageOrVideoBinding
     private lateinit var player: Player
+    private var currentVideoPosition: Long = -1
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -24,6 +25,8 @@ class ImageOrVideoFragment : Fragment() {
 
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
         val position = arguments?.getInt("position")
+
+        currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
 
         if (listOfUrls != null && position != null) {
             val url = if (DownloadUtils.doesLocalFileExist(
@@ -73,7 +76,10 @@ class ImageOrVideoFragment : Fragment() {
         player = ExoPlayer.Builder(requireContext()).build()
         binding.fullVideoView.player = player
         val mediaItem = MediaItem.fromUri(url)
+
         player.setMediaItem(mediaItem)
+        player.seekTo(currentVideoPosition)
+        player.playWhenReady = true
         player.prepare()
     }
 

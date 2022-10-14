@@ -16,6 +16,11 @@ import java.util.*
 class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
+    override suspend fun getFeedWithId(feed_id: String): MyPost = feedDao.getFeedWithId(feed_id)
+
+
+    @Suppress("RedundantSuspendModifier")
+    @WorkerThread
     override suspend fun insert(myPost: MyPost) {
         if (feedDao.existsWithId(myPost.feedId) == 0) {
             feedDao.insert(myPost)

@@ -20,8 +20,10 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
         context: Context
     ): List<MultipartBody.Part> = localDataSource.uploadMultipartBuilder(caption, uriLists, context)
 
+
     suspend fun insert(myPost: MyPost) = localDataSource.insert(myPost)
     suspend fun update(myPost: MyPost) = localDataSource.update(myPost)
     suspend fun delete(id: String) = localDataSource.delete(id)
     suspend fun getAll(): List<MyPost> = localDataSource.getAll()
+    suspend fun getListById(id: String): MyPost = localDataSource.getFeedWithId(id)
 }

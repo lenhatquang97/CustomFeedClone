@@ -17,7 +17,8 @@ class ViewModelFactory constructor(private val feedRepository: FeedRepository) :
                         DeleteFeedUseCase(feedRepository),
                         InsertDatabaseUseCase(feedRepository),
                         DeleteDatabaseUseCase(feedRepository),
-                        GetAllInDatabaseUseCase(feedRepository)
+                        GetAllInDatabaseUseCase(feedRepository),
+                        GetFeedByIdUseCase(feedRepository)
                     )
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

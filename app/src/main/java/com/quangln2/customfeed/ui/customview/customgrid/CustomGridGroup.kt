@@ -34,7 +34,7 @@ class CustomGridGroup : ViewGroup {
             2,3,4 -> {
                 when(getChildAt(0)){
                     is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
-                        if (firstItemWidth > firstItemHeight) {
+                        if (firstItemWidth >= firstItemHeight) {
                             drawHorizontalGridMoreThanTwoAndLessThanFour()
                         } else {
                             drawVerticalGridMoreThanTwoAndLessThanFour()
@@ -46,7 +46,7 @@ class CustomGridGroup : ViewGroup {
             5 -> {
                 when(getChildAt(0)){
                     is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
-                        if (firstItemWidth > firstItemHeight) {
+                        if (firstItemWidth >= firstItemHeight) {
                             drawHorizontalGridWithFive()
                         } else {
                             drawVerticalGridWithFive()
@@ -59,7 +59,7 @@ class CustomGridGroup : ViewGroup {
             8 -> {
                 when(getChildAt(0)){
                     is ImageView, is VideoThumbnailView, is FrameLayout, is VideoView, is LoadingVideoView -> {
-                        if (firstItemWidth > firstItemHeight) {
+                        if (firstItemWidth >= firstItemHeight) {
                             drawHorizontalGridWithEight()
                         } else {
                             drawVerticalGridWithEight()

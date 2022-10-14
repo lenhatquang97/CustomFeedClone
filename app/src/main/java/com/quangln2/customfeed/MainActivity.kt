@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
             object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: android.net.Network) {
                     super.onAvailable(network)
-                    Snackbar.make(findViewById(android.R.id.content), "Internet available", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(findViewById(android.R.id.content), "Internet has connected", Snackbar.LENGTH_LONG).show()
                 }
 
                 override fun onLost(network: android.net.Network) {

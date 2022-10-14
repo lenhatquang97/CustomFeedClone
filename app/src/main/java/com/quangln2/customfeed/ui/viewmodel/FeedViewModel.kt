@@ -17,6 +17,7 @@ import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeed.data.models.UploadWorkerModel
 import com.quangln2.customfeed.data.models.datamodel.MyPost
+import com.quangln2.customfeed.data.models.datamodel.OfflineResource
 import com.quangln2.customfeed.data.models.datamodel.UploadPost
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
@@ -36,7 +37,8 @@ class FeedViewModel(
     val deleteFeedUseCase: DeleteFeedUseCase,
     val insertDatabaseUseCase: InsertDatabaseUseCase,
     val deleteDatabaseUseCase: DeleteDatabaseUseCase,
-    val getAllInDatabaseUseCase: GetAllInDatabaseUseCase
+    val getAllInDatabaseUseCase: GetAllInDatabaseUseCase,
+    val getFeedByIdUseCase: GetFeedByIdUseCase
 ) : ViewModel() {
     var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
     val uriLists: LiveData<MutableList<Uri>> = _uriLists
@@ -120,20 +122,16 @@ class FeedViewModel(
                                 val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
                                 ls.add(itemConverted)
                             }
-                            Log.d("FeedViewModel", "ls: ${ls.joinToString { it.caption }}")
-                            _feedLoadingCode.postValue(response.code())
-                            _uploadLists.postValue(ls.toMutableList())
-
                             withContext(Dispatchers.IO) {
                                 ls.forEach {
                                     insertDatabaseUseCase(it)
                                 }
-                                downloadAllResourcesWithUpdate(context, body)
                             }
-                        } else {
-                            _feedLoadingCode.postValue(response.code())
-                            _uploadLists.postValue(ls.toMutableList())
+                            Log.d("FeedViewModel", "ls: ${ls.joinToString { it.caption }}")
                         }
+                        _feedLoadingCode.postValue(response.code())
+                        _uploadLists.postValue(ls.toMutableList())
+
                     }
                 }
             }
@@ -165,7 +163,6 @@ class FeedViewModel(
                     }
                     val ls = uploadLists.value
                     val filteredList = ls?.filter { it.feedId != id }
-
                     _uploadLists.value = filteredList?.toMutableList()
 
                 }
@@ -176,5 +173,13 @@ class FeedViewModel(
             }
 
         })
+    }
+
+    fun downloadResourceWithId(resources: MutableList<OfflineResource>, context: Context){
+        viewModelScope.launch(Dispatchers.IO) {
+            for (urlObj in resources) {
+                DownloadUtils.downloadResource(urlObj.url, context)
+            }
+        }
     }
 }

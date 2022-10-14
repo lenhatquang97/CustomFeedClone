@@ -39,6 +39,7 @@ class AllFeedsFragment : Fragment() {
     private lateinit var binding: FragmentAllFeedsBinding
     private lateinit var adapterVal: FeedListAdapter
 
+
     private val database by lazy {
         FeedDatabase.getFeedDatabase(requireContext())
     }
@@ -70,9 +71,10 @@ class AllFeedsFragment : Fragment() {
                     }
                 })
 
-            override fun onClickVideoView(value: String, listOfUrls: ArrayList<String>) = findNavController().navigate(
+            override fun onClickVideoView(currentVideoPosition:Long, value: String, listOfUrls: ArrayList<String>) = findNavController().navigate(
                 R.id.action_allFeedsFragment_to_viewFullVideoFragment,
                 Bundle().apply {
+                    putLong("currentVideoPosition", currentVideoPosition)
                     putString("value", value)
                     putStringArrayList("listOfUrls", listOfUrls)
                 },
@@ -105,6 +107,18 @@ class AllFeedsFragment : Fragment() {
             animation = null
         }
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                if(newState == RecyclerView.SCROLL_STATE_IDLE){
+                    val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
+                    if(firstVisibleItemPosition > 0){
+                        println("Idle $firstVisibleItemPosition")
+                        val item = viewModel.uploadLists.value?.get(firstVisibleItemPosition - 1)
+                        if(item != null){
+                            viewModel.downloadResourceWithId(item.resources, requireContext())
+                        }
+                    }
+                }
+            }
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager
                 if (manager is LinearLayoutManager) {
@@ -129,10 +143,6 @@ class AllFeedsFragment : Fragment() {
                 if (viewModel.feedLoadingCode.value != null) {
                     if (viewModel.feedLoadingCode.value!! != 200 && viewModel.feedLoadingCode.value!! != 0) {
                         binding.noPostId.root.visibility = View.VISIBLE
-                        binding.noPostId.alertView.visibility = View.VISIBLE
-                        binding.noPostId.imageView.visibility = View.INVISIBLE
-                        binding.noPostId.textNote.text =
-                            "Sorry that we can't load your feed cache. Swipe down to try again.\n Exception code: ${viewModel.feedLoadingCode.value}"
                     }
                 }
             }
@@ -140,7 +150,6 @@ class AllFeedsFragment : Fragment() {
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            binding.noPostId.alertView.visibility = View.INVISIBLE
             binding.noPostId.imageView.visibility = View.VISIBLE
             binding.noPostId.textNote.text = "Loading"
             viewModel.getAllFeeds(requireContext())
@@ -154,7 +163,11 @@ class AllFeedsFragment : Fragment() {
                 binding.swipeRefreshLayout.post {
                     binding.swipeRefreshLayout.isRefreshing = true
                 }
-                binding.swipeRefreshLayout.performClick()
+                binding.noPostId.imageView.visibility = View.VISIBLE
+                binding.noPostId.textNote.text = "Loading"
+                viewModel.getAllFeeds(requireContext())
+                FeedController.isLoading.value = -1
+
             }
         }
 
