@@ -3,7 +3,6 @@ package com.quangln2.customfeed.ui.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,7 +12,6 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.google.gson.Gson
-import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeed.data.models.UploadWorkerModel
 import com.quangln2.customfeed.data.models.datamodel.MyPost
@@ -46,24 +44,11 @@ class FeedViewModel(
     private var _uploadLists = MutableLiveData<MutableList<MyPost>>().apply { value = mutableListOf() }
     val uploadLists: LiveData<MutableList<MyPost>> = _uploadLists
 
-    private var _isUploading = MutableLiveData<Boolean>().apply { value = false }
-    val isUploading: LiveData<Boolean> = _isUploading
-
     private var _feedLoadingCode = MutableLiveData<Int>().apply { value = 0 }
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
 
     fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
-        //Handle no posts
-        if (caption.isEmpty() && uriLists.size == 0) {
-            Toast.makeText(context, "Please add some content", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-
-
-        FeedController.isLoading.value = 1
-
         val uriStringLists = uriLists.map { it.toString() }
         val uploadWorkerModel = UploadWorkerModel(caption, uriStringLists)
 
@@ -77,18 +62,6 @@ class FeedViewModel(
         val workManager = WorkManager.getInstance(context)
             .beginUniqueWork("ForegroundWorker", ExistingWorkPolicy.APPEND_OR_REPLACE, oneTimeWorkRequest)
         workManager.enqueue()
-    }
-
-    fun downloadAllResourcesWithUpdate(context: Context, uploadPosts: List<UploadPost>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            for (item in uploadPosts) {
-                if (item.imagesAndVideos == null) continue
-                for (urlObj in item.imagesAndVideos) {
-                    DownloadUtils.downloadResource(urlObj, context)
-                }
-            }
-
-        }
     }
 
     private fun loadCache() {
@@ -137,7 +110,6 @@ class FeedViewModel(
             }
 
             override fun onFailure(call: Call<MutableList<UploadPost>>, t: Throwable) {
-                Log.d("GetAllFeeds", "Failure ${t.cause?.message}")
                 loadCache()
             }
 

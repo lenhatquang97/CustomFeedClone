@@ -2,6 +2,7 @@ package com.quangln2.customfeed.domain.workmanager
 
 import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
@@ -37,6 +38,7 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
     val id = UUID.randomUUID().toString().hashCode()
 
     override fun doWork(): Result {
+        FeedController.isLoading.postValue(1)
         builder.setProgress(0, 0, true)
         with(NotificationManagerCompat.from(applicationContext)) {
             notify(id, builder.build())
@@ -60,46 +62,67 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
         )
 
         val parts = uploadMultipartBuilderUseCase(uploadWorkerModel.caption, uriListsForCompressing, applicationContext)
-
-        return try {
-            uploadFiles(parts, applicationContext)
-            Result.success()
-        } catch (e: Exception) {
-            FeedController.isLoading.postValue(0)
-            builder.setProgress(0, 0, false)
-            builder.setContentText("Upload failed")
-            builder.setAutoCancel(true)
-            with(NotificationManagerCompat.from(applicationContext)) {
-                notify(id, builder.build())
-            }
-            e.printStackTrace()
-            Result.failure()
-        }
+        uploadFiles(parts, applicationContext)
+        return Result.success()
     }
 
     private fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context) {
-        val uploadPostUseCase =
-            UploadPostUseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
+        val uploadPostUseCase = UploadPostUseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
         uploadPostUseCase(requestBody).enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                FeedController.isLoading.postValue(0)
-                builder.setProgress(0, 0, false)
-                builder.setContentText("Upload successfully")
-                builder.setAutoCancel(true)
-                with(NotificationManagerCompat.from(context)) {
-                    notify(id, builder.build())
+                if(response.errorBody() == null && response.code() == 200) {
+                    //close loading card screen
+                    FeedController.isLoading.postValue(0)
+
+                    //create notification
+                    builder.apply {
+                        setProgress(0, 0, false)
+                        setContentText("Upload successfully")
+                        setAutoCancel(true)
+                    }
+                    with(NotificationManagerCompat.from(context)) {
+                        notify(id, builder.build())
+                    }
+
+                    //show toast
+                    Toast.makeText(context, "Upload successfully", Toast.LENGTH_SHORT).show()
+
+                } else {
+                    //close loading card screen
+                    FeedController.isLoading.postValue(0)
+
+                    //create notification
+                    builder.apply {
+                        setProgress(0, 0, false)
+                        setContentText("Upload failed")
+                        setAutoCancel(true)
+                    }
+                    with(NotificationManagerCompat.from(context)) {
+                        notify(id, builder.build())
+                    }
+
+                    //show toast
+                    Toast.makeText(context, "Upload failed", Toast.LENGTH_SHORT).show()
+
                 }
+
 
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                //close loading card screen
                 FeedController.isLoading.postValue(0)
+
+                //create notification
                 builder.setProgress(0, 0, false)
                 builder.setContentText("Upload failed")
                 builder.setAutoCancel(true)
                 with(NotificationManagerCompat.from(context)) {
                     notify(id, builder.build())
                 }
+
+                //show toast
+                Toast.makeText(context, "Upload failed", Toast.LENGTH_SHORT).show()
 
             }
         })

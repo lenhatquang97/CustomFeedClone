@@ -7,7 +7,7 @@ import java.util.*
 
 data class VideoPlayed(
     val itemPosition: Int,
-    val index: Int,
+    val index: Int
 )
 
 object FeedController {

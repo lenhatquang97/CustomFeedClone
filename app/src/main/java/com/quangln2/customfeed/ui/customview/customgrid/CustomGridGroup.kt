@@ -113,12 +113,7 @@ class CustomGridGroup : ViewGroup {
         val widthRectangle = width.toFloat()
         val firstRect = RectanglePoint(0f, 0f, 2 * widthRectangle / 3, 2 * widthRectangle / 3)
         val secondRect = RectanglePoint(2 * widthRectangle / 3, 0f, widthRectangle, 1 * widthRectangle / 3)
-        val thirdRect = RectanglePoint(
-            2 * widthRectangle / 3,
-            1 * widthRectangle / 3,
-            widthRectangle,
-            2 * widthRectangle / 3
-        )
+        val thirdRect = RectanglePoint(2 * widthRectangle / 3, 1 * widthRectangle / 3, widthRectangle, 2 * widthRectangle / 3)
 
         rectangles.add(firstRect)
         rectangles.add(secondRect)
