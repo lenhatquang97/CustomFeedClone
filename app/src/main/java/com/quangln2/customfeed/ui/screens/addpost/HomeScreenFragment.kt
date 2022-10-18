@@ -136,7 +136,7 @@ class HomeScreenFragment : Fragment() {
             for (i in listOfViews.indices) {
                 when(val viewChild = listOfViews[i]){
                     is CustomLayer -> {
-                        viewChild.addedImagesText.text = "+${listOfViews.size - 9}"
+                        viewChild.addedImagesText.text = "+${listOfViews.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID}"
                         binding.customGridGroup.addView(viewChild)
                         break
                     }

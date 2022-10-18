@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.URLUtil
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.get
@@ -39,6 +38,9 @@ import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 class FeedListAdapter(
@@ -72,14 +74,15 @@ class FeedListAdapter(
             }
         }
 
-        fun bind(item: MyPostRender, context: Context) {
+        private fun loadBasicInfoAboutFeed(item: MyPostRender) {
             binding.feedId.text = item.feedId
             binding.myName.text = item.name
             binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
+            Glide.with(context).load(item.avatar).apply(ConstantClass.REQUEST_OPTIONS_WITH_SIZE_100)
+                .into(binding.myAvatarImage)
+        }
 
-            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
-            Glide.with(context).load(item.avatar).apply(requestOptions).into(binding.myAvatarImage)
-
+        private fun loadFeedDescription(item: MyPostRender) {
             if (item.caption.isEmpty()) {
                 binding.caption.visibility = View.GONE
             } else {
@@ -94,11 +97,11 @@ class FeedListAdapter(
                     binding.learnLess.visibility = View.GONE
                 }
             }
+        }
 
+        private fun bindingButton(item: MyPostRender) {
             binding.deleteButton.setOnClickListener {
-                val position = adapterPosition
-                val itr = currentList[position]
-
+                val itr = currentList[adapterPosition]
                 eventFeedCallback.onDeleteItem(itr.feedId)
             }
 
@@ -107,23 +110,35 @@ class FeedListAdapter(
                 binding.learnMore.visibility = View.GONE
                 binding.learnLess.visibility = View.VISIBLE
             }
+
             binding.learnLess.setOnClickListener {
                 binding.caption.text = item.caption.substring(0, 50) + "..."
                 binding.learnMore.visibility = View.VISIBLE
                 binding.learnLess.visibility = View.GONE
             }
+        }
+
+        private fun addMoreImageOrVideoLayer(i: Int, item: MyPostRender): Boolean {
+            if (i >= 8 && item.resources.size > ConstantClass.MAXIMUM_IMAGE_IN_A_GRID) {
+                val numbersOfAddedImages = item.resources.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
+                val viewChild = CustomLayer(context)
+                viewChild.setOnClickListener {
+                    eventFeedCallback.onClickViewMore(item.feedId)
+                }
+                viewChild.addedImagesText.text = "+$numbersOfAddedImages"
+                binding.customGridGroup.addView(viewChild)
+                return true
+            }
+            return false
+        }
+
+        fun bind(item: MyPostRender, context: Context) {
+            loadBasicInfoAboutFeed(item)
+            loadFeedDescription(item)
+            bindingButton(item)
 
             for (i in 0 until item.resources.size) {
-                if (i >= 8 && item.resources.size > 9) {
-                    val numbersOfAddedImages = item.resources.size - 9
-                    val viewChild = CustomLayer(context)
-                    viewChild.setOnClickListener {
-                        eventFeedCallback.onClickViewMore(item.feedId)
-                    }
-                    viewChild.addedImagesText.text = "+$numbersOfAddedImages"
-                    binding.customGridGroup.addView(viewChild)
-                    break
-                }
+                if (addMoreImageOrVideoLayer(i, item)) break
 
                 val value = if (DownloadUtils.doesLocalFileExist(item.resources[i].url, context)
                     && DownloadUtils.isValidFile(item.resources[i].url, context, item.resources[i].size)
@@ -134,24 +149,20 @@ class FeedListAdapter(
                 }
 
                 val mimeType = getMimeType(value)
-
-
                 if (mimeType != null && mimeType.contains("video")) {
                     if (i == 0 && DownloadUtils.isNetworkConnected(context)) {
-                        try {
-                            val urlParams = if (URLUtil.isValidUrl(value)) value else ""
-                            val bitmap = FileUtils.getVideoThumbnail(value.toUri(), context, urlParams)
-                            binding.customGridGroup.firstItemWidth = bitmap.intrinsicWidth
-                            binding.customGridGroup.firstItemHeight = bitmap.intrinsicHeight
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val urlParams = if (URLUtil.isValidUrl(value)) value else ""
+                                val bitmap = FileUtils.getVideoThumbnail(value.toUri(), context, urlParams)
+                                binding.customGridGroup.firstItemWidth = bitmap.intrinsicWidth
+                                binding.customGridGroup.firstItemHeight = bitmap.intrinsicHeight
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                         }
                     }
                     val videoView = LoadingVideoView(context, value)
-                    videoView.layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
                     videoView.setOnClickListener {
                         val stringArr = ArrayList<String>()
                         item.resources.forEach {
@@ -166,10 +177,6 @@ class FeedListAdapter(
                     binding.customGridGroup.addView(videoView)
                 } else {
                     val imageView = ImageView(context)
-                    imageView.layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
                     imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
                     imageView.setOnClickListener {
@@ -204,7 +211,7 @@ class FeedListAdapter(
                                 return false
                             }
                         }
-                    ).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
+                    ).apply(ConstantClass.REQUEST_OPTIONS_WITH_SIZE_100).into(object : SimpleTarget<Drawable>() {
                         override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                             binding.customGridGroup.firstItemWidth = resource.intrinsicWidth
                             binding.customGridGroup.firstItemHeight = resource.intrinsicHeight
@@ -216,11 +223,7 @@ class FeedListAdapter(
                 }
             }
             afterLoad(item)
-
-
         }
-
-
     }
 
 
@@ -255,10 +258,10 @@ class FeedListAdapter(
         if (holder is FeedItemViewHolder) {
             val customGridGroup = holder.itemView.findViewById<CustomGridGroup>(R.id.customGridGroup)
             val (_, videoIndex) = FeedController.peekVideoQueue()
-            if(videoIndex != null && videoIndex < customGridGroup.childCount){
+            if (videoIndex != null && videoIndex < customGridGroup.childCount) {
                 val child = customGridGroup[videoIndex]
-                if(child is LoadingVideoView){
-                    child.pauseVideo()
+                if (child is LoadingVideoView) {
+                    child.player.pause()
                     FeedController.safeRemoveFromQueue()
                 }
             }
@@ -278,7 +281,6 @@ class FeedListAdapter(
             customGridGroup.removeAllViews()
         }
     }
-
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
