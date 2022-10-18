@@ -3,7 +3,7 @@ package com.quangln2.customfeed.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.quangln2.customfeed.data.repository.FeedRepository
-import com.quangln2.customfeed.domain.*
+import com.quangln2.customfeed.domain.usecase.*
 
 @Suppress("UNCHECKED_CAST")
 class ViewModelFactory constructor(private val feedRepository: FeedRepository) :

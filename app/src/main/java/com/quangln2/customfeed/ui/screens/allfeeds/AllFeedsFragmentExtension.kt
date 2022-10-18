@@ -37,12 +37,9 @@ fun AllFeedsFragment.scrollToPlayVideoInPosition(itemPosition: Int, linearLayout
                         pauseVideo()
                         playVideo()
                     }
-
                 }
             }
         }
-    } else {
-        pauseVideo()
     }
 }
 
@@ -60,7 +57,7 @@ fun checkWhetherHaveMoreThanTwoVideosInPost(): Boolean {
 
 fun AllFeedsFragment.pauseVideo() {
     val (pausedItemIndex, videoIndex) = FeedController.peekVideoQueue()
-     lifecycleScope.launch(Dispatchers.Main) {
+    lifecycleScope.launch(Dispatchers.Main) {
         if (pausedItemIndex != null && videoIndex != null) {
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
             val customGridGroup = viewItem?.itemView?.findViewById<CustomGridGroup>(R.id.customGridGroup)
@@ -70,7 +67,6 @@ fun AllFeedsFragment.pauseVideo() {
                 FeedController.safeRemoveFromQueue()
             }
         }
-
     }
 
 }
@@ -84,37 +80,39 @@ fun AllFeedsFragment.playVideo(){
         val view = customGridGroup?.getChildAt(videoIndex)
 
         if (view is LoadingVideoView) {
-            view.playVideo()
-            view.player.addListener(
-                object : Player.Listener {
-                    override fun onPlaybackStateChanged(playbackState: Int) {
-                        super.onPlaybackStateChanged(playbackState)
-                        if (playbackState == Player.STATE_ENDED) {
-                            view.player.seekTo(0)
-                            view.pauseVideo()
+            if(!view.player.isPlaying){
+                view.playVideo()
+                view.player.addListener(
+                    object : Player.Listener {
+                        override fun onPlaybackStateChanged(playbackState: Int) {
+                            super.onPlaybackStateChanged(playbackState)
+                            if (playbackState == Player.STATE_ENDED) {
+                                //End this video
+                                view.player.seekTo(0)
+                                view.pauseVideo()
+                                FeedController.safeRemoveFromQueue()
 
-                            FeedController.safeRemoveFromQueue()
-
-                            //Play next video in list
-                            for (i in videoIndex until customGridGroup.size) {
-                                val nextView = customGridGroup.getChildAt(i)
-                                if (nextView is LoadingVideoView && i != videoIndex && i < 9) {
-                                    FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
-                                    playVideo()
-                                    break
+                                //Play next video in list
+                                for (i in videoIndex until customGridGroup.size) {
+                                    val nextView = customGridGroup.getChildAt(i)
+                                    if (nextView is LoadingVideoView && i != videoIndex && i < 9) {
+                                        FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
+                                        playVideo()
+                                        break
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            )
+                )
+            }
         } else FeedController.safeRemoveFromQueue()
     }
 }
 
 val AllFeedsFragment.eventCallback: EventFeedCallback get() = object : EventFeedCallback {
     override fun onDeleteItem(id: String) {
-            viewModel.deleteFeed(id)
+            viewModel.deleteFeed(id, requireContext())
         }
 
     override fun onClickAddPost() =

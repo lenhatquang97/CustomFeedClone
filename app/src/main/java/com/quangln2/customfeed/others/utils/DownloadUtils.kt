@@ -21,10 +21,19 @@ import java.io.*
 
 
 object DownloadUtils {
-    fun fileSizeFromInternet(url: String): Long {
-        val request = Request.Builder().url(url).build()
-        val response = downloadClient.newCall(request).execute()
-        return response.body?.contentLength() ?: 0
+    fun fileSizeFromInternet(url: String): Pair<Long, Exception?> {
+        var value = 0L
+        var exception: Exception? = null
+        try {
+            val request = Request.Builder().url(url).build()
+            val response = downloadClient.newCall(request).execute()
+            value = response.body?.contentLength() ?: 0L
+        } catch (e: Exception) {
+            exception = e
+        }
+        finally {
+            return Pair(value, exception)
+        }
     }
 
     fun doesLocalFileExist(url: String, context: Context): Boolean {
@@ -134,7 +143,7 @@ object DownloadUtils {
         }
     }
 
-    private fun getMimeType(url: String?): String? {
+    fun getMimeType(url: String?): String? {
         var type: String? = null
         val extension = MimeTypeMap.getFileExtensionFromUrl(url)
         if (extension != null) {

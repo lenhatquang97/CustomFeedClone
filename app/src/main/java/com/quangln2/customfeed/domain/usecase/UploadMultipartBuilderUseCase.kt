@@ -1,4 +1,4 @@
-package com.quangln2.customfeed.domain
+package com.quangln2.customfeed.domain.usecase
 
 import android.content.Context
 import android.net.Uri

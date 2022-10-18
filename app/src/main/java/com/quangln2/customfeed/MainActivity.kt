@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
         StrictMode.setThreadPolicy(policy)
 
         FileUtils.getPermissionForStorage(applicationContext, this)
+        FileUtils.getPermissionForCall(applicationContext, this)
 
         connectivityManager.registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {

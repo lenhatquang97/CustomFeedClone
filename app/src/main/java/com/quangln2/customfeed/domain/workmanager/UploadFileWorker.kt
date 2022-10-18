@@ -16,8 +16,8 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.models.UploadWorkerModel
 import com.quangln2.customfeed.data.repository.FeedRepository
-import com.quangln2.customfeed.domain.UploadMultipartBuilderUseCase
-import com.quangln2.customfeed.domain.UploadPostUseCase
+import com.quangln2.customfeed.domain.usecase.UploadMultipartBuilderUseCase
+import com.quangln2.customfeed.domain.usecase.UploadPostUseCase
 import com.quangln2.customfeed.others.utils.FileUtils
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody

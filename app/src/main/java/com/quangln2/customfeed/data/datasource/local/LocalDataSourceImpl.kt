@@ -6,6 +6,7 @@ import androidx.annotation.WorkerThread
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.database.FeedDao
 import com.quangln2.customfeed.data.models.datamodel.MyPost
+import com.quangln2.customfeed.others.utils.DownloadUtils.getMimeType
 import com.quangln2.customfeed.others.utils.FileUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -59,12 +60,8 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
             val tmp = FileUtils.getRealPathFromURI(uriItr, context)
             if (tmp != null) {
                 val file = File(tmp)
-                val requestFile = file
-                    .asRequestBody(
-                        if (uriItr.toString()
-                                .contains("mp4")
-                        ) "video/*".toMediaTypeOrNull() else "image/*".toMediaTypeOrNull()
-                    )
+
+                val requestFile = file.asRequestBody(getMimeType(file.toURI().toString())?.toMediaTypeOrNull())
                 builder.addFormDataPart("upload", file.name, requestFile)
             }
         }

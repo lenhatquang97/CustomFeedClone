@@ -2,7 +2,7 @@ package com.quangln2.customfeed.ui.viewmodel
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -19,12 +19,11 @@ import com.quangln2.customfeed.data.models.datamodel.OfflineResource
 import com.quangln2.customfeed.data.models.datamodel.UploadPost
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
-import com.quangln2.customfeed.domain.*
+import com.quangln2.customfeed.domain.usecase.*
 import com.quangln2.customfeed.domain.workmanager.UploadFileWorker
 import com.quangln2.customfeed.others.utils.DownloadUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -88,23 +87,39 @@ class FeedViewModel(
                 if (response.code() == 200) {
                     val ls = mutableListOf<MyPost>()
                     val body = response.body()
+                    val deletedFeeds = mutableListOf<MyPost>()
+
                     viewModelScope.launch(Dispatchers.IO) {
                         val offlinePosts = getAllInDatabaseUseCase()
                         if (body != null) {
+                            //add to offline feeds
                             body.forEach {
                                 val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
                                 ls.add(itemConverted)
                             }
-                            withContext(Dispatchers.IO) {
-                                ls.forEach {
-                                    insertDatabaseUseCase(it)
+
+                            //find in offline feeds if there are no online posts in online database
+                            offlinePosts.forEach {
+                                val filterId = body.find { item -> item.feedId == it.feedId }
+                                if(filterId == null) {
+                                    deletedFeeds.add(it)
                                 }
                             }
-                            Log.d("FeedViewModel", "ls: ${ls.joinToString { it.caption }}")
-                        }
-                        _feedLoadingCode.postValue(response.code())
-                        _uploadLists.postValue(ls.toMutableList())
+                            //deleted first
+                            deletedFeeds.forEach {
+                                deleteDatabaseUseCase(it.feedId)
+                            }
 
+                            val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+                            availableItems.forEach {
+                                insertDatabaseUseCase(it)
+                            }
+
+                        }
+                        //get available items but not in deleted feeds
+                        val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+                        _feedLoadingCode.postValue(response.code())
+                        _uploadLists.postValue(availableItems.toMutableList())
                     }
                 }
             }
@@ -126,22 +141,24 @@ class FeedViewModel(
 
     }
 
-    fun deleteFeed(id: String) {
+    fun deleteFeed(id: String, context: Context) {
         deleteFeedUseCase(id).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if (response.code() == 200) {
+                if (response.errorBody() == null && response.code() == 200) {
                     viewModelScope.launch(Dispatchers.IO) {
                         deleteDatabaseUseCase(id)
                     }
                     val ls = uploadLists.value
                     val filteredList = ls?.filter { it.feedId != id }
                     _uploadLists.value = filteredList?.toMutableList()
-
+                    Toast.makeText(context, "Delete successfully", Toast.LENGTH_SHORT).show()
+                } else{
+                    Toast.makeText(context, "Delete failed", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.d("DeleteFeed", "Failure ${t.cause?.message}")
+                Toast.makeText(context, "Delete failed", Toast.LENGTH_SHORT).show()
             }
 
         })

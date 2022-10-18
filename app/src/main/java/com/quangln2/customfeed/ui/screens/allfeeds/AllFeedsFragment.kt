@@ -1,9 +1,14 @@
 package com.quangln2.customfeed.ui.screens.allfeeds
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,6 +37,12 @@ class AllFeedsFragment : Fragment() {
     val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
+    private val phoneStateReceiver = object : BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
+            pauseVideo()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +63,8 @@ class AllFeedsFragment : Fragment() {
             layoutManager = linearLayoutManager
             animation = null
         }
+
+
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
@@ -68,10 +81,9 @@ class AllFeedsFragment : Fragment() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager
                 if (manager is LinearLayoutManager) {
-                    val itemPosition = manager.findFirstCompletelyVisibleItemPosition()
-                    scrollToPlayVideoInPosition(itemPosition, manager)
+                    val index = manager.findFirstCompletelyVisibleItemPosition()
+                    scrollToPlayVideoInPosition(index, manager)
                 }
-
             }
         })
 
@@ -94,6 +106,16 @@ class AllFeedsFragment : Fragment() {
                 if (viewModel.feedLoadingCode.value != null) {
                     if (viewModel.feedLoadingCode.value!! != 200 && viewModel.feedLoadingCode.value!! != 0) {
                         binding.noPostId.root.visibility = View.VISIBLE
+                    } else if(viewModel.feedLoadingCode.value!! == 200) {
+                        val listsOfPostRender = mutableListOf<MyPostRender>()
+                        listsOfPostRender.add(
+                            MyPostRender.convertMyPostToMyPostRender(
+                                MyPost().copy(feedId = "none"),
+                                TypeOfPost.ADD_NEW_POST
+                            )
+                        )
+                        adapterVal.submitList(listsOfPostRender.toMutableList())
+                        binding.noPostId.root.visibility = View.INVISIBLE
                     }
                 }
             }
@@ -124,6 +146,15 @@ class AllFeedsFragment : Fragment() {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        //intent filter: PHONE STATE
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("android.intent.action.PHONE_STATE")
+
+        requireActivity().registerReceiver(phoneStateReceiver, intentFilter)
+    }
+
     override fun onStop() {
         super.onStop()
         pauseVideo()
@@ -137,7 +168,11 @@ class AllFeedsFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        //Replay this video again
         playVideo()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        requireContext().unregisterReceiver(phoneStateReceiver)
     }
 }
