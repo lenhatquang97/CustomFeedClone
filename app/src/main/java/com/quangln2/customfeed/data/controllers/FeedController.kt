@@ -21,8 +21,8 @@ object FeedController {
     }
 
     fun isViewAddedToQueue(view: View, itemPosition: Int, i: Int): Boolean {
-        val isAvailable = videoQueue.find { it.itemPosition == itemPosition && it.index == i }
-        if (view is LoadingVideoView && isAvailable == null) {
+        val (a, b) = peekVideoQueue()
+        if (view is LoadingVideoView && a != itemPosition && b != i) {
             videoQueue.add(VideoPlayed(itemPosition, i))
             return true
         }

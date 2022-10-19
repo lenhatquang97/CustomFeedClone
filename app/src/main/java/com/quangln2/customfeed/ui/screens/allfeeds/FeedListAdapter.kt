@@ -150,7 +150,7 @@ class FeedListAdapter(
 
                 val mimeType = getMimeType(value)
                 if (mimeType != null && mimeType.contains("video")) {
-                    if (i == 0 && DownloadUtils.isNetworkConnected(context)) {
+                    if (i == 0) {
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
                                 val urlParams = if (URLUtil.isValidUrl(value)) value else ""
@@ -261,7 +261,7 @@ class FeedListAdapter(
             if (videoIndex != null && videoIndex < customGridGroup.childCount) {
                 val child = customGridGroup[videoIndex]
                 if (child is LoadingVideoView) {
-                    child.player.pause()
+                    child.pauseVideo()
                     FeedController.safeRemoveFromQueue()
                 }
             }
