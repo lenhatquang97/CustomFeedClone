@@ -45,7 +45,6 @@ class LoadingVideoView @JvmOverloads constructor(
         crossButton = view.findViewById(R.id.cross_x)
 
 
-
         soundButton.setOnClickListener {
             if (isMute) {
                 soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_on))

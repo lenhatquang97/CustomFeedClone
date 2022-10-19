@@ -14,7 +14,6 @@ import com.quangln2.customfeed.ui.customview.VideoThumbnailView
 class CustomGridGroup : ViewGroup {
     val rectangles = mutableListOf<RectanglePoint>()
     private val contentPadding = 12
-    private var itemNumber = 0
 
     var firstItemWidth = 0
     var firstItemHeight = 0
@@ -25,7 +24,7 @@ class CustomGridGroup : ViewGroup {
 
     @SuppressLint("DrawAllocation")
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        itemNumber = childCount
+        var itemNumber = childCount
         rectangles.clear()
 
         when (childCount) {
@@ -78,8 +77,7 @@ class CustomGridGroup : ViewGroup {
             if (child != null && child is ViewGroup) {
                 val width = (rectangles[i].rightBottom.x.toInt()) - (rectangles[i].leftTop.x.toInt()) + contentPadding
                 val height = (rectangles[i].rightBottom.y.toInt()) - (rectangles[i].leftTop.y.toInt()) + contentPadding
-
-                measureChild(child, width, height)
+                child.measure(width, height)
 
                 child.layout(
                     rectangles[i].leftTop.x.toInt() + contentPadding,
