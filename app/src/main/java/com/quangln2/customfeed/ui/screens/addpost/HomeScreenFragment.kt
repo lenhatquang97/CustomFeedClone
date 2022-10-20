@@ -3,6 +3,7 @@ package com.quangln2.customfeed.ui.screens.addpost
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -14,8 +15,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.database.FeedDatabase
@@ -23,6 +28,7 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
+import com.quangln2.customfeed.others.utils.DownloadUtils
 import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.CustomImageView
 import com.quangln2.customfeed.ui.customview.CustomLayer
@@ -30,6 +36,9 @@ import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.customview.customgrid.getGridItemsLocation
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class HomeScreenFragment : Fragment() {
@@ -51,33 +60,39 @@ class HomeScreenFragment : Fragment() {
             val data: Intent? = result.data
             if (data != null) {
                 if (data.clipData != null) {
-                    val count = data.clipData!!.itemCount
-                    for (i in 0 until count) {
-                        val uri = data.clipData!!.getItemAt(i).uri
-                        val mimeType = context?.contentResolver?.getType(uri)
-                        if (mimeType != null) {
-                            if (mimeType.startsWith("image/")) {
-                                //getFirstImageWidthAndHeight(i, uri)
-                                val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
-                                listOfViews.add(imageView)
-                                listOfUris.add(uri)
-                            } else if (mimeType.startsWith("video/")) {
-                                //getFirstVideoWidthAndHeight(i, uri)
-                                val videoView = LoadingVideoView(requireContext(), uri.toString())
-                                listOfViews.add(videoView)
-                                listOfUris.add(uri)
-                            }
-                            if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1, -1)) {
-                                listOfViews.add(8, CustomLayer(requireContext()))
-                                listOfUris.add(8, Uri.EMPTY)
-                            }
-                        }
+                    lifecycleScope.launch(Dispatchers.IO){
+                        var flagHasCustomLayer = false
+                        val count = data.clipData!!.itemCount
+                        for (i in 0 until count) {
+                            val uri = data.clipData!!.getItemAt(i).uri
+                            val mimeType = context?.contentResolver?.getType(uri)
+                            if (mimeType != null) {
+                                if (mimeType.startsWith("image/")) {
+                                    val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
+                                    listOfViews.add(imageView)
+                                    listOfUris.add(uri)
+                                } else if (mimeType.startsWith("video/")) {
+                                    withContext(Dispatchers.Main){
+                                        val videoView = LoadingVideoView(requireContext(), uri.toString())
+                                        listOfViews.add(videoView)
+                                        listOfUris.add(uri)
+                                    }
 
-                        val uriForMultipart = data.clipData!!.getItemAt(i).uri
-                        val ls = viewModel.uriLists.value
-                        ls?.add(uriForMultipart)
-                        viewModel._uriLists.value = ls?.toMutableList()
+                                }
+                                if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1, -1) && !flagHasCustomLayer) {
+                                    flagHasCustomLayer = true
+                                    listOfViews.add(8, CustomLayer(requireContext()))
+                                    listOfUris.add(8, Uri.EMPTY)
+                                }
+                            }
+
+                            val uriForMultipart = data.clipData!!.getItemAt(i).uri
+                            val ls = viewModel.uriLists.value
+                            ls?.add(uriForMultipart)
+                            viewModel._uriLists.postValue(ls?.toMutableList())
+                        }
                     }
+
                 }
             }
         }
@@ -144,6 +159,7 @@ class HomeScreenFragment : Fragment() {
         val rectangles = getGridItemsLocation(listOfViews.size)
         val widthGrid = 1000
         val contentPadding = 16
+
         for (i in listOfViews.indices) {
             when(val viewChild = listOfViews[i]){
                 is CustomLayer -> {
@@ -192,6 +208,26 @@ class HomeScreenFragment : Fragment() {
                     binding.customGridGroup.addView(viewChild)
                 }
             }
+        }
+    }
+
+    private fun retrieveFirstImageOrFirstVideo(uri: Uri, firstItemResolution: IntArray){
+        val mimeType = DownloadUtils.getMimeType(uri.toString())
+        if (mimeType != null && mimeType.startsWith("video")) {
+            try {
+                val bitmap = FileUtils.getVideoThumbnail(uri, requireContext())
+                firstItemResolution[0] = bitmap.intrinsicWidth
+                firstItemResolution[1] = bitmap.intrinsicHeight
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else if(mimeType != null && mimeType.startsWith("image")){
+            Glide.with(requireContext()).load(uri).into(object : SimpleTarget<Drawable>() {
+                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                    firstItemResolution[0] = resource.intrinsicWidth
+                    firstItemResolution[1] = resource.intrinsicHeight
+                }
+            })
         }
     }
 }

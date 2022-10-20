@@ -59,7 +59,6 @@ fun checkWhetherHaveMoreThanTwoVideosInPost(): Boolean {
     val (anotherMainItemIndex, anotherVideoIndex) = FeedController.popVideoQueue()
     if (mainItemIndex != null && videoIndex != null && anotherMainItemIndex != null && anotherVideoIndex != null) {
         FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
-        //FeedController.videoQueue.add(VideoPlayed(anotherMainItemIndex, anotherVideoIndex))
         if (mainItemIndex == anotherMainItemIndex) return true
     }
     return false
