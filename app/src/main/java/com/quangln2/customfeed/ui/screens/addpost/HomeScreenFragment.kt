@@ -3,6 +3,7 @@ package com.quangln2.customfeed.ui.screens.addpost
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
@@ -159,8 +160,9 @@ class HomeScreenFragment : Fragment() {
 
     fun initCustomGrid(){
         val rectangles = getGridItemsLocation(listOfViews.size)
-        val widthGrid = 1000
-        val contentPadding = 16
+        val marginHorizontalSum = 16 + 32
+        val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
+        val contentPadding = 32
 
         for (i in listOfViews.indices) {
             when(val viewChild = listOfViews[i]){
@@ -238,7 +240,7 @@ class HomeScreenFragment : Fragment() {
         val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
         Glide.with(requireContext()).load(ConstantClass.AVATAR_LINK).apply(requestOptions).into(binding.myAvatarImage)
     }
-    private fun onHandleMoreImagesOrVideos(customView: View, widthGrid: Int = 1000, contentPadding: Int = 16) {
+    private fun onHandleMoreImagesOrVideos(customView: View) {
         val imageAboutDeleted = listOfViews.indexOf(customView)
         val (index, textValue) = hasCustomLayer()
 

@@ -2,6 +2,10 @@ package com.quangln2.customfeed.ui.screens.allfeeds
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
+import android.content.res.Resources
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
@@ -141,7 +145,8 @@ class FeedListAdapter(
 
         fun bind(item: MyPostRender, context: Context) {
             val rectangles = getGridItemsLocation(item.resources.size, item.firstItemWidth, item.firstItemHeight)
-            val widthGrid = 1000
+            val marginHorizontalSum = 16 + 32
+            val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
             val contentPadding = 16
 
 
@@ -200,8 +205,22 @@ class FeedListAdapter(
                             eventFeedCallback.onClickVideoView(-1L, item.resources[i].url, urlArrayList)
                         }
 
-                        val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
-                        imageView.setImageDrawable(drawable)
+                        when (context.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
+                            Configuration.UI_MODE_NIGHT_YES -> {
+                                val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+                                imageView.setImageDrawable(drawable)
+                            }
+                            Configuration.UI_MODE_NIGHT_NO -> {
+                                val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
+                                imageView.setImageDrawable(drawable)
+                            }
+                            Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+                                val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+                                imageView.setImageDrawable(drawable)
+                            }
+                        }
+
+
 
                         Glide.with(context).load(value).listener(
                             object : RequestListener<Drawable> {
@@ -211,8 +230,20 @@ class FeedListAdapter(
                                     target: Target<Drawable>?,
                                     isFirstResource: Boolean
                                 ): Boolean {
-                                    val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
-                                    imageView.setImageDrawable(drawable)
+                                    when (context.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
+                                        Configuration.UI_MODE_NIGHT_YES -> {
+                                            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+                                            imageView.setImageDrawable(drawable)
+                                        }
+                                        Configuration.UI_MODE_NIGHT_NO -> {
+                                            val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
+                                            imageView.setImageDrawable(drawable)
+                                        }
+                                        Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+                                            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+                                            imageView.setImageDrawable(drawable)
+                                        }
+                                    }
                                     return false
                                 }
 
