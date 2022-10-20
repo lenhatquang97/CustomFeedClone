@@ -1,17 +1,26 @@
 package com.quangln2.customfeed.ui.screens.allfeeds
 
+import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.webkit.URLUtil
+import androidx.core.net.toUri
 import androidx.core.view.size
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.controllers.VideoPlayed
+import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.others.callback.EventFeedCallback
+import com.quangln2.customfeed.others.utils.DownloadUtils
+import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +59,6 @@ fun checkWhetherHaveMoreThanTwoVideosInPost(): Boolean {
     val (anotherMainItemIndex, anotherVideoIndex) = FeedController.popVideoQueue()
     if (mainItemIndex != null && videoIndex != null && anotherMainItemIndex != null && anotherVideoIndex != null) {
         FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
-        FeedController.videoQueue.add(VideoPlayed(anotherMainItemIndex, anotherVideoIndex))
         if (mainItemIndex == anotherMainItemIndex) return true
     }
     return false
@@ -148,4 +156,32 @@ val AllFeedsFragment.eventCallback: EventFeedCallback get() = object : EventFeed
                 }
             }
         )
+}
+
+fun AllFeedsFragment.retrieveFirstImageOrFirstVideo(myPostRender: MyPostRender){
+    if(myPostRender.resources.size > 0){
+        val url = myPostRender.resources[0].url
+        val size = myPostRender.resources[0].size
+        val value = if (DownloadUtils.doesLocalFileExist(url, requireContext())
+            && DownloadUtils.isValidFile(url, requireContext(), size)) {
+            DownloadUtils.getTemporaryFilePath(url, requireContext())} else url
+        val mimeType = DownloadUtils.getMimeType(value)
+        if (mimeType != null && mimeType.startsWith("video")) {
+            try {
+                val urlParams = if (URLUtil.isValidUrl(value)) value else ""
+                val bitmap = FileUtils.getVideoThumbnail(value.toUri(), requireContext(), urlParams)
+                myPostRender.firstItemWidth = bitmap.intrinsicWidth
+                myPostRender.firstItemHeight = bitmap.intrinsicHeight
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else if(mimeType != null && mimeType.startsWith("image")){
+            Glide.with(requireContext()).load(value).into(object : SimpleTarget<Drawable>() {
+                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                    myPostRender.firstItemWidth = resource.intrinsicWidth
+                    myPostRender.firstItemHeight = resource.intrinsicHeight
+                }
+            })
+        }
+    }
 }

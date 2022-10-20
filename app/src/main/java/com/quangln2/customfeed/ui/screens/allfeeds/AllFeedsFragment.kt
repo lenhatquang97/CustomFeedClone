@@ -11,8 +11,10 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.controllers.VideoPlayed
 import com.quangln2.customfeed.data.database.FeedDatabase
@@ -25,6 +27,9 @@ import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class AllFeedsFragment : Fragment() {
@@ -34,12 +39,14 @@ class AllFeedsFragment : Fragment() {
     private val database by lazy {
         FeedDatabase.getFeedDatabase(requireContext())
     }
+
     val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
+
     private val phoneStateReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
-            Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, ConstantClass.PHONE_STATE_CHANGED, Toast.LENGTH_SHORT).show()
             pauseVideo()
         }
     }
@@ -80,8 +87,11 @@ class AllFeedsFragment : Fragment() {
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager
-                if (manager is LinearLayoutManager) {
-                    val index = manager.findFirstCompletelyVisibleItemPosition()
+                if (manager is LinearLayoutManager && dy > 0) {
+                    val index = manager.findLastVisibleItemPosition()
+                    scrollToPlayVideoInPosition(index, manager)
+                } else if(manager is LinearLayoutManager && dy < 0) {
+                    val index = manager.findFirstVisibleItemPosition()
                     scrollToPlayVideoInPosition(index, manager)
                 }
             }
@@ -93,27 +103,31 @@ class AllFeedsFragment : Fragment() {
             val condition2 = it != null && it.size >= 2
             if (condition1 || condition2) {
                 binding.noPostId.root.visibility = View.INVISIBLE
-                val listsOfPostRender = mutableListOf<MyPostRender>()
-                listsOfPostRender.add(
-                    MyPostRender.convertMyPostToMyPostRender(
-                        MyPost().copy(feedId = "none"),
-                        TypeOfPost.ADD_NEW_POST
-                    )
-                )
-                it.forEach { itr -> listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(itr)) }
-                adapterVal.submitList(listsOfPostRender.toMutableList())
+                lifecycleScope.launch(Dispatchers.IO){
+                    val listsOfPostRender = mutableListOf<MyPostRender>()
+                    val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+
+                    listsOfPostRender.add(addNewPostItem)
+                    it.forEach { itr ->
+                        val myPostRender = MyPostRender.convertMyPostToMyPostRender(itr)
+                        retrieveFirstImageOrFirstVideo(myPostRender)
+                        listsOfPostRender.add(myPostRender)
+                    }
+
+                    withContext(Dispatchers.Main){
+                        adapterVal.submitList(listsOfPostRender.toMutableList())
+                    }
+
+                }
             } else {
                 if (viewModel.feedLoadingCode.value != null) {
                     if (viewModel.feedLoadingCode.value!! != 200 && viewModel.feedLoadingCode.value!! != 0) {
                         binding.noPostId.root.visibility = View.VISIBLE
                     } else if(viewModel.feedLoadingCode.value!! == 200) {
                         val listsOfPostRender = mutableListOf<MyPostRender>()
-                        listsOfPostRender.add(
-                            MyPostRender.convertMyPostToMyPostRender(
-                                MyPost().copy(feedId = "none"),
-                                TypeOfPost.ADD_NEW_POST
-                            )
-                        )
+                        val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+                        listsOfPostRender.add(addNewPostItem)
+
                         adapterVal.submitList(listsOfPostRender.toMutableList())
                         binding.noPostId.root.visibility = View.INVISIBLE
                     }
@@ -151,19 +165,16 @@ class AllFeedsFragment : Fragment() {
         //intent filter: PHONE STATE
         val intentFilter = IntentFilter()
         intentFilter.addAction("android.intent.action.PHONE_STATE")
-
         requireActivity().registerReceiver(phoneStateReceiver, intentFilter)
     }
 
     override fun onStop() {
         super.onStop()
         pauseVideo()
-        //Save for next use when we switch to another window.
         val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
         if (mainItemIndex != null && videoIndex != null) {
             FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
         }
-
     }
 
     override fun onStart() {
