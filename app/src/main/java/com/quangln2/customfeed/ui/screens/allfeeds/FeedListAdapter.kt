@@ -1,11 +1,11 @@
 package com.quangln2.customfeed.ui.screens.allfeeds
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
@@ -19,12 +19,12 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
+import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
 import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.databinding.FeedCardBinding
 import com.quangln2.customfeed.databinding.FeedItemBinding
@@ -35,9 +35,6 @@ import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.customview.customgrid.getGridItemsLocation
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 class FeedListAdapter(
@@ -63,11 +60,6 @@ class FeedListAdapter(
 
     inner class FeedItemViewHolder constructor(private val binding: FeedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        private fun prepareForRender(){
-            binding.customGridGroup.layoutParams.width = 1000
-            binding.customGridGroup.layoutParams.height = 1000
-        }
-
 
         private fun afterLoad(item: MyPostRender) {
             if (item.resources.size == 0) {
@@ -85,13 +77,14 @@ class FeedListAdapter(
                 .into(binding.myAvatarImage)
         }
 
+        @SuppressLint("SetTextI18n")
         private fun loadFeedDescription(item: MyPostRender) {
             if (item.caption.isEmpty()) {
                 binding.caption.visibility = View.GONE
             } else {
                 binding.caption.visibility = View.VISIBLE
                 if (item.caption.length > 50) {
-                    binding.caption.text = item.caption.substring(0, 50) + "..."
+                    binding.caption.text =  "${item.caption.substring(0, 50)}..."
                     binding.learnMore.visibility = View.VISIBLE
                     binding.learnLess.visibility = View.GONE
                 } else {
@@ -102,6 +95,7 @@ class FeedListAdapter(
             }
         }
 
+        @SuppressLint("SetTextI18n")
         private fun bindingButton(item: MyPostRender) {
             binding.deleteButton.setOnClickListener {
                 val itr = currentList[adapterPosition]
@@ -115,16 +109,26 @@ class FeedListAdapter(
             }
 
             binding.learnLess.setOnClickListener {
-                binding.caption.text = item.caption.substring(0, 50) + "..."
+                binding.caption.text = "${item.caption.substring(0, 50)}..."
                 binding.learnMore.visibility = View.VISIBLE
                 binding.learnLess.visibility = View.GONE
             }
         }
 
-        private fun addMoreImageOrVideoLayer(i: Int, item: MyPostRender): Boolean {
+        @SuppressLint("SetTextI18n")
+        private fun addMoreImageOrVideoLayer(i: Int, item: MyPostRender, rectangles: List<RectanglePoint>, widthGrid: Int, contentPadding: Int): Boolean {
             if (i >= 8 && item.resources.size > ConstantClass.MAXIMUM_IMAGE_IN_A_GRID) {
                 val numbersOfAddedImages = item.resources.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
                 val viewChild = CustomLayer(context)
+
+                val layoutParams = ViewGroup.MarginLayoutParams(
+                    (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
+                    (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+                ).apply {
+                    leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                    topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                }
+                viewChild.layoutParams = layoutParams
                 viewChild.setOnClickListener {
                     eventFeedCallback.onClickViewMore(item.feedId)
                 }
@@ -136,41 +140,36 @@ class FeedListAdapter(
         }
 
         fun bind(item: MyPostRender, context: Context) {
-            val rectangles = getGridItemsLocation(if (item.resources.size > 9) 9 else item.resources.size, binding.customGridGroup)
+            println("item firstItemWidth ${item.firstItemWidth} firstItemHeight ${item.firstItemHeight}")
+            val rectangles = getGridItemsLocation(item.resources.size, item.firstItemWidth, item.firstItemHeight)
             val widthGrid = 1000
-            val contentPadding = 8
+            val contentPadding = 16
 
-            prepareForRender()
+
             loadBasicInfoAboutFeed(item)
             loadFeedDescription(item)
             bindingButton(item)
             if(rectangles.isNotEmpty()){
                 for (i in 0 until item.resources.size) {
-                    if (addMoreImageOrVideoLayer(i, item)) break
+                    if (addMoreImageOrVideoLayer(i, item, rectangles, widthGrid, contentPadding)) return
+                    val doesLocalFileExist = DownloadUtils.doesLocalFileExist(item.resources[i].url, context)
+                    val isValidFile = DownloadUtils.isValidFile(item.resources[i].url, context, item.resources[i].size)
+                    val temporaryFilePath = DownloadUtils.getTemporaryFilePath(item.resources[i].url, context)
+                    val url = item.resources[i].url
 
-                    val value = if (DownloadUtils.doesLocalFileExist(item.resources[i].url, context)
-                        && DownloadUtils.isValidFile(item.resources[i].url, context, item.resources[i].size)
-                    ) {
-                        DownloadUtils.getTemporaryFilePath(item.resources[i].url, context)
-                    } else {
-                        item.resources[i].url
-                    }
-
+                    val value = if (doesLocalFileExist && isValidFile) temporaryFilePath else url
                     val mimeType = getMimeType(value)
+
                     if (mimeType != null && mimeType.contains("video")) {
-                        if (i == 0) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                try {
-                                    val urlParams = if (URLUtil.isValidUrl(value)) value else ""
-//                                val bitmap = FileUtils.getVideoThumbnail(value.toUri(), context, urlParams)
-//                                binding.customGridGroup.firstItemWidth = bitmap.intrinsicWidth
-//                                binding.customGridGroup.firstItemHeight = bitmap.intrinsicHeight
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
-                            }
-                        }
                         val videoView = LoadingVideoView(context, value)
+                        val layoutParams = ViewGroup.MarginLayoutParams(
+                            (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
+                            (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+                        ).apply {
+                            leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                            topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                        }
+                        videoView.layoutParams = layoutParams
                         videoView.setOnClickListener {
                             val stringArr = ArrayList<String>()
                             item.resources.forEach {
@@ -182,28 +181,24 @@ class FeedListAdapter(
                                 stringArr
                             )
                         }
-                        videoView.apply {
-                            left = (rectangles[i].leftTop.x.toInt() * widthGrid).toInt() + contentPadding
-                            top = (rectangles[i].leftTop.y.toInt() * widthGrid).toInt() + contentPadding
-                            right = (rectangles[i].rightBottom.x.toInt() * widthGrid).toInt() - contentPadding
-                            bottom = (rectangles[i].rightBottom.y.toInt() * widthGrid).toInt() - contentPadding
-                        }
-
                         binding.customGridGroup.addView(videoView)
                     } else {
                         val imageView = ImageView(context)
                         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
+                        val layoutParams = ViewGroup.MarginLayoutParams(
+                            (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
+                            (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+                        ).apply {
+                            leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                            topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                        }
+                        imageView.layoutParams = layoutParams
+
                         imageView.setOnClickListener {
                             val urlArrayList = ArrayList<String>()
                             item.resources.forEach { urlArrayList.add(it.url) }
                             eventFeedCallback.onClickVideoView(-1L, item.resources[i].url, urlArrayList)
-                        }
-                        imageView.apply {
-                            left = (rectangles[i].leftTop.x.toInt() * widthGrid).toInt() + contentPadding
-                            top = (rectangles[i].leftTop.y.toInt() * widthGrid).toInt() + contentPadding
-                            right = (rectangles[i].rightBottom.x.toInt() * widthGrid).toInt() - contentPadding
-                            bottom = (rectangles[i].rightBottom.y.toInt() * widthGrid).toInt() - contentPadding
                         }
 
                         val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
@@ -232,14 +227,7 @@ class FeedListAdapter(
                                     return false
                                 }
                             }
-                        ).apply(ConstantClass.REQUEST_OPTIONS_WITH_SIZE_100).into(object : SimpleTarget<Drawable>() {
-                            override fun onResourceReady(resource: Drawable, transition: com.bumptech.glide.request.transition.Transition<in Drawable>?) {
-//                            binding.customGridGroup.firstItemWidth = resource.intrinsicWidth
-//                            binding.customGridGroup.firstItemHeight = resource.intrinsicHeight
-                                imageView.setImageDrawable(resource)
-                            }
-
-                        })
+                        ).apply(ConstantClass.REQUEST_OPTIONS_WITH_SIZE_100).into(imageView)
                         binding.customGridGroup.addView(imageView)
                     }
                 }

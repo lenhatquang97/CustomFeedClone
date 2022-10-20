@@ -107,12 +107,13 @@
         android:id="@+id/customGridGroup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="16dp"
+        android:layout_margin="8dp"
         android:paddingHorizontal="8dp"
         android:paddingVertical="8dp"
         app:layout_constraintBottom_toTopOf="@id/delete_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/learn_less" />
+        app:layout_constraintTop_toBottomOf="@id/learn_less">
+    </FrameLayout>
 
     <View
         android:id="@+id/block_zone"

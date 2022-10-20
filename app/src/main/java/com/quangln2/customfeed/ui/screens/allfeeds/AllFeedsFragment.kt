@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeed.data.controllers.FeedController
@@ -25,6 +26,9 @@ import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class AllFeedsFragment : Fragment() {
@@ -96,27 +100,31 @@ class AllFeedsFragment : Fragment() {
             val condition2 = it != null && it.size >= 2
             if (condition1 || condition2) {
                 binding.noPostId.root.visibility = View.INVISIBLE
-                val listsOfPostRender = mutableListOf<MyPostRender>()
-                listsOfPostRender.add(
-                    MyPostRender.convertMyPostToMyPostRender(
-                        MyPost().copy(feedId = "none"),
-                        TypeOfPost.ADD_NEW_POST
-                    )
-                )
-                it.forEach { itr -> listsOfPostRender.add(MyPostRender.convertMyPostToMyPostRender(itr)) }
-                adapterVal.submitList(listsOfPostRender.toMutableList())
+                lifecycleScope.launch(Dispatchers.IO){
+                    val listsOfPostRender = mutableListOf<MyPostRender>()
+                    val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+
+                    listsOfPostRender.add(addNewPostItem)
+                    it.forEach { itr ->
+                        val myPostRender = MyPostRender.convertMyPostToMyPostRender(itr)
+                        retrieveFirstImageOrFirstVideo(myPostRender)
+                        listsOfPostRender.add(myPostRender)
+                    }
+
+                    withContext(Dispatchers.Main){
+                        adapterVal.submitList(listsOfPostRender.toMutableList())
+                    }
+
+                }
             } else {
                 if (viewModel.feedLoadingCode.value != null) {
                     if (viewModel.feedLoadingCode.value!! != 200 && viewModel.feedLoadingCode.value!! != 0) {
                         binding.noPostId.root.visibility = View.VISIBLE
                     } else if(viewModel.feedLoadingCode.value!! == 200) {
                         val listsOfPostRender = mutableListOf<MyPostRender>()
-                        listsOfPostRender.add(
-                            MyPostRender.convertMyPostToMyPostRender(
-                                MyPost().copy(feedId = "none"),
-                                TypeOfPost.ADD_NEW_POST
-                            )
-                        )
+                        val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+                        listsOfPostRender.add(addNewPostItem)
+
                         adapterVal.submitList(listsOfPostRender.toMutableList())
                         binding.noPostId.root.visibility = View.INVISIBLE
                     }

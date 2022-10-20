@@ -12,9 +12,11 @@ data class MyPostRender(
     var avatar: String,
     var createdTime: String,
     var caption: String,
-    var resources: MutableList<OfflineResource>
+    var resources: MutableList<OfflineResource>,
+    var firstItemWidth: Int = 0,
+    var firstItemHeight: Int = 0,
 ) {
-    constructor() : this("", TypeOfPost.POST, "", "", "", "", mutableListOf())
+    constructor() : this("", TypeOfPost.POST, "", "", "", "", mutableListOf(), 0, 0)
 
     companion object {
         fun convertMyPostToMyPostRender(myPost: MyPost, typeOfPost: TypeOfPost = TypeOfPost.POST): MyPostRender {
@@ -25,7 +27,9 @@ data class MyPostRender(
                 avatar = myPost.avatar,
                 createdTime = myPost.createdTime,
                 caption = myPost.caption,
-                resources = myPost.resources
+                resources = myPost.resources,
+                firstItemHeight = 0,
+                firstItemWidth = 0
             )
         }
     }
