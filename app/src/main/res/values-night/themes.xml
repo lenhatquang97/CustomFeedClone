@@ -21,4 +21,7 @@
     <style name="BackgroundColor">
         <item name="android:background">@color/black</item>
     </style>
+    <style name="SeparatorColor">
+        <item name="android:background">@color/a_bit_blacker</item>
+    </style>
 </resources>
