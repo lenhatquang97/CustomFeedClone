@@ -14,7 +14,7 @@ object CustomGridMigration {
         val rectangles = mutableListOf<RectanglePoint>()
         val firstRect = RectanglePoint(0f, 0f, 2 / 3f, 2 / 3f)
         val secondRect = RectanglePoint(2 / 3f, 0f, 1f, 1 / 3f)
-        val thirdRect = RectanglePoint(2 / 3f, 0f, 1f, 1 / 3f)
+        val thirdRect = RectanglePoint(2 / 3f, 1/3f, 1f, 2 / 3f)
         rectangles.apply {
             add(firstRect)
             add(secondRect)

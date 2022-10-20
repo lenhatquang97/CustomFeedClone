@@ -140,7 +140,6 @@ class FeedListAdapter(
         }
 
         fun bind(item: MyPostRender, context: Context) {
-            println("item firstItemWidth ${item.firstItemWidth} firstItemHeight ${item.firstItemHeight}")
             val rectangles = getGridItemsLocation(item.resources.size, item.firstItemWidth, item.firstItemHeight)
             val widthGrid = 1000
             val contentPadding = 16

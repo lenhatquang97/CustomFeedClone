@@ -27,6 +27,7 @@ import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.CustomImageView
 import com.quangln2.customfeed.ui.customview.CustomLayer
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
+import com.quangln2.customfeed.ui.customview.customgrid.getGridItemsLocation
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
 
@@ -98,7 +99,6 @@ class HomeScreenFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentHomeScreenBinding.inflate(inflater, container, false)
-
         loadInitialProfile()
 
         // Handle choose image or video
@@ -133,33 +133,65 @@ class HomeScreenFragment : Fragment() {
             if (listOfViews.size != 0) {
                 binding.customGridGroup.removeAllViews()
             }
-            for (i in listOfViews.indices) {
-                when(val viewChild = listOfViews[i]){
-                    is CustomLayer -> {
-                        viewChild.addedImagesText.text = "+${listOfViews.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID}"
-                        binding.customGridGroup.addView(viewChild)
-                        break
-                    }
-                    is LoadingVideoView -> {
-                        viewChild.apply {
-                            playButton.visibility = View.VISIBLE
-                            crossButton.visibility = View.VISIBLE
-                            crossButton.setOnClickListener {
-                                onHandleMoreImagesOrVideos(viewChild)
-                            }
-                        }
-                        binding.customGridGroup.addView(viewChild)
-                    }
-                    is FrameLayout -> {
-                        viewChild[1].setOnClickListener {
-                            onHandleMoreImagesOrVideos(viewChild)
-                        }
-                        binding.customGridGroup.addView(viewChild)
-                    }
-                }
-            }
+            initCustomGrid()
+
         }
 
         return binding.root
+    }
+
+    fun initCustomGrid(){
+        val rectangles = getGridItemsLocation(listOfViews.size)
+        val widthGrid = 1000
+        val contentPadding = 16
+        for (i in listOfViews.indices) {
+            when(val viewChild = listOfViews[i]){
+                is CustomLayer -> {
+                    viewChild.addedImagesText.text = "+${listOfViews.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID}"
+                    val layoutParams = ViewGroup.MarginLayoutParams(
+                        (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
+                        (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+                    ).apply {
+                        leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                        topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                    }
+                    viewChild.layoutParams = layoutParams
+                    binding.customGridGroup.addView(viewChild)
+                    break
+                }
+                is LoadingVideoView -> {
+                    viewChild.apply {
+                        playButton.visibility = View.VISIBLE
+                        crossButton.visibility = View.VISIBLE
+                        crossButton.setOnClickListener {
+                            onHandleMoreImagesOrVideos(viewChild)
+                        }
+                    }
+                    val layoutParams = ViewGroup.MarginLayoutParams(
+                        (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
+                        (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+                    ).apply {
+                        leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                        topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                    }
+                    viewChild.layoutParams = layoutParams
+                    binding.customGridGroup.addView(viewChild)
+                }
+                is FrameLayout -> {
+                    viewChild[1].setOnClickListener {
+                        onHandleMoreImagesOrVideos(viewChild)
+                    }
+                    val layoutParams = ViewGroup.MarginLayoutParams(
+                        (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
+                        (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+                    ).apply {
+                        leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                        topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                    }
+                    viewChild.layoutParams = layoutParams
+                    binding.customGridGroup.addView(viewChild)
+                }
+            }
+        }
     }
 }
