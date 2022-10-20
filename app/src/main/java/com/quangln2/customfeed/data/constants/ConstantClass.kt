@@ -6,7 +6,7 @@ import com.bumptech.glide.request.RequestOptions
 object ConstantClass {
     const val NAME = "Quang Lê"
     const val AVATAR_LINK = "https://res.cloudinary.com/dnirizque/image/upload/v1666060641/samples/sheep.jpg"
-    const val DEFAULT_ENDPOINT = "https://2075-2a09-bac0-23-00-815-bf9.ap.ngrok.io/"
+    const val DEFAULT_ENDPOINT = "https://12e2-2a09-bac0-497-00-822-ca3f.ap.ngrok.io/"
     const val PLEASE_ADD_CONTENT = "Please add some content"
     const val INTERNET_CONNECTED = "Internet has been connected"
     const val OFFLINE_MODE = "Offline mode"
