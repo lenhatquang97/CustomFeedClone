@@ -103,11 +103,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/learn_more" />
 
-    <com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
+    <FrameLayout
         android:id="@+id/customGridGroup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="8dp"
+        android:layout_margin="16dp"
         android:paddingHorizontal="8dp"
         android:paddingVertical="8dp"
         app:layout_constraintBottom_toTopOf="@id/delete_button"
@@ -127,8 +127,8 @@
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:minHeight="48dp"
-        android:paddingRight="16dp"
-        android:paddingBottom="16dp"
+        android:paddingRight="8dp"
+        android:paddingBottom="8dp"
         android:src="@drawable/ic_baseline_delete_24"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/block_zone"

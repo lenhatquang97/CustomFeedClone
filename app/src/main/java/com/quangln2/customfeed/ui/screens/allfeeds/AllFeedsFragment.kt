@@ -80,8 +80,11 @@ class AllFeedsFragment : Fragment() {
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager
-                if (manager is LinearLayoutManager) {
-                    val index = manager.findFirstCompletelyVisibleItemPosition()
+                if (manager is LinearLayoutManager && dy > 0) {
+                    val index = manager.findLastVisibleItemPosition()
+                    scrollToPlayVideoInPosition(index, manager)
+                } else if(manager is LinearLayoutManager && dy < 0) {
+                    val index = manager.findFirstVisibleItemPosition()
                     scrollToPlayVideoInPosition(index, manager)
                 }
             }

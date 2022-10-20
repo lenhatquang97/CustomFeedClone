@@ -56,12 +56,12 @@ class HomeScreenFragment : Fragment() {
                         val mimeType = context?.contentResolver?.getType(uri)
                         if (mimeType != null) {
                             if (mimeType.startsWith("image/")) {
-                                getFirstImageWidthAndHeight(i, uri)
+                                //getFirstImageWidthAndHeight(i, uri)
                                 val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
                                 listOfViews.add(imageView)
                                 listOfUris.add(uri)
                             } else if (mimeType.startsWith("video/")) {
-                                getFirstVideoWidthAndHeight(i, uri)
+                                //getFirstVideoWidthAndHeight(i, uri)
                                 val videoView = LoadingVideoView(requireContext(), uri.toString())
                                 listOfViews.add(videoView)
                                 listOfUris.add(uri)

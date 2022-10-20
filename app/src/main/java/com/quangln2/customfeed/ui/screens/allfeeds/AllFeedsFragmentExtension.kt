@@ -1,6 +1,7 @@
 package com.quangln2.customfeed.ui.screens.allfeeds
 
 import android.os.Bundle
+import android.widget.FrameLayout
 import androidx.core.view.size
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -13,7 +14,6 @@ import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.controllers.VideoPlayed
 import com.quangln2.customfeed.others.callback.EventFeedCallback
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
-import com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -24,7 +24,7 @@ fun AllFeedsFragment.scrollToPlayVideoInPosition(itemPosition: Int, linearLayout
     val secondCondition = (viewItem != null && itemPosition == adapterVal.itemCount - 1)
 
     if (firstCondition || secondCondition) {
-        val customGridGroup = viewItem?.findViewById<CustomGridGroup>(R.id.customGridGroup)
+        val customGridGroup = viewItem?.findViewById<FrameLayout>(R.id.customGridGroup)
         if (customGridGroup != null) {
             lifecycleScope.launch(Dispatchers.Main) {
                 for (i in 0 until customGridGroup.size) {
@@ -50,7 +50,7 @@ fun checkWhetherHaveMoreThanTwoVideosInPost(): Boolean {
     val (anotherMainItemIndex, anotherVideoIndex) = FeedController.popVideoQueue()
     if (mainItemIndex != null && videoIndex != null && anotherMainItemIndex != null && anotherVideoIndex != null) {
         FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
-        FeedController.videoQueue.add(VideoPlayed(anotherMainItemIndex, anotherVideoIndex))
+        //FeedController.videoQueue.add(VideoPlayed(anotherMainItemIndex, anotherVideoIndex))
         if (mainItemIndex == anotherMainItemIndex) return true
     }
     return false
@@ -61,7 +61,7 @@ fun AllFeedsFragment.pauseVideo() {
     lifecycleScope.launch(Dispatchers.Main) {
         if (pausedItemIndex != null && videoIndex != null) {
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
-            val customGridGroup = viewItem?.itemView?.findViewById<CustomGridGroup>(R.id.customGridGroup)
+            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
             val view = customGridGroup?.getChildAt(videoIndex)
             if (view is LoadingVideoView) {
                 view.pauseVideo()
@@ -77,7 +77,7 @@ fun AllFeedsFragment.playVideo(){
     val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
     if (mainItemIndex != null && videoIndex != null) {
         val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
-        val customGridGroup = viewItem?.itemView?.findViewById<CustomGridGroup>(R.id.customGridGroup)
+        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex)
 
         if (view is LoadingVideoView) {
