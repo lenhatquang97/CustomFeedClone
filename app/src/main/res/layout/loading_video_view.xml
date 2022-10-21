@@ -8,6 +8,7 @@
 
 
     <com.google.android.exoplayer2.ui.PlayerView
+        android:visibility="invisible"
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,6 +17,15 @@
         app:resize_mode="zoom"
         app:surface_type="texture_view"
         app:use_controller="false" />
+
+    <ImageView
+        android:id="@+id/thumbnail_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="@color/black"
+        android:scaleType="centerCrop"
+        />
 
 
     <ImageView

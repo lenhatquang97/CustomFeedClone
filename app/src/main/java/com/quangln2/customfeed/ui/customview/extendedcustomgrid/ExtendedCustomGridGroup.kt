@@ -175,7 +175,7 @@ class ExtendedCustomGridGroup : ViewGroup {
         setMeasuredDimension(width, height)
     }
 
-    fun drawHorizontalGridMoreThanTwoAndLessThanFour() {
+    private fun drawHorizontalGridMoreThanTwoAndLessThanFour() {
         val widthGrid = width.toFloat()
         val largeRectangle = RectanglePoint(0f, 0f, widthGrid, widthGrid / 2)
         val top = widthGrid / 2
@@ -190,7 +190,7 @@ class ExtendedCustomGridGroup : ViewGroup {
         }
     }
 
-    fun drawHorizontalGridWithFive() {
+    private fun drawHorizontalGridWithFive() {
         val widthGrid = width.toFloat()
         val firstRect = RectanglePoint(0f, 0f, widthGrid / 2, widthGrid / 2)
         val secondRect = RectanglePoint(0f, widthGrid / 2, widthGrid / 2, widthGrid)
@@ -207,7 +207,7 @@ class ExtendedCustomGridGroup : ViewGroup {
         }
     }
 
-    fun drawHorizontalGridWithEight() {
+    private fun drawHorizontalGridWithEight() {
         val widthGrid = width.toFloat()
         val largestRect = RectanglePoint(0f, 0f, 2 * widthGrid / 3, 1 * widthGrid / 3)
         val firstRect = RectanglePoint(2 * widthGrid / 3, 0f, widthGrid, 1 * widthGrid / 3)
@@ -226,7 +226,7 @@ class ExtendedCustomGridGroup : ViewGroup {
         }
     }
 
-    fun drawVerticalGridMoreThanTwoAndLessThanFour() {
+    private fun drawVerticalGridMoreThanTwoAndLessThanFour() {
         val widthGrid = width.toFloat()
         val largeRectangle = RectanglePoint(0f, 0f, widthGrid / 2, widthGrid)
         val left = widthGrid / 2
@@ -241,7 +241,7 @@ class ExtendedCustomGridGroup : ViewGroup {
         }
     }
 
-    fun drawVerticalGridWithFive() {
+    private fun drawVerticalGridWithFive() {
         val widthGrid = width.toFloat()
         val firstRect = RectanglePoint(0f, 0f, widthGrid / 2, 2 * widthGrid / 3)
         val secondRect = RectanglePoint(widthGrid / 2, 0f, widthGrid, 2 * widthGrid / 3)
@@ -258,7 +258,7 @@ class ExtendedCustomGridGroup : ViewGroup {
         }
     }
 
-    fun drawVerticalGridWithEight() {
+    private fun drawVerticalGridWithEight() {
         val widthGrid = width.toFloat()
         val largestRect = RectanglePoint(0f, 0f, 1 * widthGrid / 3, 2 * widthGrid / 3)
         val firstRect = RectanglePoint(widthGrid / 3, 0f, 2 * widthGrid / 3, 1 * widthGrid / 3)

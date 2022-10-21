@@ -8,11 +8,16 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
+import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeed.R
+
 
 class LoadingVideoView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -23,10 +28,15 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var playerView: PlayerView
     lateinit var crossButton: ImageView
     lateinit var player: ExoPlayer
-    var url = ""
-    var isMute = false
-    var isReleased = false
-    var currentPosition = 0L
+    lateinit var thumbnailView: ImageView
+
+    private var url = ""
+    private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL)
+    private var isMute = false
+    private var isReleased = false
+    private var currentPosition = 0L
+
+
 
     constructor(context: Context, url: String) : this(context) {
         this.url = url
@@ -43,6 +53,7 @@ class LoadingVideoView @JvmOverloads constructor(
         soundButton = view.findViewById(R.id.sound_button)
         playerView = view.findViewById(R.id.player_view)
         crossButton = view.findViewById(R.id.cross_x)
+        thumbnailView = view.findViewById(R.id.thumbnail_view)
 
 
         soundButton.setOnClickListener {
@@ -59,9 +70,18 @@ class LoadingVideoView @JvmOverloads constructor(
         }
 
         progressBar.visibility = View.VISIBLE
-        playButton.visibility = View.INVISIBLE
+        playButton.visibility = View.VISIBLE
+        playerView.visibility = View.INVISIBLE
+        thumbnailView.visibility = View.VISIBLE
 
-        player = ExoPlayer.Builder(context).build()
+        Glide.with(context).load(url).apply(requestOptions).into(thumbnailView)
+
+        prepare()
+    }
+
+    private fun prepare(){
+        val renderersFactory = DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
+        player = ExoPlayer.Builder(context, renderersFactory).build()
         playerView.player = player
 
         player.addListener(
@@ -80,7 +100,6 @@ class LoadingVideoView @JvmOverloads constructor(
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
-
     }
 
     private fun initPlayer() {
@@ -118,6 +137,9 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     fun playVideo() {
+        playerView.visibility = View.VISIBLE
+        thumbnailView.visibility = View.INVISIBLE
+
         if (isReleased) {
             isReleased = false
             initPlayer()
@@ -129,15 +151,15 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     fun pauseVideo() {
+        playerView.visibility = View.INVISIBLE
+        thumbnailView.visibility = View.VISIBLE
         playButton.visibility = View.VISIBLE
         player.pause()
 
         currentPosition = player.currentPosition
         isReleased = true
 
-
         player.release()
-
     }
 
 

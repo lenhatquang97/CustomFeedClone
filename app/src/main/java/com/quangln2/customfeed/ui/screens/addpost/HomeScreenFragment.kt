@@ -58,6 +58,8 @@ class HomeScreenFragment : Fragment() {
     var listOfUris: MutableList<Uri> = mutableListOf()
 
 
+
+
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val data: Intent? = result.data
@@ -212,26 +214,6 @@ class HomeScreenFragment : Fragment() {
                     binding.customGridGroup.addView(viewChild)
                 }
             }
-        }
-    }
-
-    private fun retrieveFirstImageOrFirstVideo(uri: Uri, firstItemResolution: IntArray){
-        val mimeType = DownloadUtils.getMimeType(uri.toString())
-        if (mimeType != null && mimeType.startsWith("video")) {
-            try {
-                val bitmap = FileUtils.getVideoThumbnail(uri, requireContext())
-                firstItemResolution[0] = bitmap.intrinsicWidth
-                firstItemResolution[1] = bitmap.intrinsicHeight
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        } else if(mimeType != null && mimeType.startsWith("image")){
-            Glide.with(requireContext()).load(uri).into(object : SimpleTarget<Drawable>() {
-                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                    firstItemResolution[0] = resource.intrinsicWidth
-                    firstItemResolution[1] = resource.intrinsicHeight
-                }
-            })
         }
     }
 

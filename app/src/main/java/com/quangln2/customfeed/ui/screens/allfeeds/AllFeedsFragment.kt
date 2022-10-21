@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
@@ -58,6 +59,7 @@ class AllFeedsFragment : Fragment() {
     val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
+
     private val phoneStateReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
             Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
@@ -176,7 +178,6 @@ class AllFeedsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        //intent filter: PHONE STATE
         val intentFilter = IntentFilter()
         intentFilter.addAction("android.intent.action.PHONE_STATE")
 
