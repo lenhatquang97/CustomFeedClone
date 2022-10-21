@@ -121,7 +121,8 @@ class FeedViewModel(
                         _feedLoadingCode.postValue(response.code())
                         _uploadLists.postValue(availableItems.toMutableList())
                     }
-                }
+                } else loadCache()
+
             }
 
             override fun onFailure(call: Call<MutableList<UploadPost>>, t: Throwable) {
