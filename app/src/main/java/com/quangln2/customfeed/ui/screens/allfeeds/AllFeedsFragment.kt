@@ -4,16 +4,15 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Resources
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.Toast
-import androidx.core.net.toUri
 import androidx.core.view.children
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
@@ -41,7 +40,6 @@ import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
 import com.quangln2.customfeed.others.utils.DownloadUtils
-import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
@@ -69,18 +67,11 @@ class AllFeedsFragment : Fragment() {
         }
     }
     private val currentViewRect = Rect()
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putInt("SCROLL_Y", feedScrollY)
-    }
+    private val phoneHeight = Resources.getSystem().displayMetrics.heightPixels
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.getAllFeedsWithPreloadCache(requireContext())
-        if(savedInstanceState != null){
-           feedScrollY = savedInstanceState.getInt("SCROLL_Y", 0)
-        }
     }
 
     override fun onCreateView(
@@ -375,18 +366,7 @@ class AllFeedsFragment : Fragment() {
                 && DownloadUtils.isValidFile(url, requireContext(), size)) {
                 DownloadUtils.getTemporaryFilePath(url, requireContext())} else url
             val mimeType = DownloadUtils.getMimeType(value)
-            if (mimeType != null && mimeType.startsWith("video")) {
-                lifecycleScope.launch(Dispatchers.IO){
-                    try {
-                        val urlParams = if (URLUtil.isValidUrl(value)) value else ""
-                        val bitmap = FileUtils.getVideoThumbnail(value.toUri(), requireContext(), urlParams)
-                        myPostRender.firstItemWidth = bitmap.intrinsicWidth
-                        myPostRender.firstItemHeight = bitmap.intrinsicHeight
-                    } catch (e: Exception){
-                        e.printStackTrace()
-                    }
-                }
-            } else if(mimeType != null && mimeType.startsWith("image")){
+            if (mimeType != null && (mimeType.startsWith("video") || mimeType.startsWith("image"))) {
                 Glide.with(requireContext()).load(value).into(object : SimpleTarget<Drawable>() {
                     override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                         myPostRender.firstItemWidth = resource.intrinsicWidth
@@ -412,20 +392,21 @@ class AllFeedsFragment : Fragment() {
             if(view is LoadingVideoView){
                 view.getLocalVisibleRect(currentViewRect)
                 val height = currentViewRect.height()
-                if(dy >= 0){
-                    if(currentViewRect.top > 0){
-                        percents = (height - currentViewRect.top) * 100 /height
-                    } else if(currentViewRect.bottom in 1 until height){
-                        percents = currentViewRect.bottom * 100 / height
-                    }
+
+                val isOutOfBoundsOnTheTop = currentViewRect.bottom < 0 && currentViewRect.top < 0
+                val isOutOfBoundsAtTheBottom = currentViewRect.top >= phoneHeight && currentViewRect.bottom >= phoneHeight
+                if(isOutOfBoundsAtTheBottom || isOutOfBoundsOnTheTop){
+                    pauseVideo()
                 } else {
                     percents = height * 100 / view.height
+                    if(percents >= 50) {
+                        playVideo()
+                    } else {
+                        pauseVideo()
+                    }
                 }
-                if(percents >= 30) {
-                    playVideo()
-                } else {
-                    pauseVideo()
-                }
+
+
             }
         }
 
