@@ -11,7 +11,6 @@ import android.widget.ProgressBar
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
-import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -38,8 +37,9 @@ class LoadingVideoView @JvmOverloads constructor(
 
 
 
-    constructor(context: Context, url: String) : this(context) {
+    constructor(context: Context, url: String, player: ExoPlayer) : this(context) {
         this.url = url
+        this.player = player
         init()
     }
 
@@ -75,12 +75,11 @@ class LoadingVideoView @JvmOverloads constructor(
         thumbnailView.visibility = View.VISIBLE
 
         Glide.with(context).load(url).apply(requestOptions).into(thumbnailView)
+
         prepare()
     }
 
     private fun prepare(){
-        val renderersFactory = DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
-        player = ExoPlayer.Builder(context, renderersFactory).build()
         playerView.player = player
 
         player.addListener(
@@ -122,6 +121,7 @@ class LoadingVideoView @JvmOverloads constructor(
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -156,6 +156,11 @@ class LoadingVideoView @JvmOverloads constructor(
         player.pause()
 
         currentPosition = player.currentPosition
+    }
+
+    fun releaseVideo(){
+        isReleased = true
+        player.release()
     }
 
 }

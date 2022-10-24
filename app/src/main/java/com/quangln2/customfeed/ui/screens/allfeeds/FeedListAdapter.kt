@@ -22,6 +22,8 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
+import com.google.android.exoplayer2.DefaultRenderersFactory
+import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.controllers.FeedController
@@ -83,10 +85,12 @@ class FeedListAdapter(
         private fun loadFeedDescription(item: MyPostRender) {
             if (item.caption.isEmpty()) {
                 binding.caption.visibility = View.GONE
+                binding.learnMore.visibility = View.GONE
+                binding.learnLess.visibility = View.GONE
             } else {
                 binding.caption.visibility = View.VISIBLE
                 if (item.caption.length > 50) {
-                    binding.caption.text =  "${item.caption.substring(0, 50)}..."
+                    binding.caption.text = "${item.caption.substring(0, 50)}..."
                     binding.learnMore.visibility = View.VISIBLE
                     binding.learnLess.visibility = View.GONE
                 } else {
@@ -118,7 +122,13 @@ class FeedListAdapter(
         }
 
         @SuppressLint("SetTextI18n")
-        private fun addMoreImageOrVideoLayer(i: Int, item: MyPostRender, rectangles: List<RectanglePoint>, widthGrid: Int, contentPadding: Int): Boolean {
+        private fun addMoreImageOrVideoLayer(
+            i: Int,
+            item: MyPostRender,
+            rectangles: List<RectanglePoint>,
+            widthGrid: Int,
+            contentPadding: Int
+        ): Boolean {
             if (i >= 8 && item.resources.size > ConstantClass.MAXIMUM_IMAGE_IN_A_GRID) {
                 val numbersOfAddedImages = item.resources.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
                 val viewChild = CustomLayer(context)
@@ -151,7 +161,7 @@ class FeedListAdapter(
             loadBasicInfoAboutFeed(item)
             loadFeedDescription(item)
             bindingButton(item)
-            if(rectangles.isNotEmpty()){
+            if (rectangles.isNotEmpty()) {
                 for (i in 0 until item.resources.size) {
                     if (addMoreImageOrVideoLayer(i, item, rectangles, widthGrid, contentPadding)) return
                     val doesLocalFileExist = DownloadUtils.doesLocalFileExist(item.resources[i].url, context)
@@ -163,7 +173,10 @@ class FeedListAdapter(
                     val mimeType = getMimeType(value)
 
                     if (mimeType != null && mimeType.contains("video")) {
-                        val videoView = LoadingVideoView(context, value)
+                        val renderersFactory =
+                            DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
+                        val player = ExoPlayer.Builder(context, renderersFactory).build()
+                        val videoView = LoadingVideoView(context, value, player)
                         val layoutParams = ViewGroup.MarginLayoutParams(
                             (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
                             (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
@@ -183,6 +196,8 @@ class FeedListAdapter(
                                 stringArr
                             )
                         }
+
+
                         binding.customGridGroup.addView(videoView)
                     } else {
                         val imageView = ImageView(context)
@@ -203,30 +218,31 @@ class FeedListAdapter(
                             eventFeedCallback.onClickVideoView(-1L, item.resources[i].url, urlArrayList)
                         }
 
-                        Glide.with(context).load(value).placeholder(ColorDrawable(Color.parseColor("#aaaaaa"))).listener(
-                            object : RequestListener<Drawable> {
-                                override fun onLoadFailed(
-                                    e: GlideException?,
-                                    model: Any?,
-                                    target: Target<Drawable>?,
-                                    isFirstResource: Boolean
-                                ): Boolean {
-                                    val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-                                    imageView.setImageDrawable(drawable)
-                                    return false
-                                }
+                        Glide.with(context).load(value).placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
+                            .listener(
+                                object : RequestListener<Drawable> {
+                                    override fun onLoadFailed(
+                                        e: GlideException?,
+                                        model: Any?,
+                                        target: Target<Drawable>?,
+                                        isFirstResource: Boolean
+                                    ): Boolean {
+                                        val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+                                        imageView.setImageDrawable(drawable)
+                                        return false
+                                    }
 
-                                override fun onResourceReady(
-                                    resource: Drawable?,
-                                    model: Any?,
-                                    target: Target<Drawable>?,
-                                    dataSource: com.bumptech.glide.load.DataSource?,
-                                    isFirstResource: Boolean
-                                ): Boolean {
-                                    return false
+                                    override fun onResourceReady(
+                                        resource: Drawable?,
+                                        model: Any?,
+                                        target: Target<Drawable>?,
+                                        dataSource: com.bumptech.glide.load.DataSource?,
+                                        isFirstResource: Boolean
+                                    ): Boolean {
+                                        return false
+                                    }
                                 }
-                            }
-                        ).into(imageView)
+                            ).into(imageView)
                         binding.customGridGroup.addView(imageView)
                     }
                 }
@@ -264,6 +280,7 @@ class FeedListAdapter(
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         super.onViewDetachedFromWindow(holder)
+
         if (holder is FeedItemViewHolder) {
             val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
             val (_, videoIndex) = FeedController.peekVideoQueue()
@@ -286,6 +303,7 @@ class FeedListAdapter(
                 val child = customGridGroup.getChildAt(i)
                 if (child is LoadingVideoView) {
                     child.pauseVideo()
+                    child.releaseVideo()
                 }
             }
             customGridGroup.removeAllViews()

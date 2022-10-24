@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.res.Resources
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -22,8 +21,8 @@ import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.SimpleTarget
-import com.bumptech.glide.request.transition.Transition
+import com.google.android.exoplayer2.DefaultRenderersFactory
+import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.database.FeedDatabase
@@ -31,7 +30,6 @@ import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentHomeScreenBinding
-import com.quangln2.customfeed.others.utils.DownloadUtils
 import com.quangln2.customfeed.others.utils.FileUtils
 import com.quangln2.customfeed.ui.customview.CustomImageView
 import com.quangln2.customfeed.ui.customview.CustomLayer
@@ -78,7 +76,9 @@ class HomeScreenFragment : Fragment() {
                                     listOfUris.add(uri)
                                 } else if (mimeType.startsWith("video/")) {
                                     withContext(Dispatchers.Main){
-                                        val videoView = LoadingVideoView(requireContext(), uri.toString())
+                                        val renderersFactory = DefaultRenderersFactory(requireContext()).forceEnableMediaCodecAsynchronousQueueing()
+                                        val player = ExoPlayer.Builder(requireContext(), renderersFactory).build()
+                                        val videoView = LoadingVideoView(requireContext(), uri.toString(), player)
                                         listOfViews.add(videoView)
                                         listOfUris.add(uri)
                                     }

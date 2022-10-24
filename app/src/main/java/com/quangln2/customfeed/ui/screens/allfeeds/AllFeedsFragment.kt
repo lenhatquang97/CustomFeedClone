@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -61,13 +62,13 @@ class AllFeedsFragment : Fragment() {
     }
 
     private var feedScrollY = 0
-
     private val phoneStateReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
             Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
             pauseVideo()
         }
     }
+    private val currentViewRect = Rect()
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -96,8 +97,6 @@ class AllFeedsFragment : Fragment() {
             layoutManager = linearLayoutManager
             animation = null
         }
-
-
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
@@ -115,12 +114,13 @@ class AllFeedsFragment : Fragment() {
                 val manager = recyclerView.layoutManager
                 if (manager is LinearLayoutManager && dy > 0) {
                     val index = manager.findLastVisibleItemPosition()
-                    scrollToPlayVideoInPosition(index, manager)
+                    val actualIndex = if(index > 0) index else 1
+                    scrollToPlayVideoInPosition(actualIndex, manager, dy)
                 } else if(manager is LinearLayoutManager && dy < 0) {
                     val index = manager.findFirstVisibleItemPosition()
-                    scrollToPlayVideoInPosition(index, manager)
+                    val actualIndex = if(index > 0) index else 1
+                    scrollToPlayVideoInPosition(actualIndex, manager, dy)
                 }
-
                 feedScrollY += dy
             }
         })
@@ -163,8 +163,6 @@ class AllFeedsFragment : Fragment() {
                         adapterVal.submitList(listsOfPostRender.toMutableList()){
                             binding.allFeeds.scrollBy(0, feedScrollY)
                         }
-
-
                     }
                 }
             }
@@ -226,7 +224,7 @@ class AllFeedsFragment : Fragment() {
         requireContext().unregisterReceiver(phoneStateReceiver)
     }
 
-    private fun scrollToPlayVideoInPosition(itemPosition: Int, linearLayoutManager: LinearLayoutManager) {
+    private fun scrollToPlayVideoInPosition(itemPosition: Int, linearLayoutManager: LinearLayoutManager, dy: Int) {
         val viewItem = linearLayoutManager.findViewByPosition(itemPosition)
         val firstCondition = (itemPosition > 0 && viewItem != null)
         val secondCondition = (viewItem != null && itemPosition == adapterVal.itemCount - 1)
@@ -234,18 +232,16 @@ class AllFeedsFragment : Fragment() {
         if (firstCondition || secondCondition) {
             val customGridGroup = viewItem?.findViewById<FrameLayout>(R.id.customGridGroup)
             if (customGridGroup != null) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    for (i in 0 until customGridGroup.size) {
-                        val view = customGridGroup.getChildAt(i)
-                        if (FeedController.isViewAddedToQueue(view, itemPosition, i)) break
-                    }
-                    if (FeedController.videoQueue.size == 1) {
-                        playVideo()
-                    } else if (FeedController.videoQueue.size > 1) {
-                        if (!checkWhetherHaveMoreThanTwoVideosInPost()) {
-                            pauseVideo()
-                            playVideo()
-                        }
+                for (i in 0 until customGridGroup.size) {
+                    val view = customGridGroup.getChildAt(i)
+                    if (FeedController.isViewAddedToQueue(view, itemPosition, i)) break
+                }
+                if (FeedController.videoQueue.size == 1) {
+                    calculateVisibilityVideoView(dy)
+                } else if (FeedController.videoQueue.size > 1) {
+                    if (!checkWhetherHaveMoreThanTwoVideosInPost()) {
+                        pauseVideo()
+                        calculateVisibilityVideoView(dy)
                     }
                 }
             }
@@ -286,7 +282,6 @@ class AllFeedsFragment : Fragment() {
             val view = customGridGroup?.getChildAt(videoIndex)
 
             if (view is LoadingVideoView) {
-
                 view.playVideo()
                 view.player.addListener(
                     object : Player.Listener {
@@ -405,6 +400,35 @@ class AllFeedsFragment : Fragment() {
     override fun onDetach() {
         super.onDetach()
         pauseVideo()
+    }
+
+    private fun calculateVisibilityVideoView(dy: Int){
+        val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
+        if (mainItemIndex != null && videoIndex != null) {
+            var percents = 100
+            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
+            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+            val view = customGridGroup?.getChildAt(videoIndex)
+            if(view is LoadingVideoView){
+                view.getLocalVisibleRect(currentViewRect)
+                val height = currentViewRect.height()
+                if(dy >= 0){
+                    if(currentViewRect.top > 0){
+                        percents = (height - currentViewRect.top) * 100 /height
+                    } else if(currentViewRect.bottom in 1 until height){
+                        percents = currentViewRect.bottom * 100 / height
+                    }
+                } else {
+                    percents = height * 100 / view.height
+                }
+                if(percents >= 30) {
+                    playVideo()
+                } else {
+                    pauseVideo()
+                }
+            }
+        }
+
     }
 
 
