@@ -2,7 +2,6 @@ package com.quangln2.customfeed.ui.screens.allfeeds
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -12,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
-import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import androidx.core.view.size
 import androidx.recyclerview.widget.AsyncDifferConfig
@@ -205,24 +203,7 @@ class FeedListAdapter(
                             eventFeedCallback.onClickVideoView(-1L, item.resources[i].url, urlArrayList)
                         }
 
-                        when (context.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
-                            Configuration.UI_MODE_NIGHT_YES -> {
-                                val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-                                imageView.setImageDrawable(drawable)
-                            }
-                            Configuration.UI_MODE_NIGHT_NO -> {
-                                val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
-                                imageView.setImageDrawable(drawable)
-                            }
-                            Configuration.UI_MODE_NIGHT_UNDEFINED -> {
-                                val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-                                imageView.setImageDrawable(drawable)
-                            }
-                        }
-
-
-
-                        Glide.with(context).load(value).listener(
+                        Glide.with(context).load(value).placeholder(ColorDrawable(Color.parseColor("#aaaaaa"))).listener(
                             object : RequestListener<Drawable> {
                                 override fun onLoadFailed(
                                     e: GlideException?,
@@ -230,20 +211,8 @@ class FeedListAdapter(
                                     target: Target<Drawable>?,
                                     isFirstResource: Boolean
                                 ): Boolean {
-                                    when (context.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
-                                        Configuration.UI_MODE_NIGHT_YES -> {
-                                            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-                                            imageView.setImageDrawable(drawable)
-                                        }
-                                        Configuration.UI_MODE_NIGHT_NO -> {
-                                            val drawable = ContextCompat.getDrawable(context, R.drawable.placeholder_image)
-                                            imageView.setImageDrawable(drawable)
-                                        }
-                                        Configuration.UI_MODE_NIGHT_UNDEFINED -> {
-                                            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-                                            imageView.setImageDrawable(drawable)
-                                        }
-                                    }
+                                    val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+                                    imageView.setImageDrawable(drawable)
                                     return false
                                 }
 
@@ -257,7 +226,7 @@ class FeedListAdapter(
                                     return false
                                 }
                             }
-                        ).apply(ConstantClass.REQUEST_OPTIONS_WITH_SIZE_100).into(imageView)
+                        ).into(imageView)
                         binding.customGridGroup.addView(imageView)
                     }
                 }

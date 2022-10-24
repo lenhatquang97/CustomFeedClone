@@ -68,9 +68,8 @@ object DownloadUtils {
         if (doesLocalFileExist(url, context)) return
         val mimeType = getMimeType(url)
         if (mimeType != null) {
-            if (mimeType.contains("image")) {
-                downloadImage(url, context)
-            } else if (mimeType.contains("video")) {
+            //Only download video
+            if (mimeType.contains("video")) {
                 downloadVideo(url, context)
             }
         }

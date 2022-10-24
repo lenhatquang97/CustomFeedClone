@@ -1,16 +1,13 @@
 package com.quangln2.customfeed.ui.viewmodel
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeed.data.models.UploadWorkerModel
@@ -20,7 +17,7 @@ import com.quangln2.customfeed.data.models.datamodel.UploadPost
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.domain.usecase.*
-import com.quangln2.customfeed.domain.workmanager.UploadFileWorker
+import com.quangln2.customfeed.domain.workmanager.UploadService
 import com.quangln2.customfeed.others.utils.DownloadUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,28 +47,18 @@ class FeedViewModel(
     fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
         val uriStringLists = uriLists.map { it.toString() }
         val uploadWorkerModel = UploadWorkerModel(caption, uriStringLists)
-
         val jsonString = Gson().toJson(uploadWorkerModel)
-        val inputData = Data.Builder().putString("jsonString", jsonString).build()
+        val intent = Intent(context, UploadService::class.java)
+        intent.putExtra("jsonString", jsonString)
+        context.startService(intent)
 
-        val oneTimeWorkRequest = OneTimeWorkRequest.Builder(UploadFileWorker::class.java)
-            .setInputData(inputData)
-            .build()
-
-        val workManager = WorkManager.getInstance(context)
-            .beginUniqueWork("ForegroundWorker", ExistingWorkPolicy.APPEND_OR_REPLACE, oneTimeWorkRequest)
-        workManager.enqueue()
     }
 
     private fun loadCache() {
-        val ls = mutableListOf<MyPost>()
         viewModelScope.launch(Dispatchers.IO) {
             val offlinePosts = getAllInDatabaseUseCase()
-            for (item in offlinePosts) {
-                ls.add(item)
-            }
             _feedLoadingCode.postValue(-1)
-            _uploadLists.postValue(ls.toMutableList())
+            _uploadLists.postValue(offlinePosts.toMutableList())
         }
 
     }

@@ -13,6 +13,7 @@ import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.net.toUri
+import androidx.core.view.children
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -59,6 +60,8 @@ class AllFeedsFragment : Fragment() {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
+    private var feedScrollY = 0
+
     private val phoneStateReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
             Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
@@ -66,9 +69,17 @@ class AllFeedsFragment : Fragment() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("SCROLL_Y", feedScrollY)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.getAllFeedsWithPreloadCache(requireContext())
+        if(savedInstanceState != null){
+           feedScrollY = savedInstanceState.getInt("SCROLL_Y", 0)
+        }
     }
 
     override fun onCreateView(
@@ -109,6 +120,8 @@ class AllFeedsFragment : Fragment() {
                     val index = manager.findFirstVisibleItemPosition()
                     scrollToPlayVideoInPosition(index, manager)
                 }
+
+                feedScrollY += dy
             }
         })
 
@@ -130,7 +143,10 @@ class AllFeedsFragment : Fragment() {
                     }
 
                     withContext(Dispatchers.Main){
-                        adapterVal.submitList(listsOfPostRender.toMutableList())
+                        adapterVal.submitList(listsOfPostRender.toMutableList()){
+                            binding.allFeeds.scrollBy(0, feedScrollY)
+                        }
+
                     }
 
                 }
@@ -139,19 +155,25 @@ class AllFeedsFragment : Fragment() {
                     if (viewModel.feedLoadingCode.value!! != 200 && viewModel.feedLoadingCode.value!! != 0) {
                         binding.noPostId.root.visibility = View.VISIBLE
                     } else if(viewModel.feedLoadingCode.value!! == 200) {
+                        binding.noPostId.root.visibility = View.GONE
                         val listsOfPostRender = mutableListOf<MyPostRender>()
                         val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
                         listsOfPostRender.add(addNewPostItem)
 
-                        adapterVal.submitList(listsOfPostRender.toMutableList())
-                        binding.noPostId.root.visibility = View.INVISIBLE
+                        adapterVal.submitList(listsOfPostRender.toMutableList()){
+                            binding.allFeeds.scrollBy(0, feedScrollY)
+                        }
+
+
                     }
                 }
             }
+
             binding.swipeRefreshLayout.isRefreshing = false
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
+            pauseVideo()
             binding.noPostId.imageView.visibility = View.VISIBLE
             binding.noPostId.textNote.text = "Loading"
             viewModel.getAllFeeds(requireContext())
@@ -243,15 +265,13 @@ class AllFeedsFragment : Fragment() {
 
     private fun pauseVideo() {
         val (pausedItemIndex, videoIndex) = FeedController.peekVideoQueue()
-        lifecycleScope.launch(Dispatchers.Main) {
-            if (pausedItemIndex != null && videoIndex != null) {
-                val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
-                val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
-                val view = customGridGroup?.getChildAt(videoIndex)
-                if (view is LoadingVideoView) {
-                    view.pauseVideo()
-                    FeedController.safeRemoveFromQueue()
-                }
+        if (pausedItemIndex != null && videoIndex != null) {
+            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
+            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+            val view = customGridGroup?.getChildAt(videoIndex)
+            if (view is LoadingVideoView) {
+                view.pauseVideo()
+                FeedController.safeRemoveFromQueue()
             }
         }
 
@@ -266,11 +286,13 @@ class AllFeedsFragment : Fragment() {
             val view = customGridGroup?.getChildAt(videoIndex)
 
             if (view is LoadingVideoView) {
+
                 view.playVideo()
                 view.player.addListener(
                     object : Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             super.onPlaybackStateChanged(playbackState)
+                            var flagEndOfVideoInGrid = false
                             if (playbackState == Player.STATE_ENDED) {
                                 //End this video
                                 view.player.seekTo(0)
@@ -280,10 +302,24 @@ class AllFeedsFragment : Fragment() {
                                 //Play next video in list
                                 for (i in videoIndex until customGridGroup.size) {
                                     val nextView = customGridGroup.getChildAt(i)
-                                    if (nextView is LoadingVideoView && i != videoIndex && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID) {
-                                        FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
+                                    if (nextView is LoadingVideoView && i != videoIndex) {
+                                        val condition1 = customGridGroup.size <= 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
+                                        val condition2 = customGridGroup.size > 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - 1
+                                        if(condition1 || condition2){
+                                            FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
+                                            playVideo()
+                                            flagEndOfVideoInGrid = true
+                                            break
+                                        }
+                                    }
+                                }
+
+                                //Play from start if end of video
+                                if(!flagEndOfVideoInGrid){
+                                    val firstVideoIndex = customGridGroup.children.indexOfFirst { it is LoadingVideoView }
+                                    if(firstVideoIndex != -1){
+                                        FeedController.videoQueue.add(VideoPlayed(mainItemIndex, firstVideoIndex))
                                         playVideo()
-                                        break
                                     }
                                 }
                             }
@@ -345,13 +381,15 @@ class AllFeedsFragment : Fragment() {
                 DownloadUtils.getTemporaryFilePath(url, requireContext())} else url
             val mimeType = DownloadUtils.getMimeType(value)
             if (mimeType != null && mimeType.startsWith("video")) {
-                try {
-                    val urlParams = if (URLUtil.isValidUrl(value)) value else ""
-                    val bitmap = FileUtils.getVideoThumbnail(value.toUri(), requireContext(), urlParams)
-                    myPostRender.firstItemWidth = bitmap.intrinsicWidth
-                    myPostRender.firstItemHeight = bitmap.intrinsicHeight
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                lifecycleScope.launch(Dispatchers.IO){
+                    try {
+                        val urlParams = if (URLUtil.isValidUrl(value)) value else ""
+                        val bitmap = FileUtils.getVideoThumbnail(value.toUri(), requireContext(), urlParams)
+                        myPostRender.firstItemWidth = bitmap.intrinsicWidth
+                        myPostRender.firstItemHeight = bitmap.intrinsicHeight
+                    } catch (e: Exception){
+                        e.printStackTrace()
+                    }
                 }
             } else if(mimeType != null && mimeType.startsWith("image")){
                 Glide.with(requireContext()).load(value).into(object : SimpleTarget<Drawable>() {
@@ -363,4 +401,11 @@ class AllFeedsFragment : Fragment() {
             }
         }
     }
+
+    override fun onDetach() {
+        super.onDetach()
+        pauseVideo()
+    }
+
+
 }

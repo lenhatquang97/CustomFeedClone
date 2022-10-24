@@ -75,7 +75,6 @@ class LoadingVideoView @JvmOverloads constructor(
         thumbnailView.visibility = View.VISIBLE
 
         Glide.with(context).load(url).apply(requestOptions).into(thumbnailView)
-
         prepare()
     }
 
@@ -157,10 +156,6 @@ class LoadingVideoView @JvmOverloads constructor(
         player.pause()
 
         currentPosition = player.currentPosition
-        isReleased = true
-
-        player.release()
     }
-
 
 }

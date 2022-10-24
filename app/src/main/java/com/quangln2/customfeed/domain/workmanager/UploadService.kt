@@ -1,15 +1,15 @@
 package com.quangln2.customfeed.domain.workmanager
 
+import android.app.Service
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import android.os.IBinder
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
-import androidx.work.Worker
-import androidx.work.WorkerParameters
 import com.google.gson.Gson
-import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
@@ -25,45 +25,53 @@ import retrofit2.Call
 import retrofit2.Response
 import java.util.*
 
-class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
+class UploadService: Service() {
     private val database by lazy {
-        FeedDatabase.getFeedDatabase(ctx)
+        FeedDatabase.getFeedDatabase(this)
     }
-    val builder = NotificationCompat.Builder(ctx, ctx.getString(R.string.channel_id))
+    val builder = NotificationCompat.Builder(this, "FeedPost")
         .setContentTitle("CustomFeed")
         .setContentText("Uploading...")
-        .setSmallIcon(R.drawable.ic_baseline_post_add_24)
+        .setSmallIcon(com.quangln2.customfeed.R.drawable.ic_baseline_post_add_24)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
     val id = UUID.randomUUID().toString().hashCode()
 
-    override fun doWork(): Result {
-        FeedController.isLoading.postValue(1)
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+
+    override fun onCreate() {
+        super.onCreate()
         builder.setProgress(0, 0, true)
-        with(NotificationManagerCompat.from(applicationContext)) {
-            notify(id, builder.build())
-        }
+        startForeground(1, builder.build())
+    }
 
-        val jsonString = inputData.getString("jsonString")
-        val uploadWorkerModel = Gson().fromJson(jsonString, UploadWorkerModel::class.java)
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if(intent != null){
+            FeedController.isLoading.postValue(1)
+            val jsonString = intent.getStringExtra("jsonString")
+            val uploadWorkerModel = Gson().fromJson(jsonString, UploadWorkerModel::class.java)
 
-        val emptyList = mutableListOf<Uri>()
-        val uploadMultipartBuilderUseCase = UploadMultipartBuilderUseCase(
-            FeedRepository(
-                LocalDataSourceImpl(database.feedDao()),
-                RemoteDataSourceImpl()
+            val emptyList = mutableListOf<Uri>()
+            val uploadMultipartBuilderUseCase = UploadMultipartBuilderUseCase(
+                FeedRepository(
+                    LocalDataSourceImpl(database.feedDao()),
+                    RemoteDataSourceImpl()
+                )
             )
-        )
 
-        val uriLists = uploadWorkerModel.uriLists.map { it.toUri() }
-        val uriListsForCompressing = if (uriLists.isEmpty()) emptyList else FileUtils.compressImagesAndVideos(
-            uriLists.toMutableList(),
-            applicationContext
-        )
+            val uriLists = uploadWorkerModel.uriLists.map { it.toUri() }
+            val uriListsForCompressing = if (uriLists.isEmpty()) emptyList else FileUtils.compressImagesAndVideos(
+                uriLists.toMutableList(),
+                applicationContext
+            )
 
-        val parts = uploadMultipartBuilderUseCase(uploadWorkerModel.caption, uriListsForCompressing, applicationContext)
-        uploadFiles(parts, applicationContext)
-        return Result.success()
+            val parts = uploadMultipartBuilderUseCase(uploadWorkerModel.caption, uriListsForCompressing, applicationContext)
+            uploadFiles(parts, applicationContext)
+
+        }
+        return START_NOT_STICKY
     }
 
     private fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context) {
@@ -106,6 +114,8 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
 
                 }
 
+                stopSelf()
+
 
             }
 
@@ -123,8 +133,10 @@ class UploadFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, par
 
                 //show toast
                 Toast.makeText(context, "Upload failed", Toast.LENGTH_SHORT).show()
+                stopSelf()
 
             }
         })
     }
+
 }
