@@ -78,9 +78,7 @@ class HomeScreenFragment : Fragment() {
                                     }
                                 } else if (mimeType.startsWith("video/")) {
                                     withContext(Dispatchers.Main){
-                                        val renderersFactory = DefaultRenderersFactory(requireContext()).forceEnableMediaCodecAsynchronousQueueing()
-                                        val player = ExoPlayer.Builder(requireContext(), renderersFactory).build()
-                                        val videoView = LoadingVideoView(requireContext(), uri.toString(), player)
+                                        val videoView = LoadingVideoView(requireContext(), uri.toString())
                                         listOfViews.add(videoView)
                                         listOfUris.add(uri)
                                     }

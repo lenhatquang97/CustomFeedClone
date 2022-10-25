@@ -11,8 +11,6 @@ import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.exoplayer2.DefaultRenderersFactory
-import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.databinding.FragmentViewDetailBinding
 import com.quangln2.customfeed.ui.customview.CustomImageView
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
@@ -92,11 +90,7 @@ class ViewDetailFragment : Fragment() {
                         }
                     }else if(mimeType.contains("video")){
                         withContext(Dispatchers.Main){
-                            val renderersFactory = DefaultRenderersFactory(requireContext()).forceEnableMediaCodecAsynchronousQueueing()
-                            val player = ExoPlayer.Builder(requireContext(), renderersFactory).build().apply {
-                                release()
-                            }
-                            val videoView = LoadingVideoView(requireContext(), it, player)
+                            val videoView = LoadingVideoView(requireContext(), it)
                             videoView.apply {
                                 progressBar.visibility = View.GONE
                                 crossButton.visibility = View.VISIBLE

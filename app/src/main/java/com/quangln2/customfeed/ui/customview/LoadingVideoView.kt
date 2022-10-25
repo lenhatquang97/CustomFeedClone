@@ -42,6 +42,24 @@ class LoadingVideoView @JvmOverloads constructor(
         this.player = player
         init()
     }
+    constructor(context: Context, url: String): this(context){
+        this.url = url
+        initForShowThumbnail()
+    }
+
+    private fun initForShowThumbnail(){
+        val view = LayoutInflater.from(context).inflate(R.layout.loading_video_view, this, true)
+        progressBar = view.findViewById(R.id.my_spinner)
+        playButton = view.findViewById(R.id.play_button)
+        soundButton = view.findViewById(R.id.sound_button)
+        playerView = view.findViewById(R.id.player_view)
+        crossButton = view.findViewById(R.id.cross_x)
+        thumbnailView = view.findViewById(R.id.thumbnail_view)
+
+        thumbnailView.visibility = View.VISIBLE
+        progressBar.visibility = View.GONE
+        Glide.with(context).load(url).apply(requestOptions).into(thumbnailView)
+    }
 
 
     @SuppressLint("UseCompatLoadingForDrawables")
