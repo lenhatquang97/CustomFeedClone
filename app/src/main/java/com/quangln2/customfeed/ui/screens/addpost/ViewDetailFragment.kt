@@ -23,11 +23,22 @@ class ViewDetailFragment : Fragment() {
     private lateinit var binding: FragmentViewDetailBinding
     var listOfViews: MutableList<View> = mutableListOf()
     var listOfUris: MutableList<String> = arrayListOf()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val arrayListOfUris = arguments?.getStringArrayList("listOfUris")
+        arrayListOfUris?.forEach {
+            listOfUris.add(it)
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentViewDetailBinding.inflate(inflater, container, false)
+
+        binding.toolbar.title = "Numbers of images/videos: ${listOfUris.size}"
+
         binding.doneTitle.setOnClickListener {
             val navController = findNavController()
             val arrayListOfReturn = arrayListOf<String>()
@@ -50,10 +61,6 @@ class ViewDetailFragment : Fragment() {
                 }
             }.show()
         }
-        val arrayListOfUris = arguments?.getStringArrayList("listOfUris")
-        arrayListOfUris?.forEach {
-            listOfUris.add(it)
-        }
         initCustomGrid(listOfUris)
 
         return binding.root
@@ -64,6 +71,7 @@ class ViewDetailFragment : Fragment() {
         val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
         val contentPadding = 16
         lifecycleScope.launch(Dispatchers.IO) {
+            //This will prevent ConcurrentModificationException
             val iterator = listOfUris.toMutableList().iterator()
             var i = 0
             while(iterator.hasNext()){
@@ -114,6 +122,10 @@ class ViewDetailFragment : Fragment() {
                 }
                 i++
             }
+            withContext(Dispatchers.Main){
+                binding.toolbar.title = "Numbers of images/videos: ${listOfUris.size}"
+            }
+
         }
     }
 

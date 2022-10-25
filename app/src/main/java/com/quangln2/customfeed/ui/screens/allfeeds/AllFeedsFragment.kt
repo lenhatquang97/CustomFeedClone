@@ -207,7 +207,7 @@ class AllFeedsFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        playVideo()
+        calculateVisibilityVideoView(0)
     }
 
     override fun onDestroy() {
@@ -293,7 +293,7 @@ class AllFeedsFragment : Fragment() {
                                         val condition2 = customGridGroup.size > 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - 1
                                         if(condition1 || condition2){
                                             FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
-                                            playVideo()
+                                            calculateVisibilityVideoView(0)
                                             flagEndOfVideoInGrid = true
                                             break
                                         }
@@ -305,7 +305,7 @@ class AllFeedsFragment : Fragment() {
                                     val firstVideoIndex = customGridGroup.children.indexOfFirst { it is LoadingVideoView }
                                     if(firstVideoIndex != -1){
                                         FeedController.videoQueue.add(VideoPlayed(mainItemIndex, firstVideoIndex))
-                                        playVideo()
+                                        calculateVisibilityVideoView(0)
                                     }
                                 }
                             }
@@ -392,7 +392,6 @@ class AllFeedsFragment : Fragment() {
             if(view is LoadingVideoView){
                 view.getLocalVisibleRect(currentViewRect)
                 val height = currentViewRect.height()
-
                 val isOutOfBoundsOnTheTop = currentViewRect.bottom < 0 && currentViewRect.top < 0
                 val isOutOfBoundsAtTheBottom = currentViewRect.top >= phoneHeight && currentViewRect.bottom >= phoneHeight
                 if(isOutOfBoundsAtTheBottom || isOutOfBoundsOnTheTop){
