@@ -66,6 +66,29 @@ object CustomGridMigration {
         return rectangles
     }
 
+    fun drawMoreThanTenChildrenGrid(childCount: Int): List<RectanglePoint> {
+        val rectangles = mutableListOf<RectanglePoint>()
+        val loopNumber = childCount / 3
+        val remainingItemNumber = childCount % 3
+        for (k in 0 until loopNumber) {
+            val top = k * 1 / 3f
+            val bottom = (k + 1) * 1 / 3f
+            for (i in 0 until 3) {
+                val left = i * (1 / 3f)
+                val right = (i + 1) * (1 / 3f)
+                rectangles.add(RectanglePoint(left, top, right, bottom))
+            }
+        }
+        val top = loopNumber / 3f
+        val bottom = (loopNumber + 1) / 3f
+        for(k in 0 until remainingItemNumber){
+            val left = k * (1 / 3f)
+            val right = (k + 1) * (1 / 3f)
+            rectangles.add(RectanglePoint(left, top, right, bottom))
+        }
+        return rectangles
+    }
+
      fun drawHorizontalGridMoreThanTwoAndLessThanFourGrid(childCount: Int): List<RectanglePoint> {
         val rectangles = mutableListOf<RectanglePoint>()
         val largeRectangle = RectanglePoint(0f, 0f, 1f, 0.5f)

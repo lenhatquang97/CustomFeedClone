@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toUri
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -25,6 +26,7 @@ import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
+import com.quangln2.customfeed.data.constants.ConstantSetup
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
@@ -56,8 +58,6 @@ class HomeScreenFragment : Fragment() {
     var listOfUris: MutableList<Uri> = mutableListOf()
 
 
-
-
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val data: Intent? = result.data
@@ -71,9 +71,11 @@ class HomeScreenFragment : Fragment() {
                             val mimeType = context?.contentResolver?.getType(uri)
                             if (mimeType != null) {
                                 if (mimeType.startsWith("image/")) {
-                                    val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
-                                    listOfViews.add(imageView)
-                                    listOfUris.add(uri)
+                                    withContext(Dispatchers.Main){
+                                        val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
+                                        listOfViews.add(imageView)
+                                        listOfUris.add(uri)
+                                    }
                                 } else if (mimeType.startsWith("video/")) {
                                     withContext(Dispatchers.Main){
                                         val renderersFactory = DefaultRenderersFactory(requireContext()).forceEnableMediaCodecAsynchronousQueueing()
@@ -108,9 +110,17 @@ class HomeScreenFragment : Fragment() {
         viewModel._uriLists.value?.clear()
     }
 
+    override fun onStop() {
+        super.onStop()
+        binding.customGridGroup.removeAllViews()
+//        listOfViews.clear()
+//        listOfUris.clear()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         viewModel._uriLists.value?.clear()
+
     }
 
     @SuppressLint("SetTextI18n")
@@ -120,6 +130,7 @@ class HomeScreenFragment : Fragment() {
     ): View {
         binding = FragmentHomeScreenBinding.inflate(inflater, container, false)
         loadInitialProfile()
+
 
         // Handle choose image or video
         binding.buttonChooseImageVideo.setOnClickListener {
@@ -160,7 +171,7 @@ class HomeScreenFragment : Fragment() {
         return binding.root
     }
 
-    fun initCustomGrid(){
+    private fun initCustomGrid(){
         val rectangles = getGridItemsLocation(listOfViews.size)
         val marginHorizontalSum = 16 + 32
         val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
@@ -178,6 +189,24 @@ class HomeScreenFragment : Fragment() {
                         topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
                     }
                     viewChild.layoutParams = layoutParams
+                    viewChild.setOnClickListener {
+                        val listsOfNotEmptyUri = listOfUris.filter { it != Uri.EMPTY }
+                        val arrayListsOfUri = ArrayList<String>()
+                        listsOfNotEmptyUri.forEach {
+                            arrayListsOfUri.add(it.toString())
+                        }
+
+                        findNavController().navigate(R.id.action_homeScreenFragment_to_viewDetailFragment,
+                            Bundle().apply {
+                                putStringArrayList("listOfUris", arrayListsOfUri)
+                            },
+                            navOptions {
+                            anim {
+                                enter = android.R.animator.fade_in
+                                exit = android.R.animator.fade_out
+                            }
+                        })
+                    }
                     binding.customGridGroup.addView(viewChild)
                     break
                 }
@@ -217,10 +246,10 @@ class HomeScreenFragment : Fragment() {
         }
     }
 
-    fun loadInitialProfile(){
+    private fun loadInitialProfile(){
         // Load initial avatar
         val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
-        Glide.with(requireContext()).load(ConstantClass.AVATAR_LINK).apply(requestOptions).into(binding.myAvatarImage)
+        Glide.with(requireContext()).load(ConstantSetup.AVATAR_LINK).apply(requestOptions).into(binding.myAvatarImage)
     }
     private fun onHandleMoreImagesOrVideos(customView: View) {
         val imageAboutDeleted = listOfViews.indexOf(customView)
@@ -271,6 +300,49 @@ class HomeScreenFragment : Fragment() {
 
         initCustomGrid()
 
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val navController = findNavController()
+        navController.currentBackStackEntry?.savedStateHandle?.getLiveData<ArrayList<String>>("listOfUrisReturn")?.observe(viewLifecycleOwner) {
+            listOfUris.clear()
+            listOfViews.clear()
+            binding.customGridGroup.removeAllViews()
+            it.forEach {itr -> listOfUris.add(itr.toUri()) }
+            lifecycleScope.launch(Dispatchers.IO){
+                var flagHasCustomLayer = false
+                val ls = viewModel.uriLists.value
+                for (i in 0 until it.size) {
+                    val uri = listOfUris[i]
+                    val mimeType = context?.contentResolver?.getType(uri)
+                    if (mimeType != null) {
+                        if (mimeType.startsWith("image/")) {
+                            withContext(Dispatchers.Main){
+                                val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
+                                listOfViews.add(imageView)
+                            }
+                        } else if (mimeType.startsWith("video/")) {
+                            withContext(Dispatchers.Main){
+                                val renderersFactory = DefaultRenderersFactory(requireContext()).forceEnableMediaCodecAsynchronousQueueing()
+                                val player = ExoPlayer.Builder(requireContext(), renderersFactory).build()
+                                val videoView = LoadingVideoView(requireContext(), uri.toString(), player)
+                                listOfViews.add(videoView)
+                            }
+                        }
+                        if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1, -1) && !flagHasCustomLayer) {
+                            flagHasCustomLayer = true
+                            listOfViews.add(8, CustomLayer(requireContext()))
+                            listOfUris.add(8, Uri.EMPTY)
+                        }
+                    }
+                    ls?.add(uri)
+                }
+                viewModel._uriLists.postValue(ls?.toMutableList())
+                navController.currentBackStackEntry?.savedStateHandle?.remove<ArrayList<String>>("listOfUrisReturn")
+            }
+
+        }
     }
 
     private fun hasCustomLayer(): Pair<Int, Int> {

@@ -25,4 +25,7 @@
     <style name="SeparatorColor">
         <item name="android:background">@color/a_bit_blacker</item>
     </style>
+    <style name="Toolbar.TitleText" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">16sp</item>
+    </style>
 </resources>

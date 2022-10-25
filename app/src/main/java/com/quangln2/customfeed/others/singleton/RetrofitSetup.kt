@@ -1,6 +1,6 @@
 package com.quangln2.customfeed.others.singleton
 
-import com.quangln2.customfeed.data.constants.ConstantClass.DEFAULT_ENDPOINT
+import com.quangln2.customfeed.data.constants.ConstantSetup
 import com.quangln2.customfeed.data.datasource.remote.ApiSource
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -22,7 +22,7 @@ object RetrofitSetup {
 
     private val retrofit = Retrofit.Builder()
         .client(client)
-        .baseUrl(DEFAULT_ENDPOINT)
+        .baseUrl(ConstantSetup.DEFAULT_ENDPOINT)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

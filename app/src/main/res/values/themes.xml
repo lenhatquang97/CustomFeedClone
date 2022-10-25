@@ -20,4 +20,8 @@
     <style name="SeparatorColor">
         <item name="android:background">@android:color/darker_gray</item>
     </style>
+
+    <style name="Toolbar.TitleText" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">16sp</item>
+    </style>
 </resources>

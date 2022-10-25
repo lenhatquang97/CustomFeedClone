@@ -1,8 +1,9 @@
 package com.quangln2.customfeed.ui.customview.customgrid
 
+
 import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
 
-fun getGridItemsLocation(childCount: Int, firstItemWidth: Int = 0, firstItemHeight: Int = 0): List<RectanglePoint> {
+fun getGridItemsLocationWithMoreThanTen(childCount: Int, firstItemWidth: Int = 0, firstItemHeight: Int = 0): List<RectanglePoint> {
     val rectangles = when (childCount) {
         0 -> emptyList<RectanglePoint>()
         1 -> CustomGridMigration.drawOneChildGrid()
@@ -30,7 +31,7 @@ fun getGridItemsLocation(childCount: Int, firstItemWidth: Int = 0, firstItemHeig
 
         }
         else -> {
-            CustomGridMigration.drawNineChildrenGrid()
+            CustomGridMigration.drawMoreThanTenChildrenGrid(childCount)
         }
     }
     return rectangles

@@ -5,7 +5,7 @@ import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.net.toUri
-import androidx.core.view.get
+import com.bumptech.glide.Glide
 import com.quangln2.customfeed.R
 
 class CustomImageView {
@@ -18,10 +18,6 @@ class CustomImageView {
             frameLayout.addView(imageView)
             frameLayout.addView(crossButton)
 
-            frameLayout.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-                frameLayout.get(0).layout(0, 0, right - left, bottom - top)
-            }
-
             return frameLayout
         }
 
@@ -32,7 +28,6 @@ class CustomImageView {
 
             crossButton.setImageDrawable(context.getDrawable(R.drawable.remove_icon))
             params.gravity = Gravity.END
-
             crossButton.layoutParams = params
             crossButton.setPadding(16, 16, 16, 16)
             return crossButton
@@ -43,7 +38,7 @@ class CustomImageView {
             imageView.layoutParams =
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-            imageView.setImageURI(url.toUri())
+            Glide.with(context).load(url.toUri()).into(imageView)
             return imageView
         }
     }

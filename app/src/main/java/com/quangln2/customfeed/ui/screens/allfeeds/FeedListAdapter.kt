@@ -26,6 +26,7 @@ import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
+import com.quangln2.customfeed.data.constants.ConstantSetup
 import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
@@ -55,7 +56,7 @@ class FeedListAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(context: Context) {
             val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(50)
-            Glide.with(context).load(ConstantClass.AVATAR_LINK).apply(requestOptions).into(binding.circleAvatar)
+            Glide.with(context).load(ConstantSetup.AVATAR_LINK).apply(requestOptions).into(binding.circleAvatar)
             binding.root.setOnClickListener {
                 eventFeedCallback.onClickAddPost()
             }
@@ -77,7 +78,7 @@ class FeedListAdapter(
             binding.feedId.text = item.feedId
             binding.myName.text = item.name
             binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
-            Glide.with(context).load(item.avatar).apply(ConstantClass.REQUEST_OPTIONS_WITH_SIZE_100)
+            Glide.with(context).load(item.avatar).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
                 .into(binding.myAvatarImage)
         }
 
@@ -173,8 +174,7 @@ class FeedListAdapter(
                     val mimeType = getMimeType(value)
 
                     if (mimeType != null && mimeType.contains("video")) {
-                        val renderersFactory =
-                            DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
+                        val renderersFactory = DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
                         val player = ExoPlayer.Builder(context, renderersFactory).build()
                         val videoView = LoadingVideoView(context, value, player)
                         val layoutParams = ViewGroup.MarginLayoutParams(

@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_homeScreenFragment_to_allFeedsFragment"
             app:destination="@id/allFeedsFragment" />
+        <action
+            android:id="@+id/action_homeScreenFragment_to_viewDetailFragment"
+            app:destination="@id/viewDetailFragment" />
     </fragment>
     <fragment
         android:id="@+id/allFeedsFragment"
@@ -41,5 +44,14 @@
         <action
             android:id="@+id/action_viewMoreFragment_to_viewFullVideoFragment"
             app:destination="@id/viewFullVideoFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/viewDetailFragment"
+        android:name="com.quangln2.customfeed.ui.screens.addpost.ViewDetailFragment"
+        android:label="fragment_view_detail"
+        tools:layout="@layout/fragment_view_detail" >
+        <action
+            android:id="@+id/action_viewDetailFragment_to_homeScreenFragment"
+            app:destination="@id/homeScreenFragment" />
     </fragment>
 </navigation>

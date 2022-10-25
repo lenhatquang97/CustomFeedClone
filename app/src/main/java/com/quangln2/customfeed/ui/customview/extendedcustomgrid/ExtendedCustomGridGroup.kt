@@ -87,6 +87,7 @@ class ExtendedCustomGridGroup : ViewGroup {
         }
 
 
+
     }
 
     private fun drawOneChild() {

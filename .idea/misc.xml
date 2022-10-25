@@ -23,8 +23,9 @@
         <entry key="app/src/main/res/layout/fragment_all_feeds.xml" value="0.30732421875000004" />
         <entry key="app/src/main/res/layout/fragment_home_screen.xml" value="0.27034759521484375" />
         <entry key="app/src/main/res/layout/fragment_image_or_video.xml" value="0.17119565217391305" />
+        <entry key="app/src/main/res/layout/fragment_view_detail.xml" value="0.31871345029239767" />
         <entry key="app/src/main/res/layout/fragment_view_full_video.xml" value="0.12731481481481483" />
-        <entry key="app/src/main/res/layout/fragment_view_more.xml" value="0.2030360531309298" />
+        <entry key="app/src/main/res/layout/fragment_view_more.xml" value="0.1" />
         <entry key="app/src/main/res/layout/image_layer_view.xml" value="0.2291041056315104" />
         <entry key="app/src/main/res/layout/image_video_view.xml" value="0.10677083333333333" />
         <entry key="app/src/main/res/layout/loading_card.xml" value="0.3379562377929688" />
