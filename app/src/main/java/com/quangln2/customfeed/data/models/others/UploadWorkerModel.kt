@@ -1,4 +1,4 @@
-package com.quangln2.customfeed.data.models
+package com.quangln2.customfeed.data.models.others
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName

@@ -36,18 +36,18 @@ class LoadingVideoView @JvmOverloads constructor(
     private var currentPosition = 0L
 
 
-
     constructor(context: Context, url: String, player: ExoPlayer) : this(context) {
         this.url = url
         this.player = player
         init()
     }
-    constructor(context: Context, url: String): this(context){
+
+    constructor(context: Context, url: String) : this(context) {
         this.url = url
         initForShowThumbnail()
     }
 
-    private fun initForShowThumbnail(){
+    private fun initForShowThumbnail() {
         val view = LayoutInflater.from(context).inflate(R.layout.loading_video_view, this, true)
         progressBar = view.findViewById(R.id.my_spinner)
         playButton = view.findViewById(R.id.play_button)
@@ -97,7 +97,7 @@ class LoadingVideoView @JvmOverloads constructor(
         prepare()
     }
 
-    private fun prepare(){
+    private fun prepare() {
         playerView.player = player
 
         player.addListener(
@@ -176,7 +176,7 @@ class LoadingVideoView @JvmOverloads constructor(
         currentPosition = player.currentPosition
     }
 
-    fun releaseVideo(){
+    fun releaseVideo() {
         isReleased = true
         player.release()
     }

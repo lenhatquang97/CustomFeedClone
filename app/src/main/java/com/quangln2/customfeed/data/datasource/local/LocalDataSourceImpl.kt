@@ -3,7 +3,7 @@ package com.quangln2.customfeed.data.datasource.local
 import android.content.Context
 import android.net.Uri
 import androidx.annotation.WorkerThread
-import com.quangln2.customfeed.data.constants.ConstantClass
+import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantSetup
 import com.quangln2.customfeed.data.database.FeedDao
 import com.quangln2.customfeed.data.models.datamodel.MyPost
@@ -52,7 +52,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
         val builder = MultipartBody.Builder()
         builder.setType(MultipartBody.FORM)
         builder.addFormDataPart("feedId", UUID.randomUUID().toString())
-        builder.addFormDataPart("name", ConstantClass.NAME)
+        builder.addFormDataPart("name", context.resources.getString(R.string.account_name))
         builder.addFormDataPart("avatar", ConstantSetup.AVATAR_LINK)
         builder.addFormDataPart("createdTime", System.currentTimeMillis().toString())
         builder.addFormDataPart("caption", caption)

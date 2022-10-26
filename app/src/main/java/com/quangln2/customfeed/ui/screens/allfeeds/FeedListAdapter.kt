@@ -47,7 +47,7 @@ class FeedListAdapter(
     private val eventFeedCallback: EventFeedCallback
 ) :
     androidx.recyclerview.widget.ListAdapter<MyPostRender, RecyclerView.ViewHolder>(
-        AsyncDifferConfig.Builder<MyPostRender>(FeedListDiffCallback())
+        AsyncDifferConfig.Builder(FeedListDiffCallback())
             .setBackgroundThreadExecutor(Executors.newSingleThreadExecutor())
             .build()
     ) {
@@ -174,7 +174,8 @@ class FeedListAdapter(
                     val mimeType = getMimeType(value)
 
                     if (mimeType != null && mimeType.contains("video")) {
-                        val renderersFactory = DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
+                        val renderersFactory =
+                            DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
                         val player = ExoPlayer.Builder(context, renderersFactory).build()
                         val videoView = LoadingVideoView(context, value, player)
                         val layoutParams = ViewGroup.MarginLayoutParams(
@@ -268,12 +269,12 @@ class FeedListAdapter(
         viewType: Int
     ): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        if (viewType == TypeOfPost.ADD_NEW_POST.value) {
+        return if (viewType == TypeOfPost.ADD_NEW_POST.value) {
             val binding = FeedCardBinding.inflate(layoutInflater, parent, false)
-            return this.AddNewItemViewHolder(binding)
+            this.AddNewItemViewHolder(binding)
         } else {
             val binding = FeedItemBinding.inflate(layoutInflater, parent, false)
-            return this.FeedItemViewHolder(binding)
+            this.FeedItemViewHolder(binding)
         }
 
     }

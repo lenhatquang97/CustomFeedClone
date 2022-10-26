@@ -11,6 +11,7 @@ import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.quangln2.customfeed.R
 import com.quangln2.customfeed.databinding.FragmentViewDetailBinding
 import com.quangln2.customfeed.ui.customview.CustomImageView
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
@@ -21,8 +22,8 @@ import kotlinx.coroutines.withContext
 
 class ViewDetailFragment : Fragment() {
     private lateinit var binding: FragmentViewDetailBinding
-    var listOfViews: MutableList<View> = mutableListOf()
-    var listOfUris: MutableList<String> = arrayListOf()
+    private var listOfViews: MutableList<View> = mutableListOf()
+    private var listOfUris: MutableList<String> = arrayListOf()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val arrayListOfUris = arguments?.getStringArrayList("listOfUris")
@@ -37,7 +38,7 @@ class ViewDetailFragment : Fragment() {
     ): View {
         binding = FragmentViewDetailBinding.inflate(inflater, container, false)
 
-        binding.toolbar.title = "Numbers of images/videos: ${listOfUris.size}"
+        binding.toolbar.title = resources.getString(R.string.nums_of_images_videos, listOfViews.size)
 
         binding.doneTitle.setOnClickListener {
             val navController = findNavController()
@@ -51,8 +52,8 @@ class ViewDetailFragment : Fragment() {
 
         binding.toolbar.setNavigationOnClickListener {
             AlertDialog.Builder(requireContext()).apply {
-                setTitle("Some changes have not been saved")
-                setMessage("Do you want to cancel them?")
+                setTitle(resources.getString(R.string.not_saved_changes))
+                setMessage(resources.getString(R.string.cancel_ask))
                 setPositiveButton("Yes") { _, _ ->
                     findNavController().popBackStack()
                 }
@@ -65,7 +66,8 @@ class ViewDetailFragment : Fragment() {
 
         return binding.root
     }
-    private fun initCustomGrid(listOfUris: MutableList<String>){
+
+    private fun initCustomGrid(listOfUris: MutableList<String>) {
         val rectangles = getGridItemsLocationWithMoreThanTen(listOfUris.size)
         val marginHorizontalSum = 16 + 32
         val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
@@ -74,12 +76,12 @@ class ViewDetailFragment : Fragment() {
             //This will prevent ConcurrentModificationException
             val iterator = listOfUris.toMutableList().iterator()
             var i = 0
-            while(iterator.hasNext()){
+            while (iterator.hasNext()) {
                 val it = iterator.next()
                 val mimeType = requireContext().contentResolver.getType(it.toUri())
-                if(mimeType != null){
-                    if(mimeType.contains("image")){
-                        withContext(Dispatchers.Main){
+                if (mimeType != null) {
+                    if (mimeType.contains("image")) {
+                        withContext(Dispatchers.Main) {
                             val imageView = CustomImageView.generateCustomImageView(requireContext(), it)
                             val layoutParams = ViewGroup.MarginLayoutParams(
                                 (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
@@ -96,8 +98,8 @@ class ViewDetailFragment : Fragment() {
                             listOfViews.add(imageView)
                             binding.customGridGroup.addView(imageView)
                         }
-                    }else if(mimeType.contains("video")){
-                        withContext(Dispatchers.Main){
+                    } else if (mimeType.contains("video")) {
+                        withContext(Dispatchers.Main) {
                             val videoView = LoadingVideoView(requireContext(), it)
                             videoView.apply {
                                 progressBar.visibility = View.GONE
@@ -122,14 +124,14 @@ class ViewDetailFragment : Fragment() {
                 }
                 i++
             }
-            withContext(Dispatchers.Main){
-                binding.toolbar.title = "Numbers of images/videos: ${listOfUris.size}"
+            withContext(Dispatchers.Main) {
+                binding.toolbar.title = resources.getString(R.string.nums_of_images_videos, listOfViews.size)
             }
 
         }
     }
 
-    private fun onHandleMoreImagesOrVideos(customView: View, listOfUris: MutableList<String>){
+    private fun onHandleMoreImagesOrVideos(customView: View, listOfUris: MutableList<String>) {
         val indexDeleted = listOfViews.indexOf(customView)
         listOfViews.removeAt(indexDeleted)
         listOfUris.removeAt(indexDeleted)

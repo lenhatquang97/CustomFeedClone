@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 
 class FullImageVideoAdapter(
-    private val fragment: Fragment,
+    fragment: Fragment,
     private val listOfUrls: ArrayList<String>,
     private val currentVideoPosition: Long
 ) : FragmentStateAdapter(fragment) {

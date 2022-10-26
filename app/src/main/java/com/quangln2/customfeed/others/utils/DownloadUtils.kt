@@ -1,17 +1,9 @@
 package com.quangln2.customfeed.others.utils
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.widget.Toast
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.quangln2.customfeed.others.singleton.RetrofitSetup.downloadClient
 import okhttp3.Call
 import okhttp3.Callback
@@ -30,8 +22,7 @@ object DownloadUtils {
             value = response.body?.contentLength() ?: 0L
         } catch (e: Exception) {
             exception = e
-        }
-        finally {
+        } finally {
             return Pair(value, exception)
         }
     }
@@ -73,33 +64,6 @@ object DownloadUtils {
                 downloadVideo(url, context)
             }
         }
-    }
-
-    private fun downloadImage(imageUrl: String, context: Context) {
-        val fileName = URLUtil.guessFileName(imageUrl, null, null)
-        val file = File(context.cacheDir, fileName)
-        Glide.with(context).load(imageUrl).into(
-            object : CustomTarget<Drawable>() {
-                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                    try {
-                        val bitmap = (resource as BitmapDrawable).bitmap
-                        val fout = FileOutputStream(file)
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fout)
-                        fout.close()
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Oh no", Toast.LENGTH_SHORT).show()
-                        e.printStackTrace()
-                    }
-                }
-
-                override fun onLoadFailed(errorDrawable: Drawable?) {
-                    super.onLoadFailed(errorDrawable)
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) {}
-
-            }
-        )
     }
 
     private fun downloadVideo(videoUrl: String, context: Context) {
@@ -151,18 +115,5 @@ object DownloadUtils {
         return type
     }
 
-    fun isNetworkConnected(context: Context): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val capabilities = cm.getNetworkCapabilities(cm.activeNetwork)
-        if (capabilities != null) {
-            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                return true
-            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                return true
-            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                return true
-            }
-        }
-        return false
-    }
+
 }

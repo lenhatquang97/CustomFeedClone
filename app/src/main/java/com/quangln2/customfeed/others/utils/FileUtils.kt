@@ -6,9 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.Settings
@@ -16,6 +13,7 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import com.quangln2.customfeed.R
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -38,23 +36,10 @@ object FileUtils {
     }
 
     fun convertUnixTimestampToTime(unixTimestamp: String): String {
-        val date = if (unixTimestamp.isEmpty()) Date() else java.util.Date(unixTimestamp.toLong())
+        val date = if (unixTimestamp.isEmpty()) Date() else Date(unixTimestamp.toLong())
         val sdf = java.text.SimpleDateFormat("dd/MM/yyyy - HH:mm")
-        sdf.timeZone = java.util.TimeZone.getTimeZone("GMT+7")
+        sdf.timeZone = TimeZone.getTimeZone("GMT+7")
         return sdf.format(date)
-    }
-
-    fun getVideoThumbnail(uri: Uri, context: Context, url: String = ""): Drawable {
-        val retriever = MediaMetadataRetriever()
-        if (url.isNotEmpty()) {
-            retriever.setDataSource(url, HashMap<String, String>())
-        } else {
-            retriever.setDataSource(context, uri)
-        }
-        val bitmap = retriever.getFrameAtTime(100)
-        retriever.release()
-
-        return BitmapDrawable(context.resources, bitmap)
     }
 
     fun getPermissionForStorage(context: Context, activity: Activity): Boolean {
@@ -83,7 +68,7 @@ object FileUtils {
         return true
     }
 
-    fun getPermissionForStorageWithMultipleTimesDenial(context: Context, activity: Activity): Boolean {
+    fun getPermissionForStorageWithMultipleTimesDenial(context: Context): Boolean {
         val permissionCheck = ContextCompat.checkSelfPermission(
             context,
             android.Manifest.permission.READ_EXTERNAL_STORAGE
@@ -91,7 +76,7 @@ object FileUtils {
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(
                 context,
-                "Note that when you deny more than twice, you need to accept permission from Settings",
+                context.resources.getString(R.string.guide_to_get_storage_permission),
                 Toast.LENGTH_LONG
             ).show()
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)

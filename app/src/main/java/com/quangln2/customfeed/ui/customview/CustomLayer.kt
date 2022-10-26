@@ -22,6 +22,4 @@ class CustomLayer @JvmOverloads constructor(
         addedImagesText.setTextColor(resources.getColor(R.color.white))
         view.setBackgroundColor(resources.getColor(R.color.black))
     }
-
-
 }

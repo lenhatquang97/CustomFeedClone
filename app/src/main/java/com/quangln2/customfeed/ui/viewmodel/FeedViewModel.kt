@@ -10,10 +10,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
-import com.quangln2.customfeed.data.models.UploadWorkerModel
 import com.quangln2.customfeed.data.models.datamodel.MyPost
 import com.quangln2.customfeed.data.models.datamodel.OfflineResource
 import com.quangln2.customfeed.data.models.datamodel.UploadPost
+import com.quangln2.customfeed.data.models.others.EnumFeedLoadingCode
+import com.quangln2.customfeed.data.models.others.UploadWorkerModel
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.domain.usecase.*
@@ -31,8 +32,7 @@ class FeedViewModel(
     val deleteFeedUseCase: DeleteFeedUseCase,
     val insertDatabaseUseCase: InsertDatabaseUseCase,
     val deleteDatabaseUseCase: DeleteDatabaseUseCase,
-    val getAllInDatabaseUseCase: GetAllInDatabaseUseCase,
-    val getFeedByIdUseCase: GetFeedByIdUseCase
+    val getAllInDatabaseUseCase: GetAllInDatabaseUseCase
 ) : ViewModel() {
     var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
     val uriLists: LiveData<MutableList<Uri>> = _uriLists
@@ -40,7 +40,7 @@ class FeedViewModel(
     private var _uploadLists = MutableLiveData<MutableList<MyPost>>().apply { value = mutableListOf() }
     val uploadLists: LiveData<MutableList<MyPost>> = _uploadLists
 
-    private var _feedLoadingCode = MutableLiveData<Int>().apply { value = 0 }
+    private var _feedLoadingCode = MutableLiveData<Int>().apply { value = EnumFeedLoadingCode.INITIAL.value }
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
 
@@ -57,18 +57,18 @@ class FeedViewModel(
     private fun loadCache() {
         viewModelScope.launch(Dispatchers.IO) {
             val offlinePosts = getAllInDatabaseUseCase()
-            _feedLoadingCode.postValue(-1)
+            _feedLoadingCode.postValue(EnumFeedLoadingCode.OFFLINE.value)
             _uploadLists.postValue(offlinePosts.toMutableList())
         }
 
     }
 
-    fun getAllFeedsWithPreloadCache(context: Context) {
+    fun getAllFeedsWithPreloadCache() {
         loadCache()
-        getAllFeeds(context)
+        getAllFeeds()
     }
 
-    fun getAllFeeds(context: Context) {
+    fun getAllFeeds() {
         getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
                 if (response.code() == 200) {
@@ -88,7 +88,7 @@ class FeedViewModel(
                             //find in offline feeds if there are no online posts in online database
                             offlinePosts.forEach {
                                 val filterId = body.find { item -> item.feedId == it.feedId }
-                                if(filterId == null) {
+                                if (filterId == null) {
                                     deletedFeeds.add(it)
                                 }
                             }
@@ -97,14 +97,16 @@ class FeedViewModel(
                                 deleteDatabaseUseCase(it.feedId)
                             }
 
-                            val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+                            val availableItems =
+                                ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
                             availableItems.forEach {
                                 insertDatabaseUseCase(it)
                             }
 
                         }
                         //get available items but not in deleted feeds
-                        val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+                        val availableItems =
+                            ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
                         _feedLoadingCode.postValue(response.code())
                         _uploadLists.postValue(availableItems.toMutableList())
                     }
@@ -140,7 +142,7 @@ class FeedViewModel(
                     val filteredList = ls?.filter { it.feedId != id }
                     _uploadLists.value = filteredList?.toMutableList()
                     Toast.makeText(context, "Delete successfully", Toast.LENGTH_SHORT).show()
-                } else{
+                } else {
                     Toast.makeText(context, "Delete failed", Toast.LENGTH_SHORT).show()
                 }
             }

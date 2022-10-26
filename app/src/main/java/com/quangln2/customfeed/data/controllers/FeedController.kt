@@ -19,13 +19,14 @@ object FeedController {
             videoQueue.remove()
         }
     }
+
     fun removeAllFromQueue() {
         videoQueue.clear()
     }
 
     fun isViewAddedToQueue(view: View, itemPosition: Int, i: Int): Boolean {
         val (a, b) = peekVideoQueue()
-        if (view is LoadingVideoView && ((a == null && b == null) || (a!= null && b!= null && a < itemPosition && b < i))) {
+        if (view is LoadingVideoView && ((a == null && b == null) || (a != null && b != null && a < itemPosition && b < i))) {
             videoQueue.add(VideoPlayed(itemPosition, i))
             return true
         }

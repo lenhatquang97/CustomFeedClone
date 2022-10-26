@@ -10,11 +10,13 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import com.google.gson.Gson
+import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
-import com.quangln2.customfeed.data.models.UploadWorkerModel
+import com.quangln2.customfeed.data.models.others.EnumFeedSplashScreenState
+import com.quangln2.customfeed.data.models.others.UploadWorkerModel
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.domain.usecase.UploadMultipartBuilderUseCase
 import com.quangln2.customfeed.domain.usecase.UploadPostUseCase
@@ -25,7 +27,7 @@ import retrofit2.Call
 import retrofit2.Response
 import java.util.*
 
-class UploadService: Service() {
+class UploadService : Service() {
     private val database by lazy {
         FeedDatabase.getFeedDatabase(this)
     }
@@ -48,9 +50,9 @@ class UploadService: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if(intent != null){
-            FeedController.isLoading.postValue(1)
-            val jsonString = intent.getStringExtra("jsonString")
+        if (intent != null) {
+            FeedController.isLoading.postValue(EnumFeedSplashScreenState.LOADING.value)
+            val jsonString = intent.getStringExtra(resources.getString(R.string.jsonStringKey))
             val uploadWorkerModel = Gson().fromJson(jsonString, UploadWorkerModel::class.java)
 
             val emptyList = mutableListOf<Uri>()
@@ -67,7 +69,8 @@ class UploadService: Service() {
                 applicationContext
             )
 
-            val parts = uploadMultipartBuilderUseCase(uploadWorkerModel.caption, uriListsForCompressing, applicationContext)
+            val parts =
+                uploadMultipartBuilderUseCase(uploadWorkerModel.caption, uriListsForCompressing, applicationContext)
             uploadFiles(parts, applicationContext)
 
         }
@@ -75,17 +78,18 @@ class UploadService: Service() {
     }
 
     private fun uploadFiles(requestBody: List<MultipartBody.Part>, context: Context) {
-        val uploadPostUseCase = UploadPostUseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
+        val uploadPostUseCase =
+            UploadPostUseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
         uploadPostUseCase(requestBody).enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if(response.errorBody() == null && response.code() == 200) {
+                if (response.errorBody() == null && response.code() == 200) {
                     //close loading card screen
-                    FeedController.isLoading.postValue(0)
+                    FeedController.isLoading.postValue(EnumFeedSplashScreenState.COMPLETE.value)
 
                     //create notification
                     builder.apply {
                         setProgress(0, 0, false)
-                        setContentText("Upload successfully")
+                        setContentText(resources.getString(R.string.upload_success))
                         setAutoCancel(true)
                     }
                     with(NotificationManagerCompat.from(context)) {
@@ -93,16 +97,16 @@ class UploadService: Service() {
                     }
 
                     //show toast
-                    Toast.makeText(context, "Upload successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, resources.getString(R.string.upload_success), Toast.LENGTH_SHORT).show()
 
                 } else {
                     //close loading card screen
-                    FeedController.isLoading.postValue(0)
+                    FeedController.isLoading.postValue(EnumFeedSplashScreenState.COMPLETE.value)
 
                     //create notification
                     builder.apply {
                         setProgress(0, 0, false)
-                        setContentText("Upload failed")
+                        setContentText(resources.getString(R.string.upload_failed))
                         setAutoCancel(true)
                     }
                     with(NotificationManagerCompat.from(context)) {
@@ -110,7 +114,7 @@ class UploadService: Service() {
                     }
 
                     //show toast
-                    Toast.makeText(context, "Upload failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, resources.getString(R.string.upload_failed), Toast.LENGTH_SHORT).show()
 
                 }
 
@@ -121,18 +125,18 @@ class UploadService: Service() {
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 //close loading card screen
-                FeedController.isLoading.postValue(0)
+                FeedController.isLoading.postValue(EnumFeedSplashScreenState.COMPLETE.value)
 
                 //create notification
                 builder.setProgress(0, 0, false)
-                builder.setContentText("Upload failed")
+                builder.setContentText(resources.getString(R.string.upload_failed))
                 builder.setAutoCancel(true)
                 with(NotificationManagerCompat.from(context)) {
                     notify(id, builder.build())
                 }
 
                 //show toast
-                Toast.makeText(context, "Upload failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, resources.getString(R.string.upload_failed), Toast.LENGTH_SHORT).show()
                 stopSelf()
 
             }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.net.toUri
 import com.bumptech.glide.Glide
 import com.quangln2.customfeed.R
@@ -26,7 +27,7 @@ class CustomImageView {
             val params =
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
 
-            crossButton.setImageDrawable(context.getDrawable(R.drawable.remove_icon))
+            crossButton.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.remove_icon))
             params.gravity = Gravity.END
             crossButton.layoutParams = params
             crossButton.setPadding(16, 16, 16, 16)

@@ -6,7 +6,6 @@ import android.os.StrictMode
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.databinding.ActivityMainBinding
 import com.quangln2.customfeed.others.utils.FileUtils
 
@@ -32,13 +31,21 @@ class MainActivity : AppCompatActivity() {
             object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: android.net.Network) {
                     super.onAvailable(network)
-                    Snackbar.make(findViewById(android.R.id.content), ConstantClass.INTERNET_CONNECTED, Snackbar.LENGTH_LONG)
+                    Snackbar.make(
+                        findViewById(android.R.id.content),
+                        resources.getString(R.string.internet_connected),
+                        Snackbar.LENGTH_LONG
+                    )
                         .show()
                 }
 
                 override fun onLost(network: android.net.Network) {
                     super.onLost(network)
-                    Snackbar.make(findViewById(android.R.id.content), ConstantClass.OFFLINE_MODE, Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(
+                        findViewById(android.R.id.content),
+                        resources.getString(R.string.offline_mode),
+                        Snackbar.LENGTH_LONG
+                    ).show()
                 }
             }
         )
