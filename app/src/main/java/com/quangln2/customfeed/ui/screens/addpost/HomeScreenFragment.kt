@@ -45,12 +45,9 @@ import kotlinx.coroutines.withContext
 
 
 class HomeScreenFragment : Fragment() {
-
     lateinit var binding: FragmentHomeScreenBinding
 
-    private val database by lazy {
-        FeedDatabase.getFeedDatabase(requireContext())
-    }
+    private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
     private val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
@@ -122,15 +119,16 @@ class HomeScreenFragment : Fragment() {
         binding = FragmentHomeScreenBinding.inflate(inflater, container, false)
         loadInitialProfile()
 
-
         // Handle choose image or video
         binding.buttonChooseImageVideo.setOnClickListener {
             val isStoragePermissionAllowed = FileUtils.getPermissionForStorageWithMultipleTimesDenial(requireContext())
             if (isStoragePermissionAllowed) {
                 val pickerIntent = Intent(Intent.ACTION_PICK)
-                pickerIntent.type = "*/*"
-                pickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                pickerIntent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+                pickerIntent.apply {
+                    type = "*/*"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+                }
                 resultLauncher.launch(pickerIntent)
             }
         }
@@ -171,7 +169,7 @@ class HomeScreenFragment : Fragment() {
         for (i in listOfViews.indices) {
             when (val viewChild = listOfViews[i]) {
                 is CustomLayer -> {
-                    val customLayerSize = listOfViews.filter { it is CustomLayer }.size
+                    val customLayerSize = listOfViews.filterIsInstance<CustomLayer>().size
                     viewChild.addedImagesText.text = "+${listOfViews.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - customLayerSize}"
                     val layoutParams = ViewGroup.MarginLayoutParams(
                         (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,

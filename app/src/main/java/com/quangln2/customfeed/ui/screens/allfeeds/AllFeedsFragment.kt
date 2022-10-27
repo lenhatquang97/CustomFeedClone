@@ -180,7 +180,6 @@ class AllFeedsFragment : Fragment() {
                             retrieveFirstImageOrFirstVideo(myPostRender)
                             listsOfPostRender.add(myPostRender)
                         }
-
                         withContext(Dispatchers.Main) {
                             adapterVal.submitList(listsOfPostRender.toMutableList())
                         }
@@ -193,15 +192,12 @@ class AllFeedsFragment : Fragment() {
                         } else if (feedLoadingCode == EnumFeedLoadingCode.SUCCESS.value) {
                             binding.noPostId.root.visibility = View.GONE
                             val listsOfPostRender = mutableListOf<MyPostRender>()
-                            val addNewPostItem =
-                                MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+                            val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
                             listsOfPostRender.add(addNewPostItem)
-
                             adapterVal.submitList(listsOfPostRender.toMutableList())
                         }
                     }
                 }
-
                 binding.swipeRefreshLayout.isRefreshing = false
             }
 
@@ -213,9 +209,6 @@ class AllFeedsFragment : Fragment() {
             binding.noPostId.textNote.text = resources.getString(R.string.loading)
             viewModel.getAllFeeds()
         }
-
-
-
 
         FeedController.isLoading.observe(viewLifecycleOwner) {
             binding.loadingCard.root.visibility = if (it == EnumFeedSplashScreenState.LOADING.value) View.VISIBLE else View.GONE
@@ -237,7 +230,6 @@ class AllFeedsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val intentFilter = IntentFilter()
         intentFilter.addAction("android.intent.action.PHONE_STATE")
-
         requireActivity().registerReceiver(phoneStateReceiver, intentFilter)
     }
 
@@ -344,12 +336,9 @@ class AllFeedsFragment : Fragment() {
                                     val nextView = customGridGroup.getChildAt(i)
                                     if (nextView is LoadingVideoView && i != videoIndex) {
                                         //Less than 9 images or videos
-                                        val condition1 =
-                                            customGridGroup.size <= 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
-
+                                        val condition1 = customGridGroup.size <= 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
                                         //More than 10 images or videos with CustomLayer in 8th position
-                                        val condition2 =
-                                            customGridGroup.size > 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - 1
+                                        val condition2 = customGridGroup.size > 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - 1
                                         if (condition1 || condition2) {
                                             FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
                                             calculateVisibilityVideoView()
@@ -361,8 +350,7 @@ class AllFeedsFragment : Fragment() {
 
                                 //Play from start if end of video
                                 if (!flagEndOfVideoInGrid) {
-                                    val firstVideoIndex =
-                                        customGridGroup.children.indexOfFirst { it is LoadingVideoView }
+                                    val firstVideoIndex = customGridGroup.children.indexOfFirst { it is LoadingVideoView }
                                     if (firstVideoIndex != -1) {
                                         FeedController.videoQueue.add(VideoPlayed(mainItemIndex, firstVideoIndex))
                                         calculateVisibilityVideoView()
