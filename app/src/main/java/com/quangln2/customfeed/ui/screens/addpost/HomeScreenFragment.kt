@@ -64,16 +64,15 @@ class HomeScreenFragment : Fragment() {
             if (data != null) {
                 if (data.clipData != null) {
                     lifecycleScope.launch(Dispatchers.IO) {
-                        var flagHasCustomLayer = false
                         val count = data.clipData!!.itemCount
+                        val ls = viewModel.uriLists.value
                         for (i in 0 until count) {
                             val uri = data.clipData!!.getItemAt(i).uri
                             val mimeType = context?.contentResolver?.getType(uri)
                             if (mimeType != null) {
                                 if (mimeType.startsWith("image/")) {
                                     withContext(Dispatchers.Main) {
-                                        val imageView =
-                                            CustomImageView.generateCustomImageView(requireContext(), uri.toString())
+                                        val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
                                         listOfViews.add(imageView)
                                         listOfUris.add(uri)
                                     }
@@ -83,20 +82,15 @@ class HomeScreenFragment : Fragment() {
                                         listOfViews.add(videoView)
                                         listOfUris.add(uri)
                                     }
-
-                                }
-                                if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1, -1) && !flagHasCustomLayer) {
-                                    flagHasCustomLayer = true
-                                    listOfViews.add(8, CustomLayer(requireContext()))
-                                    listOfUris.add(8, Uri.EMPTY)
                                 }
                             }
-
-                            val uriForMultipart = data.clipData!!.getItemAt(i).uri
-                            val ls = viewModel.uriLists.value
-                            ls?.add(uriForMultipart)
-                            viewModel._uriLists.postValue(ls?.toMutableList())
+                            ls?.add(uri)
                         }
+                        if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1, -1)) {
+                            listOfViews.add(8, CustomLayer(requireContext()))
+                            listOfUris.add(8, Uri.EMPTY)
+                        }
+                        viewModel._uriLists.postValue(ls?.toMutableList())
                     }
 
                 }
@@ -112,8 +106,6 @@ class HomeScreenFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         binding.customGridGroup.removeAllViews()
-//        listOfViews.clear()
-//        listOfUris.clear()
     }
 
     override fun onDestroy() {
@@ -179,7 +171,8 @@ class HomeScreenFragment : Fragment() {
         for (i in listOfViews.indices) {
             when (val viewChild = listOfViews[i]) {
                 is CustomLayer -> {
-                    viewChild.addedImagesText.text = "+${listOfViews.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID}"
+                    val customLayerSize = listOfViews.filter { it is CustomLayer }.size
+                    viewChild.addedImagesText.text = "+${listOfViews.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - customLayerSize}"
                     val layoutParams = ViewGroup.MarginLayoutParams(
                         (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
                         (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
@@ -246,7 +239,6 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun loadInitialProfile() {
-        // Load initial avatar
         val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
         Glide.with(requireContext()).load(ConstantSetup.AVATAR_LINK).apply(requestOptions).into(binding.myAvatarImage)
     }
@@ -297,7 +289,6 @@ class HomeScreenFragment : Fragment() {
             }
         }
         binding.customGridGroup.removeAllViews()
-
         initCustomGrid()
 
     }
@@ -312,7 +303,6 @@ class HomeScreenFragment : Fragment() {
                 binding.customGridGroup.removeAllViews()
                 it.forEach { itr -> listOfUris.add(itr.toUri()) }
                 lifecycleScope.launch(Dispatchers.IO) {
-                    var flagHasCustomLayer = false
                     val ls = viewModel.uriLists.value
                     for (i in 0 until it.size) {
                         val uri = listOfUris[i]
@@ -320,26 +310,23 @@ class HomeScreenFragment : Fragment() {
                         if (mimeType != null) {
                             if (mimeType.startsWith("image/")) {
                                 withContext(Dispatchers.Main) {
-                                    val imageView =
-                                        CustomImageView.generateCustomImageView(requireContext(), uri.toString())
+                                    val imageView = CustomImageView.generateCustomImageView(requireContext(), uri.toString())
                                     listOfViews.add(imageView)
                                 }
                             } else if (mimeType.startsWith("video/")) {
                                 withContext(Dispatchers.Main) {
-                                    val renderersFactory =
-                                        DefaultRenderersFactory(requireContext()).forceEnableMediaCodecAsynchronousQueueing()
+                                    val renderersFactory = DefaultRenderersFactory(requireContext()).forceEnableMediaCodecAsynchronousQueueing()
                                     val player = ExoPlayer.Builder(requireContext(), renderersFactory).build()
                                     val videoView = LoadingVideoView(requireContext(), uri.toString(), player)
                                     listOfViews.add(videoView)
                                 }
                             }
-                            if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1, -1) && !flagHasCustomLayer) {
-                                flagHasCustomLayer = true
-                                listOfViews.add(8, CustomLayer(requireContext()))
-                                listOfUris.add(8, Uri.EMPTY)
-                            }
                         }
                         ls?.add(uri)
+                    }
+                    if (listOfViews.size >= 10 && hasCustomLayer() == Pair(-1, -1)) {
+                        listOfViews.add(8, CustomLayer(requireContext()))
+                        listOfUris.add(8, Uri.EMPTY)
                     }
                     viewModel._uriLists.postValue(ls?.toMutableList())
                     navController.currentBackStackEntry?.savedStateHandle?.remove<ArrayList<String>>("listOfUrisReturn")
