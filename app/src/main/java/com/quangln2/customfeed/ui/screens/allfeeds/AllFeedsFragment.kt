@@ -61,18 +61,60 @@ class AllFeedsFragment : Fragment() {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
-    private val phoneStateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
-            pauseVideo()
-        }
-    }
-    private var feedScrollY = 0
+    private lateinit var phoneStateReceiver: BroadcastReceiver
     private val currentViewRect = Rect()
+
+    private val eventCallback: EventFeedCallback
+        get() = object : EventFeedCallback {
+            override fun onDeleteItem(id: String) {
+                viewModel.deleteFeed(id, requireContext())
+            }
+
+            override fun onClickAddPost() =
+                findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment, null, navOptions {
+                    anim {
+                        enter = android.R.animator.fade_in
+                        exit = android.R.animator.fade_out
+                    }
+                })
+
+            override fun onClickVideoView(currentVideoPosition: Long, url: String, listOfUrls: ArrayList<String>) =
+                findNavController().navigate(
+                    R.id.action_allFeedsFragment_to_viewFullVideoFragment,
+                    Bundle().apply {
+                        putLong("currentVideoPosition", currentVideoPosition)
+                        putString("value", url)
+                        putStringArrayList("listOfUrls", listOfUrls)
+                    },
+                    navOptions {
+                        anim {
+                            enter = android.R.animator.fade_in
+                            exit = android.R.animator.fade_out
+                        }
+                    }
+                )
+
+            override fun onClickViewMore(id: String) = findNavController().navigate(
+                R.id.action_allFeedsFragment_to_viewMoreFragment,
+                Bundle().apply { putString("id", id) },
+                navOptions {
+                    anim {
+                        enter = android.R.animator.fade_in
+                        exit = android.R.animator.fade_out
+                    }
+                }
+            )
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.getAllFeedsWithPreloadCache()
+        phoneStateReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
+                pauseVideo()
+            }
+        }
     }
 
     override fun onCreateView(
@@ -82,6 +124,7 @@ class AllFeedsFragment : Fragment() {
         binding = FragmentAllFeedsBinding.inflate(inflater, container, false)
 
         adapterVal = FeedListAdapter(requireContext(), eventCallback)
+        adapterVal.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         val linearLayoutManager = LinearLayoutManager(requireContext())
 
         binding.allFeeds.apply {
@@ -89,6 +132,7 @@ class AllFeedsFragment : Fragment() {
             layoutManager = linearLayoutManager
             animation = null
         }
+
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
@@ -110,9 +154,10 @@ class AllFeedsFragment : Fragment() {
                 } else if (dy < 0) {
                     index = manager.findFirstVisibleItemPosition()
                 }
-                val actualIndex = if (index > 0) index else 1
-                scrollToPlayVideoInPosition(actualIndex, manager)
-                feedScrollY += dy
+                val fullyVisibleIndex = manager.findFirstCompletelyVisibleItemPosition()
+                val actualIndex = if (index > 0) index else fullyVisibleIndex
+                val actualIndexWithoutZero = if (actualIndex > 0) actualIndex else 1
+                scrollToPlayVideoInPosition(actualIndexWithoutZero, manager)
             }
         })
 
@@ -137,12 +182,8 @@ class AllFeedsFragment : Fragment() {
                         }
 
                         withContext(Dispatchers.Main) {
-                            adapterVal.submitList(listsOfPostRender.toMutableList()) {
-                                binding.allFeeds.scrollBy(0, feedScrollY)
-                            }
-
+                            adapterVal.submitList(listsOfPostRender.toMutableList())
                         }
-
                     }
                 } else {
                     val feedLoadingCode = viewModel.feedLoadingCode.value
@@ -156,9 +197,7 @@ class AllFeedsFragment : Fragment() {
                                 MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
                             listsOfPostRender.add(addNewPostItem)
 
-                            adapterVal.submitList(listsOfPostRender.toMutableList()) {
-                                binding.allFeeds.scrollBy(0, feedScrollY)
-                            }
+                            adapterVal.submitList(listsOfPostRender.toMutableList())
                         }
                     }
                 }
@@ -204,12 +243,12 @@ class AllFeedsFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        pauseVideo()
         //Save for next use when we switch to another window.
         val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
         if (mainItemIndex != null && videoIndex != null) {
             FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
         }
+        pauseAndReleaseVideo()
 
     }
 
@@ -220,7 +259,12 @@ class AllFeedsFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        requireContext().unregisterReceiver(phoneStateReceiver)
+        try{
+            requireContext().unregisterReceiver(phoneStateReceiver)
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
+
     }
 
     private fun scrollToPlayVideoInPosition(itemPosition: Int, linearLayoutManager: LinearLayoutManager) {
@@ -238,24 +282,13 @@ class AllFeedsFragment : Fragment() {
                 if (FeedController.videoQueue.size == 1) {
                     calculateVisibilityVideoView()
                 } else if (FeedController.videoQueue.size > 1) {
-                    if (!checkWhetherHaveMoreThanTwoVideosInPost()) {
+                    if (!viewModel.checkWhetherHaveMoreThanTwoVideosInPost()) {
                         pauseVideo()
                         calculateVisibilityVideoView()
                     }
                 }
             }
         }
-    }
-
-
-    private fun checkWhetherHaveMoreThanTwoVideosInPost(): Boolean {
-        val (mainItemIndex, videoIndex) = FeedController.popVideoQueue()
-        val (anotherMainItemIndex, anotherVideoIndex) = FeedController.popVideoQueue()
-        if (mainItemIndex != null && videoIndex != null && anotherMainItemIndex != null && anotherVideoIndex != null) {
-            FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
-            if (mainItemIndex == anotherMainItemIndex) return true
-        }
-        return false
     }
 
     private fun pauseVideo() {
@@ -269,7 +302,20 @@ class AllFeedsFragment : Fragment() {
                 FeedController.safeRemoveFromQueue()
             }
         }
+    }
 
+    private fun pauseAndReleaseVideo() {
+        val (releasedItemIndex, videoIndex) = FeedController.peekVideoQueue()
+        if (releasedItemIndex != null && videoIndex != null) {
+            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(releasedItemIndex)
+            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+            val view = customGridGroup?.getChildAt(videoIndex)
+            if (view is LoadingVideoView) {
+                view.pauseVideo()
+                view.releaseVideo()
+                FeedController.safeRemoveFromQueue()
+            }
+        }
     }
 
 
@@ -297,8 +343,11 @@ class AllFeedsFragment : Fragment() {
                                 for (i in videoIndex until customGridGroup.size) {
                                     val nextView = customGridGroup.getChildAt(i)
                                     if (nextView is LoadingVideoView && i != videoIndex) {
+                                        //Less than 9 images or videos
                                         val condition1 =
                                             customGridGroup.size <= 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
+
+                                        //More than 10 images or videos with CustomLayer in 8th position
                                         val condition2 =
                                             customGridGroup.size > 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - 1
                                         if (condition1 || condition2) {
@@ -327,71 +376,25 @@ class AllFeedsFragment : Fragment() {
         }
     }
 
-    private val eventCallback: EventFeedCallback
-        get() = object : EventFeedCallback {
-            override fun onDeleteItem(id: String) {
-                viewModel.deleteFeed(id, requireContext())
-            }
-
-            override fun onClickAddPost() =
-                findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment, null, navOptions {
-                    anim {
-                        enter = android.R.animator.fade_in
-                        exit = android.R.animator.fade_out
-                    }
-                })
-
-            override fun onClickVideoView(currentVideoPosition: Long, url: String, listOfUrls: ArrayList<String>) =
-                findNavController().navigate(
-                    R.id.action_allFeedsFragment_to_viewFullVideoFragment,
-                    Bundle().apply {
-                        putLong("currentVideoPosition", currentVideoPosition)
-                        putString("value", url)
-                        putStringArrayList("listOfUrls", listOfUrls)
-                    },
-                    navOptions {
-                        anim {
-                            enter = android.R.animator.fade_in
-                            exit = android.R.animator.fade_out
-                        }
-                    }
-                )
-
-            override fun onClickViewMore(id: String) = findNavController().navigate(
-                R.id.action_allFeedsFragment_to_viewMoreFragment,
-                Bundle().apply { putString("id", id) },
-                navOptions {
-                    anim {
-                        enter = android.R.animator.fade_in
-                        exit = android.R.animator.fade_out
-                    }
-                }
-            )
-        }
-
     private fun retrieveFirstImageOrFirstVideo(myPostRender: MyPostRender) {
         if (myPostRender.resources.size > 0) {
             val url = myPostRender.resources[0].url
             val size = myPostRender.resources[0].size
-            val value = if (DownloadUtils.doesLocalFileExist(url, requireContext())
-                && DownloadUtils.isValidFile(url, requireContext(), size)
-            ) {
-                DownloadUtils.getTemporaryFilePath(url, requireContext())
-            } else url
-            val mimeType = DownloadUtils.getMimeType(value)
-            if (mimeType != null && (mimeType.startsWith("video") || mimeType.startsWith("image"))) {
-                Glide.with(requireContext()).load(value).into(object : SimpleTarget<Drawable>() {
-                    override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                        myPostRender.firstItemWidth = resource.intrinsicWidth
-                        myPostRender.firstItemHeight = resource.intrinsicHeight
-                    }
-                })
-            }
+            val doesLocalFileExist = DownloadUtils.doesLocalFileExist(url, requireContext())
+            val isValidFile = DownloadUtils.isValidFile(url, requireContext(), size)
+            val temporaryFilePath = DownloadUtils.getTemporaryFilePath(url, requireContext())
+            val value = if (doesLocalFileExist && isValidFile) temporaryFilePath else url
+            Glide.with(requireContext()).load(value).into(object : SimpleTarget<Drawable>() {
+                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                    myPostRender.firstItemWidth = resource.intrinsicWidth
+                    myPostRender.firstItemHeight = resource.intrinsicHeight
+                }
+            })
         }
     }
 
-    override fun onDetach() {
-        super.onDetach()
+    override fun onPause() {
+        super.onPause()
         pauseVideo()
     }
 

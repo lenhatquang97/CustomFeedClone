@@ -6,12 +6,12 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
-import androidx.core.view.get
 import androidx.core.view.size
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
@@ -279,25 +279,9 @@ class FeedListAdapter(
 
     }
 
-    override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
-        super.onViewDetachedFromWindow(holder)
-
-        if (holder is FeedItemViewHolder) {
-            val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
-            val (_, videoIndex) = FeedController.peekVideoQueue()
-            if (videoIndex != null && videoIndex < customGridGroup.childCount) {
-                val child = customGridGroup[videoIndex]
-                if (child is LoadingVideoView) {
-                    child.pauseVideo()
-                    FeedController.safeRemoveFromQueue()
-                }
-            }
-
-        }
-    }
-
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         super.onViewRecycled(holder)
+        Log.d("onViewRecycled", "onViewRecycled")
         if (holder is FeedItemViewHolder) {
             val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
             for (i in 0 until customGridGroup.size) {
@@ -305,6 +289,7 @@ class FeedListAdapter(
                 if (child is LoadingVideoView) {
                     child.pauseVideo()
                     child.releaseVideo()
+                    FeedController.safeRemoveFromQueue()
                 }
             }
             customGridGroup.removeAllViews()

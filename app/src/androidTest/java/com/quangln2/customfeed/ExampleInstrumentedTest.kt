@@ -46,8 +46,7 @@ class ExampleInstrumentedTest {
             DeleteFeedUseCase(feedRepository),
             InsertDatabaseUseCase(feedRepository),
             DeleteDatabaseUseCase(feedRepository),
-            GetAllInDatabaseUseCase(feedRepository),
-            GetFeedByIdUseCase(feedRepository)
+            GetAllInDatabaseUseCase(feedRepository)
         )
     }
 

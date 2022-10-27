@@ -9,6 +9,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.quangln2.customfeed.data.controllers.FeedController
+import com.quangln2.customfeed.data.controllers.VideoPlayed
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeed.data.models.datamodel.MyPost
 import com.quangln2.customfeed.data.models.datamodel.OfflineResource
@@ -160,5 +162,15 @@ class FeedViewModel(
                 DownloadUtils.downloadResource(urlObj.url, context)
             }
         }
+    }
+
+    fun checkWhetherHaveMoreThanTwoVideosInPost(): Boolean {
+        val (mainItemIndex, videoIndex) = FeedController.popVideoQueue()
+        val (anotherMainItemIndex, anotherVideoIndex) = FeedController.popVideoQueue()
+        if (mainItemIndex != null && videoIndex != null && anotherMainItemIndex != null && anotherVideoIndex != null) {
+            FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
+            if (mainItemIndex == anotherMainItemIndex) return true
+        }
+        return false
     }
 }

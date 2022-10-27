@@ -1,11 +1,15 @@
 package com.quangln2.customfeed.ui.screens.viewimageorvideo
 
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -66,7 +70,29 @@ class ImageOrVideoFragment : Fragment() {
             } else {
                 binding.fullVideoView.visibility = View.GONE
                 binding.fullImageView.visibility = View.VISIBLE
-                Glide.with(requireContext()).load(url).into(binding.fullImageView)
+                Glide.with(requireContext()).load(url).listener(
+                    object : RequestListener<Drawable> {
+                        override fun onLoadFailed(
+                            e: GlideException?,
+                            model: Any?,
+                            target: Target<Drawable>?,
+                            isFirstResource: Boolean
+                        ): Boolean {
+                            return false
+                        }
+
+                        override fun onResourceReady(
+                            resource: Drawable?,
+                            model: Any?,
+                            target: Target<Drawable>?,
+                            dataSource: com.bumptech.glide.load.DataSource?,
+                            isFirstResource: Boolean
+                        ): Boolean {
+                            binding.fullVideoProgressBar.visibility = View.GONE
+                            return false
+                        }
+                    }
+                ) .into(binding.fullImageView)
             }
         }
 
@@ -89,7 +115,8 @@ class ImageOrVideoFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        if (urlTmp.contains("mp4")) {
+        val mimeType = DownloadUtils.getMimeType(urlTmp)
+        if(mimeType != null && mimeType.contains("video")){
             player.pause()
             player.release()
         }
