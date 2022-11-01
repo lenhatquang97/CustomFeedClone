@@ -167,6 +167,11 @@ class LoadingVideoView @JvmOverloads constructor(
         player.play()
     }
 
+    fun pauseAndReleaseVideo(){
+        pauseVideo()
+        releaseVideo()
+    }
+
     fun pauseVideo() {
         playerView.visibility = View.INVISIBLE
         thumbnailView.visibility = View.VISIBLE

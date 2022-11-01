@@ -286,7 +286,7 @@ class FeedListAdapter(
                 val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
                 val child = customGridGroup.getChildAt(videoIndex)
                 if (child is LoadingVideoView) {
-                    child.pauseVideo()
+                    child.pauseAndReleaseVideo()
                 }
             }
         }
@@ -303,8 +303,7 @@ class FeedListAdapter(
                         FeedController.addedToPlayedVideos(holder.adapterPosition, i)
                     }
 
-                    child.pauseVideo()
-                    child.releaseVideo()
+                    child.pauseAndReleaseVideo()
                     FeedController.safeRemoveFromQueue()
                 }
             }

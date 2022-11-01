@@ -113,7 +113,7 @@ class AllFeedsFragment : Fragment() {
         phoneStateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
-                pauseVideo()
+                pauseVideoUtil()
             }
         }
     }
@@ -297,7 +297,7 @@ class AllFeedsFragment : Fragment() {
                     calculateVisibilityVideoView(onPlayed)
                 } else if (FeedController.videoQueueSize() > 1) {
                     if (!viewModel.checkWhetherHaveMoreThanTwoVideosInPost()) {
-                        pauseVideo()
+                        pauseVideoUtil()
                         calculateVisibilityVideoView(onPlayed)
                     }
                 }
@@ -305,14 +305,14 @@ class AllFeedsFragment : Fragment() {
         }
     }
 
-    private fun pauseVideo() {
+    private fun pauseVideoUtil() {
         val (pausedItemIndex, videoIndex) = FeedController.peekVideoQueue()
         if (pausedItemIndex != null && videoIndex != null) {
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
             val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
             val view = customGridGroup?.getChildAt(videoIndex)
             if (view is LoadingVideoView) {
-                view.pauseVideo()
+                view.pauseAndReleaseVideo()
                 FeedController.safeRemoveFromQueue()
             }
         }
@@ -325,15 +325,14 @@ class AllFeedsFragment : Fragment() {
             val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
             val view = customGridGroup?.getChildAt(videoIndex)
             if (view is LoadingVideoView) {
-                view.pauseVideo()
-                view.releaseVideo()
+                view.pauseAndReleaseVideo()
                 FeedController.safeRemoveFromQueue()
             }
         }
     }
 
 
-    private fun playVideo() {
+    private fun playVideoUtil() {
         val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
         if (mainItemIndex != null && videoIndex != null) {
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
@@ -350,7 +349,7 @@ class AllFeedsFragment : Fragment() {
                             if (playbackState == Player.STATE_ENDED) {
                                 //End this video
                                 view.player.seekTo(0)
-                                view.pauseVideo()
+                                view.pauseAndReleaseVideo()
                                 FeedController.safeRemoveFromQueue()
 
                                 //Play next video in list
@@ -407,7 +406,7 @@ class AllFeedsFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        pauseVideo()
+        pauseVideoUtil()
     }
 
     private fun calculateVisibilityVideoView(onPlayed: () -> Unit = {}) {
@@ -431,14 +430,14 @@ class AllFeedsFragment : Fragment() {
                 val isOutOfBoundsAtTheBottom =
                     currentViewRect.top >= ConstantSetup.PHONE_HEIGHT && currentViewRect.bottom >= ConstantSetup.PHONE_HEIGHT
                 if (isOutOfBoundsAtTheBottom || isOutOfBoundsOnTheTop) {
-                    pauseVideo()
+                    pauseVideoUtil()
                 } else {
                     val percents = height * 100 / view.height
                     if (percents >= 50) {
-                        playVideo()
+                        playVideoUtil()
                         onPlayed()
                     } else {
-                        pauseVideo()
+                        pauseVideoUtil()
                     }
                 }
             }
