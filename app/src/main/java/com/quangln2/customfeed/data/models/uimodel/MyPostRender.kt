@@ -15,11 +15,19 @@ data class MyPostRender(
     var resources: MutableList<OfflineResource>,
     var firstItemWidth: Int = 0,
     var firstItemHeight: Int = 0,
+    var containsVideo: Boolean = false
 ) {
-    constructor() : this("", TypeOfPost.POST, "", "", "", "", mutableListOf(), 0, 0)
+    constructor() : this("", TypeOfPost.POST, "", "", "", "", mutableListOf(), 0, 0, false)
 
     companion object {
         fun convertMyPostToMyPostRender(myPost: MyPost, typeOfPost: TypeOfPost = TypeOfPost.POST): MyPostRender {
+            var containsVideo = false
+            for(resource in myPost.resources) {
+                if(resource.url.contains(".mp4.mp4")){
+                    containsVideo = true
+                    break
+                }
+            }
             return MyPostRender(
                 feedId = myPost.feedId,
                 typeOfPost = typeOfPost,
@@ -29,7 +37,8 @@ data class MyPostRender(
                 caption = myPost.caption,
                 resources = myPost.resources,
                 firstItemHeight = 0,
-                firstItemWidth = 0
+                firstItemWidth = 0,
+                containsVideo = containsVideo
             )
         }
     }

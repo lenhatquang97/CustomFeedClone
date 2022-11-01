@@ -12,17 +12,8 @@ data class VideoPlayed(
 
 object FeedController {
     var isLoading = MutableLiveData<Int>().apply { value = -1 }
-    var videoQueue: Queue<VideoPlayed> = LinkedList()
-
-    fun safeRemoveFromQueue() {
-        if (videoQueue.size > 0) {
-            videoQueue.remove()
-        }
-    }
-
-    fun removeAllFromQueue() {
-        videoQueue.clear()
-    }
+    private val videoQueue: Queue<VideoPlayed> = LinkedList()
+    private val playedVideos = mutableMapOf<Int, Int>()
 
     fun isViewAddedToQueue(view: View, itemPosition: Int, i: Int): Boolean {
         val (a, b) = peekVideoQueue()
@@ -33,13 +24,22 @@ object FeedController {
         return false
     }
 
-    fun peekVideoQueue(): Pair<Int?, Int?> {
-        return Pair(videoQueue.peek()?.itemPosition, videoQueue.peek()?.index)
-    }
-
+    fun videoQueueSize() = videoQueue.size
+    fun addedToQueue(itemPosition: Int, i: Int) = videoQueue.add(VideoPlayed(itemPosition, i))
+    fun peekVideoQueue(): Pair<Int?, Int?> = Pair(videoQueue.peek()?.itemPosition, videoQueue.peek()?.index)
     fun popVideoQueue(): Pair<Int?, Int?> {
         val pair = Pair(videoQueue.peek()?.itemPosition, videoQueue.peek()?.index)
         safeRemoveFromQueue()
         return pair
     }
+    fun safeRemoveFromQueue(){ if (videoQueue.size > 0) videoQueue.remove() }
+
+    fun addedToPlayedVideos(itemPosition: Int, i: Int){
+        playedVideos[itemPosition] = i
+    }
+    fun getPlayedVideos(itemPosition: Int): Int{
+        return playedVideos[itemPosition] ?: -1
+    }
+
+
 }

@@ -29,7 +29,6 @@ import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.constants.ConstantSetup
 import com.quangln2.customfeed.data.controllers.FeedController
-import com.quangln2.customfeed.data.controllers.VideoPlayed
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
@@ -48,26 +47,28 @@ import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicInteger
 
 
 class AllFeedsFragment : Fragment() {
     private lateinit var binding: FragmentAllFeedsBinding
     private lateinit var adapterVal: FeedListAdapter
 
-    private val database by lazy {
-        FeedDatabase.getFeedDatabase(requireContext())
-    }
+    private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
+    private val currentViewRect by lazy { Rect() }
+    private val positionDeletedOrRefreshed by lazy { AtomicInteger(-1) }
+
     val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
     private lateinit var phoneStateReceiver: BroadcastReceiver
-    private val currentViewRect = Rect()
 
     private val eventCallback: EventFeedCallback
         get() = object : EventFeedCallback {
-            override fun onDeleteItem(id: String) {
+            override fun onDeleteItem(id: String, position: Int) {
                 viewModel.deleteFeed(id, requireContext())
+                positionDeletedOrRefreshed.set(position)
             }
 
             override fun onClickAddPost() =
@@ -122,7 +123,6 @@ class AllFeedsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentAllFeedsBinding.inflate(inflater, container, false)
-
         adapterVal = FeedListAdapter(requireContext(), eventCallback)
         adapterVal.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         val linearLayoutManager = LinearLayoutManager(requireContext())
@@ -148,32 +148,34 @@ class AllFeedsFragment : Fragment() {
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager as LinearLayoutManager
-                var index = 0
-                if (dy > 0) {
-                    index = manager.findLastVisibleItemPosition()
-                } else if (dy < 0) {
-                    index = manager.findFirstVisibleItemPosition()
+                val firstPartiallyIndex = manager.findFirstVisibleItemPosition()
+                val tmpFirstFullIndex = manager.findFirstCompletelyVisibleItemPosition()
+                val firstFullIndex = if(tmpFirstFullIndex <= 0) 1 else tmpFirstFullIndex
+                val lastFullIndex = manager.findLastCompletelyVisibleItemPosition()
+                val lastPartiallyIndex = manager.findLastVisibleItemPosition()
+                val indexLists = listOf(firstPartiallyIndex, firstFullIndex, lastFullIndex, lastPartiallyIndex)
+                val ls = if(dy >= 0) indexLists else indexLists.reversed()
+                for(i in ls){
+                    if(checkViewHasVideo(i)){
+                        var isPlayed = false
+                        val onPlayed = fun(){
+                            isPlayed = true
+                        }
+                        scrollToPlayVideoInPosition(i, manager, onPlayed)
+                        if(isPlayed) break
+                    }
                 }
-                val fullyVisibleIndex = manager.findFirstCompletelyVisibleItemPosition()
-                val actualIndex = if (index > 0) index else fullyVisibleIndex
-                val actualIndexWithoutZero = if (actualIndex > 0) actualIndex else 1
-                scrollToPlayVideoInPosition(actualIndexWithoutZero, manager)
             }
         })
 
         viewModel.uploadLists.observe(viewLifecycleOwner) {
             it?.apply {
                 binding.noPostId.root.visibility = View.VISIBLE
-                //Load on Internet
-                val condition1 = it.size >= 1 && viewModel.feedLoadingCode.value == EnumFeedLoadingCode.SUCCESS.value
-                //Load on Cache
-                val condition2 = it.size >= 2
-                if (condition1 || condition2) {
+                if (viewModel.feedLoadingCode.value == EnumFeedLoadingCode.SUCCESS.value || it.isNotEmpty()) {
                     binding.noPostId.root.visibility = View.INVISIBLE
                     lifecycleScope.launch(Dispatchers.IO) {
                         val listsOfPostRender = mutableListOf<MyPostRender>()
                         val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
-
                         listsOfPostRender.add(addNewPostItem)
                         it.forEach { itr ->
                             val myPostRender = MyPostRender.convertMyPostToMyPostRender(itr)
@@ -181,7 +183,12 @@ class AllFeedsFragment : Fragment() {
                             listsOfPostRender.add(myPostRender)
                         }
                         withContext(Dispatchers.Main) {
-                            adapterVal.submitList(listsOfPostRender.toMutableList())
+                            adapterVal.submitList(listsOfPostRender.toMutableList()){
+                                if(positionDeletedOrRefreshed.get() >= 1){
+                                    binding.allFeeds.scrollToPosition(positionDeletedOrRefreshed.get() - 1)
+                                    positionDeletedOrRefreshed.set(-1)
+                                }
+                            }
                         }
                     }
                 } else {
@@ -194,7 +201,12 @@ class AllFeedsFragment : Fragment() {
                             val listsOfPostRender = mutableListOf<MyPostRender>()
                             val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
                             listsOfPostRender.add(addNewPostItem)
-                            adapterVal.submitList(listsOfPostRender.toMutableList())
+                            adapterVal.submitList(listsOfPostRender.toMutableList()){
+                                if(positionDeletedOrRefreshed.get() >= 1){
+                                    binding.allFeeds.scrollToPosition(positionDeletedOrRefreshed.get() - 1)
+                                    positionDeletedOrRefreshed.set(-1)
+                                }
+                            }
                         }
                     }
                 }
@@ -204,9 +216,9 @@ class AllFeedsFragment : Fragment() {
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            pauseVideo()
             binding.noPostId.imageView.visibility = View.VISIBLE
             binding.noPostId.textNote.text = resources.getString(R.string.loading)
+            positionDeletedOrRefreshed.set(1)
             viewModel.getAllFeeds()
         }
 
@@ -238,7 +250,8 @@ class AllFeedsFragment : Fragment() {
         //Save for next use when we switch to another window.
         val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
         if (mainItemIndex != null && videoIndex != null) {
-            FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
+            FeedController.addedToQueue(mainItemIndex, videoIndex)
+            FeedController.addedToPlayedVideos(mainItemIndex, videoIndex)
         }
         pauseAndReleaseVideo()
 
@@ -259,7 +272,16 @@ class AllFeedsFragment : Fragment() {
 
     }
 
-    private fun scrollToPlayVideoInPosition(itemPosition: Int, linearLayoutManager: LinearLayoutManager) {
+    private fun checkViewHasVideo(itemPosition: Int): Boolean{
+        if(itemPosition <= 0) return false
+        if(itemPosition < adapterVal.itemCount){
+            val item = adapterVal.currentList[itemPosition]
+            return item.containsVideo
+        }
+        return false
+    }
+
+    private fun scrollToPlayVideoInPosition(itemPosition: Int, linearLayoutManager: LinearLayoutManager, onPlayed: () -> Unit = {}) {
         val viewItem = linearLayoutManager.findViewByPosition(itemPosition)
         val firstCondition = (itemPosition > 0 && viewItem != null)
         val secondCondition = (viewItem != null && itemPosition == adapterVal.itemCount - 1)
@@ -271,12 +293,12 @@ class AllFeedsFragment : Fragment() {
                     val view = customGridGroup.getChildAt(i)
                     if (FeedController.isViewAddedToQueue(view, itemPosition, i)) break
                 }
-                if (FeedController.videoQueue.size == 1) {
-                    calculateVisibilityVideoView()
-                } else if (FeedController.videoQueue.size > 1) {
+                if (FeedController.videoQueueSize() == 1) {
+                    calculateVisibilityVideoView(onPlayed)
+                } else if (FeedController.videoQueueSize() > 1) {
                     if (!viewModel.checkWhetherHaveMoreThanTwoVideosInPost()) {
                         pauseVideo()
-                        calculateVisibilityVideoView()
+                        calculateVisibilityVideoView(onPlayed)
                     }
                 }
             }
@@ -340,7 +362,8 @@ class AllFeedsFragment : Fragment() {
                                         //More than 10 images or videos with CustomLayer in 8th position
                                         val condition2 = customGridGroup.size > 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - 1
                                         if (condition1 || condition2) {
-                                            FeedController.videoQueue.add(VideoPlayed(mainItemIndex, i))
+                                            FeedController.addedToQueue(mainItemIndex, i)
+                                            FeedController.addedToPlayedVideos(mainItemIndex, i)
                                             calculateVisibilityVideoView()
                                             flagEndOfVideoInGrid = true
                                             break
@@ -352,7 +375,8 @@ class AllFeedsFragment : Fragment() {
                                 if (!flagEndOfVideoInGrid) {
                                     val firstVideoIndex = customGridGroup.children.indexOfFirst { it is LoadingVideoView }
                                     if (firstVideoIndex != -1) {
-                                        FeedController.videoQueue.add(VideoPlayed(mainItemIndex, firstVideoIndex))
+                                        FeedController.addedToQueue(mainItemIndex, firstVideoIndex)
+                                        FeedController.addedToPlayedVideos(mainItemIndex, firstVideoIndex)
                                         calculateVisibilityVideoView()
                                     }
                                 }
@@ -386,10 +410,17 @@ class AllFeedsFragment : Fragment() {
         pauseVideo()
     }
 
-    private fun calculateVisibilityVideoView() {
-        val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
+    private fun calculateVisibilityVideoView(onPlayed: () -> Unit = {}) {
+        var (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
         if (mainItemIndex != null && videoIndex != null) {
-            var percents = 100
+            val tmp = FeedController.getPlayedVideos(mainItemIndex)
+            if(tmp != -1 && videoIndex != tmp){
+                videoIndex = tmp
+                FeedController.safeRemoveFromQueue()
+                FeedController.addedToQueue(mainItemIndex, videoIndex)
+            }
+
+
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
             val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
             val view = customGridGroup?.getChildAt(videoIndex)
@@ -402,9 +433,10 @@ class AllFeedsFragment : Fragment() {
                 if (isOutOfBoundsAtTheBottom || isOutOfBoundsOnTheTop) {
                     pauseVideo()
                 } else {
-                    percents = height * 100 / view.height
+                    val percents = height * 100 / view.height
                     if (percents >= 50) {
                         playVideo()
+                        onPlayed()
                     } else {
                         pauseVideo()
                     }

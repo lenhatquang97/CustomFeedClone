@@ -40,9 +40,11 @@ class ViewMoreFragment : Fragment() {
     private val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
-
+    private val requestOptions by lazy {
+        RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
+    }
     private lateinit var item: MyPostRender
-    private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
+
 
     private fun fetchPostById(id: String) {
         item = viewModel.getFeedItem(id)

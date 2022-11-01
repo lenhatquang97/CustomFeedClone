@@ -20,6 +20,7 @@ object DownloadUtils {
             val request = Request.Builder().url(url).build()
             val response = downloadClient.newCall(request).execute()
             value = response.body?.contentLength() ?: 0L
+            response.close()
         } catch (e: Exception) {
             exception = e
         } finally {
@@ -84,6 +85,7 @@ object DownloadUtils {
                         response.close()
                     } else {
                         Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
+                        response.close()
                     }
                 }
 

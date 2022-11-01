@@ -57,36 +57,6 @@ class HomeScreenFragment : Fragment() {
     private val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
-    var listOfViews: MutableList<View> = mutableListOf()
-    var listOfUris: MutableList<Uri> = mutableListOf()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel._uriLists.value?.clear()
-
-        val arrayListOfUris = savedInstanceState?.getStringArrayList(KEY_INSTANCE) ?: arrayListOf()
-        val uriSource = arrayListOfUris.map { uriString -> uriString.toUri() }.toMutableList()
-        addAnImageOrVideoToList(uriSource)
-        Log.v(TAG, "onSaveInstanceState listOfViews: ${listOfViews.size} and listOfUris: ${listOfUris.size}")
-    }
-
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        Log.v(TAG, "onSaveInstanceState listOfViews: ${listOfViews.size} and listOfUris: ${listOfUris.size}")
-
-        val arrayOfString = arrayListOf<String>()
-        for (uri in listOfUris) {
-            if(uri != Uri.EMPTY) {
-                arrayOfString.add(uri.toString())
-            }
-        }
-        outState.putStringArrayList(KEY_INSTANCE, arrayOfString)
-
-    }
-
-
-
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val data: Intent? = result.data
@@ -103,9 +73,17 @@ class HomeScreenFragment : Fragment() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    private var listOfViews: MutableList<View> = mutableListOf()
+    private var listOfUris: MutableList<Uri> = mutableListOf()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         viewModel._uriLists.value?.clear()
+
+        val arrayListOfUris = savedInstanceState?.getStringArrayList(KEY_INSTANCE) ?: arrayListOf()
+        val uriSource = arrayListOfUris.map { uriString -> uriString.toUri() }.toMutableList()
+        addAnImageOrVideoToList(uriSource)
+        Log.v(TAG, "onSaveInstanceState listOfViews: ${listOfViews.size} and listOfUris: ${listOfUris.size}")
     }
 
     @SuppressLint("SetTextI18n")
@@ -140,6 +118,25 @@ class HomeScreenFragment : Fragment() {
                 addAnImageOrVideoToList(uriSource)
                 navController.currentBackStackEntry?.savedStateHandle?.remove<ArrayList<String>>(KEY_LISTS_OF_URL_RETURN)
             }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        Log.v(TAG, "onSaveInstanceState listOfViews: ${listOfViews.size} and listOfUris: ${listOfUris.size}")
+
+        val arrayOfString = arrayListOf<String>()
+        for (uri in listOfUris) {
+            if(uri != Uri.EMPTY) {
+                arrayOfString.add(uri.toString())
+            }
+        }
+        outState.putStringArrayList(KEY_INSTANCE, arrayOfString)
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel._uriLists.value?.clear()
     }
 
     private fun buttonHandleChooseImagesOrVideos(){
@@ -229,10 +226,7 @@ class HomeScreenFragment : Fragment() {
         }
         binding.customGridGroup.removeAllViews()
         initCustomGrid()
-
     }
-
-
 
     private fun hasCustomLayer(): Pair<Int, Int> {
         for (i in 8 until binding.customGridGroup.childCount) {
@@ -289,21 +283,23 @@ class HomeScreenFragment : Fragment() {
 
     private fun initCustomGrid() {
         val rectangles = getGridItemsLocation(listOfViews.size)
-        val marginHorizontalSum = 16 + 32
-        val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
+        val marginLeft = 8
         val contentPadding = 32
+        val marginHorizontalSum = 2 * marginLeft + contentPadding
+        val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
+
         for (i in rectangles.indices) {
-            val leftView = (rectangles[i].leftTop.x * widthGrid).toInt()
-            val topView = (rectangles[i].leftTop.y * widthGrid).toInt()
-            val widthView = (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt()
-            val heightView = (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt()
+            val leftView = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+            val topView = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+            val widthView = (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding
+            val heightView = (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
             when (val viewChild = listOfViews[i]) {
                 is CustomLayer -> {
                     val customLayerSize = listOfViews.filterIsInstance<CustomLayer>().size
                     viewChild.addedImagesText.text = "+${listOfViews.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - customLayerSize}"
-                    val layoutParams = ViewGroup.MarginLayoutParams(widthView - contentPadding,heightView - contentPadding).apply {
-                        leftMargin = leftView + contentPadding
-                        topMargin = topView + contentPadding
+                    val layoutParams = ViewGroup.MarginLayoutParams(widthView,heightView).apply {
+                        leftMargin = leftView
+                        topMargin = topView
                     }
                     viewChild.layoutParams = layoutParams
                     viewChild.setOnClickListener {
@@ -339,9 +335,9 @@ class HomeScreenFragment : Fragment() {
                             onHandleMoreImagesOrVideos(viewChild)
                         }
                     }
-                    val layoutParams = ViewGroup.MarginLayoutParams(widthView - contentPadding, heightView - contentPadding).apply {
-                        leftMargin = leftView + contentPadding
-                        topMargin = topView + contentPadding
+                    val layoutParams = ViewGroup.MarginLayoutParams(widthView, heightView).apply {
+                        leftMargin = leftView
+                        topMargin = topView
                     }
                     viewChild.layoutParams = layoutParams
                     binding.customGridGroup.addView(viewChild)
@@ -350,9 +346,9 @@ class HomeScreenFragment : Fragment() {
                     viewChild[1].setOnClickListener {
                         onHandleMoreImagesOrVideos(viewChild)
                     }
-                    val layoutParams = ViewGroup.MarginLayoutParams(widthView - contentPadding, heightView - contentPadding).apply {
-                        leftMargin = leftView + contentPadding
-                        topMargin = topView + contentPadding
+                    val layoutParams = ViewGroup.MarginLayoutParams(widthView, heightView).apply {
+                        leftMargin = leftView
+                        topMargin = topView
                     }
                     viewChild.layoutParams = layoutParams
                     binding.customGridGroup.addView(viewChild)

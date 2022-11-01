@@ -6,7 +6,6 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -106,7 +105,7 @@ class FeedListAdapter(
         private fun bindingButton(item: MyPostRender) {
             binding.deleteButton.setOnClickListener {
                 val itr = currentList[adapterPosition]
-                eventFeedCallback.onDeleteItem(itr.feedId)
+                eventFeedCallback.onDeleteItem(itr.feedId, position)
             }
 
             binding.learnMore.setOnClickListener {
@@ -134,13 +133,16 @@ class FeedListAdapter(
                 val numbersOfAddedImages = item.resources.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
                 val viewChild = CustomLayer(context)
 
-                val layoutParams = ViewGroup.MarginLayoutParams(
-                    (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
-                    (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
-                ).apply {
-                    leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
-                    topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                val leftView = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                val topView = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                val widthView = (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding
+                val heightView = (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+
+                val layoutParams = ViewGroup.MarginLayoutParams(widthView, heightView).apply {
+                    leftMargin = leftView
+                    topMargin = topView
                 }
+
                 viewChild.layoutParams = layoutParams
                 viewChild.setOnClickListener {
                     eventFeedCallback.onClickViewMore(item.feedId)
@@ -154,36 +156,37 @@ class FeedListAdapter(
 
         fun bind(item: MyPostRender, context: Context) {
             val rectangles = getGridItemsLocation(item.resources.size, item.firstItemWidth, item.firstItemHeight)
+            val contentPadding = 16
             val marginHorizontalSum = 16 + 32
             val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
-            val contentPadding = 16
-
 
             loadBasicInfoAboutFeed(item)
             loadFeedDescription(item)
             bindingButton(item)
             if (rectangles.isNotEmpty()) {
-                for (i in 0 until item.resources.size) {
+                for (i in rectangles.indices) {
                     if (addMoreImageOrVideoLayer(i, item, rectangles, widthGrid, contentPadding)) return
-                    val doesLocalFileExist = DownloadUtils.doesLocalFileExist(item.resources[i].url, context)
-                    val isValidFile = DownloadUtils.isValidFile(item.resources[i].url, context, item.resources[i].size)
-                    val temporaryFilePath = DownloadUtils.getTemporaryFilePath(item.resources[i].url, context)
                     val url = item.resources[i].url
-
+                    val doesLocalFileExist = DownloadUtils.doesLocalFileExist(url, context)
+                    val isValidFile = DownloadUtils.isValidFile(url, context, item.resources[i].size)
+                    val temporaryFilePath = DownloadUtils.getTemporaryFilePath(url, context)
                     val value = if (doesLocalFileExist && isValidFile) temporaryFilePath else url
                     val mimeType = getMimeType(value)
+
+
+                    val leftView = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                    val topView = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                    val widthView = (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding
+                    val heightView = (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
 
                     if (mimeType != null && mimeType.contains("video")) {
                         val renderersFactory =
                             DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
                         val player = ExoPlayer.Builder(context, renderersFactory).build()
                         val videoView = LoadingVideoView(context, value, player)
-                        val layoutParams = ViewGroup.MarginLayoutParams(
-                            (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
-                            (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
-                        ).apply {
-                            leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
-                            topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                        val layoutParams = ViewGroup.MarginLayoutParams(widthView, heightView).apply {
+                            leftMargin = leftView
+                            topMargin = topView
                         }
                         videoView.layoutParams = layoutParams
                         videoView.setOnClickListener {
@@ -198,18 +201,14 @@ class FeedListAdapter(
                             )
                         }
 
-
                         binding.customGridGroup.addView(videoView)
                     } else {
                         val imageView = ImageView(context)
                         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
 
-                        val layoutParams = ViewGroup.MarginLayoutParams(
-                            (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
-                            (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
-                        ).apply {
-                            leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
-                            topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                        val layoutParams = ViewGroup.MarginLayoutParams(widthView, heightView).apply {
+                            leftMargin = leftView
+                            topMargin = topView
                         }
                         imageView.layoutParams = layoutParams
 
@@ -279,14 +278,31 @@ class FeedListAdapter(
 
     }
 
+    override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        if (holder is FeedItemViewHolder) {
+            val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
+            if(mainItemIndex != null && videoIndex != null) {
+                val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
+                val child = customGridGroup.getChildAt(videoIndex)
+                if (child is LoadingVideoView) {
+                    child.pauseVideo()
+                }
+            }
+        }
+    }
+
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         super.onViewRecycled(holder)
-        Log.d("onViewRecycled", "onViewRecycled")
         if (holder is FeedItemViewHolder) {
             val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
             for (i in 0 until customGridGroup.size) {
                 val child = customGridGroup.getChildAt(i)
                 if (child is LoadingVideoView) {
+                    if(child.player.isPlaying){
+                        FeedController.addedToPlayedVideos(holder.adapterPosition, i)
+                    }
+
                     child.pauseVideo()
                     child.releaseVideo()
                     FeedController.safeRemoveFromQueue()

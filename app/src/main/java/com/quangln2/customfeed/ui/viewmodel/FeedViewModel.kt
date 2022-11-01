@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.controllers.VideoPlayed
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
@@ -99,16 +100,14 @@ class FeedViewModel(
                                 deleteDatabaseUseCase(it.feedId)
                             }
 
-                            val availableItems =
-                                ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+                            val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
                             availableItems.forEach {
                                 insertDatabaseUseCase(it)
                             }
 
                         }
                         //get available items but not in deleted feeds
-                        val availableItems =
-                            ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+                        val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
                         _feedLoadingCode.postValue(response.code())
                         _uploadLists.postValue(availableItems.toMutableList())
                     }
@@ -143,14 +142,14 @@ class FeedViewModel(
                     val ls = uploadLists.value
                     val filteredList = ls?.filter { it.feedId != id }
                     _uploadLists.value = filteredList?.toMutableList()
-                    Toast.makeText(context, "Delete successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.resources.getString(R.string.delete_successfully), Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Delete failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.resources.getString(R.string.delete_failed), Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(context, "Delete failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.resources.getString(R.string.delete_failed), Toast.LENGTH_SHORT).show()
             }
 
         })
@@ -168,7 +167,7 @@ class FeedViewModel(
         val (mainItemIndex, videoIndex) = FeedController.popVideoQueue()
         val (anotherMainItemIndex, anotherVideoIndex) = FeedController.popVideoQueue()
         if (mainItemIndex != null && videoIndex != null && anotherMainItemIndex != null && anotherVideoIndex != null) {
-            FeedController.videoQueue.add(VideoPlayed(mainItemIndex, videoIndex))
+            FeedController.addedToQueue(mainItemIndex, videoIndex)
             if (mainItemIndex == anotherMainItemIndex) return true
         }
         return false

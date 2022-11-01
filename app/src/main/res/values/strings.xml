@@ -23,4 +23,6 @@
     <string name="not_saved_changes">Some changes have not been saved</string>
     <string name="cancel_ask">Do you want to cancel them?</string>
     <string name="nums_of_images_videos">Numbers of images/videos: %1$d</string>
+    <string name="delete_successfully">Delete successfully</string>
+    <string name="delete_failed">Delete failed</string>
 </resources>
