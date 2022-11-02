@@ -26,7 +26,7 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.constants.ConstantSetup
-import com.quangln2.customfeed.data.controllers.FeedController
+import com.quangln2.customfeed.data.controllers.FeedCtrl
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
 import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
@@ -281,8 +281,8 @@ class FeedListAdapter(
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         super.onViewDetachedFromWindow(holder)
         if (holder is FeedItemViewHolder) {
-            val (mainItemIndex, videoIndex) = FeedController.peekVideoQueue()
-            if(mainItemIndex != null && videoIndex != null) {
+            val (mainItemIndex, videoIndex) = FeedCtrl.peekFirst()
+            if(mainItemIndex != -1 && videoIndex != -1) {
                 val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
                 val child = customGridGroup.getChildAt(videoIndex)
                 if (child is LoadingVideoView) {
@@ -299,12 +299,7 @@ class FeedListAdapter(
             for (i in 0 until customGridGroup.size) {
                 val child = customGridGroup.getChildAt(i)
                 if (child is LoadingVideoView) {
-                    if(child.player.isPlaying){
-                        FeedController.addedToPlayedVideos(holder.adapterPosition, i)
-                    }
-
                     child.pauseAndReleaseVideo()
-                    FeedController.safeRemoveFromQueue()
                 }
             }
             customGridGroup.removeAllViews()
