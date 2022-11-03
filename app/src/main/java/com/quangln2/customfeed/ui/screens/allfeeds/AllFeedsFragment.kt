@@ -265,44 +265,46 @@ class AllFeedsFragment : Fragment() {
     }
 
     private fun playVideoUtil() {
-        if(FeedCtrl.playingQueue.isEmpty()) return
-        val (mainItemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
-        val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
-        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
-        val view = customGridGroup?.getChildAt(videoIndex)
+        if(FeedCtrl.playingQueue.isNotEmpty()){
+            val (mainItemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
+            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
+            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+            val view = customGridGroup?.getChildAt(videoIndex)
 
-        if (view is LoadingVideoView) {
-            view.playVideo()
-            view.player.addListener(
-                object : Player.Listener {
-                    override fun onPlaybackStateChanged(playbackState: Int) {
-                        super.onPlaybackStateChanged(playbackState)
-                        if (playbackState == Player.STATE_ENDED) {
-                            view.player.seekTo(0)
-                            view.pauseAndReleaseVideo()
+            if (view is LoadingVideoView) {
+                view.playVideo()
+                view.player.addListener(
+                    object : Player.Listener {
+                        override fun onPlaybackStateChanged(playbackState: Int) {
+                            super.onPlaybackStateChanged(playbackState)
+                            if (playbackState == Player.STATE_ENDED) {
+                                view.player.seekTo(0)
+                                view.pauseAndReleaseVideo()
 
-                            if(FeedCtrl.videoDeque.isNotEmpty()){
-                                FeedCtrl.playingQueue.remove()
-                                val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
-                                if(hasDuplicatedVideo.isNotEmpty()){
-                                    while(FeedCtrl.videoDeque.isNotEmpty()){
-                                        val pair = FeedCtrl.videoDeque.remove()
-                                        if(pair.first == mainItemIndex && pair.second == videoIndex){
-                                            break
+                                if(FeedCtrl.videoDeque.isNotEmpty()){
+                                    FeedCtrl.playingQueue.remove()
+                                    val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
+                                    if(hasDuplicatedVideo.isNotEmpty()){
+                                        while(FeedCtrl.videoDeque.isNotEmpty()){
+                                            val pair = FeedCtrl.videoDeque.remove()
+                                            if(pair.first == mainItemIndex && pair.second == videoIndex){
+                                                break
+                                            }
                                         }
                                     }
-                                }
-                                val pair = FeedCtrl.videoDeque.peek()
-                                if(pair != null){
-                                    FeedCtrl.playingQueue.add(pair)
-                                    playVideoUtil()
+                                    val pair = FeedCtrl.videoDeque.peek()
+                                    if(pair != null){
+                                        FeedCtrl.playingQueue.add(pair)
+                                        playVideoUtil()
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            )
+                )
+            }
         }
+
     }
 
     private fun retrieveFirstImageOrFirstVideo(myPostRender: MyPostRender) {
