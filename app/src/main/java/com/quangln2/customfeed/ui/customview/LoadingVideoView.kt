@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.exoplayer2.ExoPlayer
@@ -30,7 +31,7 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var thumbnailView: ImageView
 
     private var url = ""
-    private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL)
+    private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565)
     private var isMute = false
     private var isReleased = false
     private var currentPosition = 0L

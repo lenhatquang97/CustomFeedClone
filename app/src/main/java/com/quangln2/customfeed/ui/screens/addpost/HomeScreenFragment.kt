@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.quangln2.customfeed.R
@@ -156,7 +157,7 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun loadInitialProfile() {
-        val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
+        val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565).override(100)
         Glide.with(requireContext()).load(ConstantSetup.AVATAR_LINK).apply(requestOptions).into(binding.myAvatarImage)
     }
 

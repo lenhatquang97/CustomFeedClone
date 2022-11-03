@@ -241,7 +241,6 @@ class AllFeedsFragment : Fragment() {
         pauseVideoWithoutPop()
     }
 
-
     private fun pauseVideoUtil() {
         if(FeedCtrl.playingQueue.isEmpty()) return
         val (pausedItemIndex, videoIndex) = FeedCtrl.playingQueue.remove()

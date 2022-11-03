@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
@@ -54,7 +55,7 @@ class FeedListAdapter(
     inner class AddNewItemViewHolder constructor(private val binding: FeedCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(context: Context) {
-            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(50)
+            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565).override(50)
             Glide.with(context).load(ConstantSetup.AVATAR_LINK).apply(requestOptions).into(binding.circleAvatar)
             binding.root.setOnClickListener {
                 eventFeedCallback.onClickAddPost()
@@ -218,7 +219,9 @@ class FeedListAdapter(
                             eventFeedCallback.onClickVideoView(-1L, item.resources[i].url, urlArrayList)
                         }
 
-                        Glide.with(context).load(value).placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
+                        Glide.with(context).load(value).apply(
+                            RequestOptions().format(DecodeFormat.PREFER_RGB_565)
+                        ).placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
                             .listener(
                                 object : RequestListener<Drawable> {
                                     override fun onLoadFailed(
@@ -242,7 +245,7 @@ class FeedListAdapter(
                                         return false
                                     }
                                 }
-                            ).into(imageView)
+                            ).centerInside().into(imageView)
                         binding.customGridGroup.addView(imageView)
                     }
                 }
@@ -287,8 +290,11 @@ class FeedListAdapter(
                 val child = customGridGroup.getChildAt(i)
                 if (child is LoadingVideoView) {
                     child.pauseAndReleaseVideo()
+                } else if(child is ImageView){
+                    Glide.with(context).clear(child)
                 }
             }
+
             customGridGroup.removeAllViews()
         }
     }
