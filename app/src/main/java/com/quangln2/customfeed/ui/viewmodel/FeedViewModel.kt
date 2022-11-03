@@ -10,8 +10,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.quangln2.customfeed.R
-import com.quangln2.customfeed.data.controllers.FeedController
-import com.quangln2.customfeed.data.controllers.VideoPlayed
 import com.quangln2.customfeed.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeed.data.models.datamodel.MyPost
 import com.quangln2.customfeed.data.models.datamodel.OfflineResource
@@ -163,13 +161,4 @@ class FeedViewModel(
         }
     }
 
-    fun checkWhetherHaveMoreThanTwoVideosInPost(): Boolean {
-        val (mainItemIndex, videoIndex) = FeedController.popVideoQueue()
-        val (anotherMainItemIndex, anotherVideoIndex) = FeedController.popVideoQueue()
-        if (mainItemIndex != null && videoIndex != null && anotherMainItemIndex != null && anotherVideoIndex != null) {
-            FeedController.addedToQueue(mainItemIndex, videoIndex)
-            if (mainItemIndex == anotherMainItemIndex) return true
-        }
-        return false
-    }
 }

@@ -11,7 +11,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import com.google.gson.Gson
 import com.quangln2.customfeed.R
-import com.quangln2.customfeed.data.controllers.FeedController
+import com.quangln2.customfeed.data.controllers.FeedCtrl
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeed.data.datasource.remote.RemoteDataSourceImpl
@@ -34,7 +34,7 @@ class UploadService : Service() {
     val builder = NotificationCompat.Builder(this, "FeedPost")
         .setContentTitle("CustomFeed")
         .setContentText("Uploading...")
-        .setSmallIcon(com.quangln2.customfeed.R.drawable.ic_baseline_post_add_24)
+        .setSmallIcon(R.drawable.ic_baseline_post_add_24)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
     val id = UUID.randomUUID().toString().hashCode()
@@ -51,7 +51,7 @@ class UploadService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
-            FeedController.isLoading.postValue(EnumFeedSplashScreenState.LOADING.value)
+            FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.LOADING.value)
             val jsonString = intent.getStringExtra(resources.getString(R.string.jsonStringKey))
             val uploadWorkerModel = Gson().fromJson(jsonString, UploadWorkerModel::class.java)
 
@@ -84,7 +84,7 @@ class UploadService : Service() {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.errorBody() == null && response.code() == 200) {
                     //close loading card screen
-                    FeedController.isLoading.postValue(EnumFeedSplashScreenState.COMPLETE.value)
+                    FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.COMPLETE.value)
 
                     //create notification
                     builder.apply {
@@ -101,7 +101,7 @@ class UploadService : Service() {
 
                 } else {
                     //close loading card screen
-                    FeedController.isLoading.postValue(EnumFeedSplashScreenState.COMPLETE.value)
+                    FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.COMPLETE.value)
 
                     //create notification
                     builder.apply {
@@ -125,7 +125,7 @@ class UploadService : Service() {
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 //close loading card screen
-                FeedController.isLoading.postValue(EnumFeedSplashScreenState.COMPLETE.value)
+                FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.COMPLETE.value)
 
                 //create notification
                 builder.setProgress(0, 0, false)

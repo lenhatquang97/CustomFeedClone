@@ -1,9 +1,13 @@
 package com.quangln2.customfeed.data.controllers
 
+import androidx.lifecycle.MutableLiveData
 import java.util.*
 
 object FeedCtrl {
     val videoDeque: Deque<Pair<Int, Int>> = LinkedList()
+    val playingQueue: Queue<Pair<Int, Int>> = LinkedList()
+    var isLoadingToUpload = MutableLiveData<Int>().apply { value = -1 }
+
 
 
     fun addToFirst(itemPosition: Int, i: Int) = videoDeque.addFirst(Pair(itemPosition, i))
@@ -14,5 +18,14 @@ object FeedCtrl {
     fun popFirstSafely(){
         if(videoDeque.isNotEmpty()) videoDeque.removeFirst()
     }
+
+    fun compareDequeWithList(list: List<Pair<Int, Int>>): Boolean{
+        if(list.size != videoDeque.size) return false
+        for(i in list.indices){
+            if(list[i] != videoDeque.elementAt(i)) return false
+        }
+        return true
+    }
+
 
 }

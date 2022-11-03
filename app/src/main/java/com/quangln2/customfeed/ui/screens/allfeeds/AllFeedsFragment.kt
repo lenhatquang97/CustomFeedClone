@@ -1,17 +1,13 @@
 package com.quangln2.customfeed.ui.screens.allfeeds
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -25,9 +21,7 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.R
-import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.constants.ConstantSetup
-import com.quangln2.customfeed.data.controllers.FeedController
 import com.quangln2.customfeed.data.controllers.FeedCtrl
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
@@ -47,7 +41,6 @@ import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 
@@ -63,7 +56,8 @@ class AllFeedsFragment : Fragment() {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
-    private lateinit var phoneStateReceiver: BroadcastReceiver
+
+    private val temporaryVideoSequence = mutableListOf<Pair<Int, Int>>()
 
     private val eventCallback: EventFeedCallback
         get() = object : EventFeedCallback {
@@ -111,12 +105,6 @@ class AllFeedsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.getAllFeedsWithPreloadCache()
-        phoneStateReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                Toast.makeText(context, "Phone state changed", Toast.LENGTH_SHORT).show()
-                pauseVideoUtil()
-            }
-        }
     }
 
     override fun onCreateView(
@@ -147,6 +135,7 @@ class AllFeedsFragment : Fragment() {
                 }
             }
 
+
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager as LinearLayoutManager
                 val firstPartiallyIndex = manager.findFirstVisibleItemPosition()
@@ -159,29 +148,19 @@ class AllFeedsFragment : Fragment() {
                     add(firstFullIndex)
                     add(lastFullIndex)
                     add(lastPartiallyIndex)
-                }.toList()
-                val previousVideoDeque: Deque<Pair<Int, Int>> = LinkedList()
+                }.filter { it >= 0 }.toList()
 
-                for(item in FeedCtrl.videoDeque){
-                    previousVideoDeque.addLast(item)
-                }
+                //Step 0: Clear all videoDeque
+                FeedCtrl.videoDeque.clear()
 
-                val forStack = mutableListOf<Pair<Int, Int>>()
-                val forQueue = mutableListOf<Pair<Int, Int>>()
+                //Step 1: Get all visible items
+                retrieveAllVisibleVideosOnScreen(indexLists)
 
-                for(i in indexLists){
-                    retrieveAvailableVideos(i, forStack, forQueue)
-                }
+                //Step 2: put incoming video to play
+                putIncomingVideoToQueue()
 
-                forStack.reversed().forEach {
-                    FeedCtrl.addToFirst(it.first, it.second)
-                }
-
-                forQueue.forEach {
-                    FeedCtrl.addToLast(it.first, it.second)
-                }
-
-                calculateVisibilityVideoView()
+                //Step 3: Play video
+                playVideoUtil()
             }
         })
 
@@ -239,7 +218,7 @@ class AllFeedsFragment : Fragment() {
             viewModel.getAllFeeds()
         }
 
-        FeedController.isLoading.observe(viewLifecycleOwner) {
+        FeedCtrl.isLoadingToUpload.observe(viewLifecycleOwner) {
             binding.loadingCard.root.visibility = if (it == EnumFeedSplashScreenState.LOADING.value) View.VISIBLE else View.GONE
             if (it == EnumFeedSplashScreenState.COMPLETE.value) {
                 binding.swipeRefreshLayout.post {
@@ -248,84 +227,84 @@ class AllFeedsFragment : Fragment() {
                 binding.noPostId.imageView.visibility = View.VISIBLE
                 binding.noPostId.textNote.text = resources.getString(R.string.loading)
                 viewModel.getAllFeeds()
-                FeedController.isLoading.value = EnumFeedSplashScreenState.UNDEFINED.value
+                FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.UNDEFINED.value
 
             }
         }
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val intentFilter = IntentFilter()
-        intentFilter.addAction("android.intent.action.PHONE_STATE")
-        requireActivity().registerReceiver(phoneStateReceiver, intentFilter)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        //Save for next use when we switch to another window.
-        val (mainItemIndex, videoIndex) = FeedCtrl.peekFirst()
-        if (mainItemIndex != -1 && videoIndex != -1) {
-            FeedCtrl.addToFirst(mainItemIndex, videoIndex)
-        }
-        pauseVideoUtil()
-
-    }
-
     override fun onStart() {
         super.onStart()
-        calculateVisibilityVideoView()
+        playVideoUtil()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        try{
-            requireContext().unregisterReceiver(phoneStateReceiver)
-        } catch (e: Exception){
-            e.printStackTrace()
-        }
-
+    override fun onPause() {
+        super.onPause()
+        pauseVideoWithoutPop()
     }
+
 
     private fun pauseVideoUtil() {
-        val (pausedItemIndex, videoIndex) = FeedCtrl.peekFirst()
-        if (pausedItemIndex != -1 && videoIndex != -1) {
-            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
-            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
-            val view = customGridGroup?.getChildAt(videoIndex)
-            if (view is LoadingVideoView) {
-                view.pauseAndReleaseVideo()
-                FeedCtrl.popFirstSafely()
-            }
+        if(FeedCtrl.playingQueue.isEmpty()) return
+        val (pausedItemIndex, videoIndex) = FeedCtrl.playingQueue.remove()
+        val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
+        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+        val view = customGridGroup?.getChildAt(videoIndex)
+        if (view is LoadingVideoView) {
+            view.pauseAndReleaseVideo()
+        }
+    }
+
+    private fun pauseVideoWithoutPop() {
+        if(FeedCtrl.playingQueue.isEmpty()) return
+        val (pausedItemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
+        val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
+        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+        val view = customGridGroup?.getChildAt(videoIndex)
+        if (view is LoadingVideoView) {
+            view.pauseAndReleaseVideo()
         }
     }
 
     private fun playVideoUtil() {
-        val (mainItemIndex, videoIndex) = FeedCtrl.peekFirst()
-        if (mainItemIndex != -1 && videoIndex != -1) {
-            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
-            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
-            val view = customGridGroup?.getChildAt(videoIndex)
+        if(FeedCtrl.playingQueue.isEmpty()) return
+        val (mainItemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
+        val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
+        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+        val view = customGridGroup?.getChildAt(videoIndex)
 
-            if (view is LoadingVideoView) {
-                view.playVideo()
-                view.player.addListener(
-                    object : Player.Listener {
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            super.onPlaybackStateChanged(playbackState)
-                            if (playbackState == Player.STATE_ENDED) {
-                                view.player.seekTo(0)
-                                view.pauseAndReleaseVideo()
-                                FeedCtrl.popFirstSafely()
-                                calculateVisibilityVideoView()
+        if (view is LoadingVideoView) {
+            view.playVideo()
+            view.player.addListener(
+                object : Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        super.onPlaybackStateChanged(playbackState)
+                        if (playbackState == Player.STATE_ENDED) {
+                            view.player.seekTo(0)
+                            view.pauseAndReleaseVideo()
+
+                            if(FeedCtrl.videoDeque.isNotEmpty()){
+                                FeedCtrl.playingQueue.remove()
+                                val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
+                                if(hasDuplicatedVideo.isNotEmpty()){
+                                    while(FeedCtrl.videoDeque.isNotEmpty()){
+                                        val pair = FeedCtrl.videoDeque.remove()
+                                        if(pair.first == mainItemIndex && pair.second == videoIndex){
+                                            break
+                                        }
+                                    }
+                                }
+                                val pair = FeedCtrl.videoDeque.peek()
+                                if(pair != null){
+                                    FeedCtrl.playingQueue.add(pair)
+                                    playVideoUtil()
+                                }
                             }
                         }
                     }
-                )
-            } else {
-                FeedCtrl.popFirstSafely()
-            }
+                }
+            )
         }
     }
 
@@ -346,11 +325,6 @@ class AllFeedsFragment : Fragment() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        pauseVideoUtil()
-    }
-
     private fun checkLoadingVideoViewIsVisible(view: View): Boolean{
         if(view is LoadingVideoView){
             view.getLocalVisibleRect(currentViewRect)
@@ -368,73 +342,100 @@ class AllFeedsFragment : Fragment() {
         return false
     }
 
-    private fun retrieveAvailableVideos(mainItemIndex: Int, forStack: MutableList<Pair<Int, Int>>, forQueue: MutableList<Pair<Int, Int>>){
-        val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
-        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
-        customGridGroup?.let {
-            for (i in 0 until it.size) {
-                val view = it.getChildAt(i)
-                val condition1 = customGridGroup.size <= 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
-                val condition2 = customGridGroup.size > 9 && i < ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - 1
-                if ((condition1 || condition2) && checkLoadingVideoViewIsVisible(view)) {
-                    if(FeedCtrl.isEmpty()){
-                        FeedCtrl.addToLast(mainItemIndex, i)
-                    } else{
-                        val (firstItemIndex, firstVideoIndex) = FeedCtrl.peekFirst()
-                        if(firstItemIndex != -1){
-                            val condition1 = mainItemIndex < firstItemIndex
-                            val condition2 = mainItemIndex == firstItemIndex && i < firstVideoIndex
-                            if(condition1 || condition2){
-                                forStack.add(Pair(mainItemIndex, i))
+    fun retrieveAllVisibleVideosOnScreen(visibleFeeds: List<Int>){
+        val forStack = mutableListOf<Pair<Int, Int>>()
+        val forQueue = mutableListOf<Pair<Int, Int>>()
+        visibleFeeds.forEach { feedIdx ->
+            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(feedIdx)
+            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+            customGridGroup?.let{
+                for(i in 0 until it.size){
+                    val view = it.getChildAt(i)
+                    if (checkLoadingVideoViewIsVisible(view)) {
+                        if(FeedCtrl.isEmpty()){
+                            FeedCtrl.addToLast(feedIdx, i)
+                        } else{
+                            val (firstItemIndex, firstVideoIndex) = FeedCtrl.peekFirst()
+                            if(firstItemIndex != -1){
+                                val condition1 = feedIdx < firstItemIndex
+                                val condition2 = feedIdx == firstItemIndex && i < firstVideoIndex
+                                if(condition1 || condition2){
+                                    forStack.add(Pair(feedIdx, i))
+                                }
+                            }
+
+                            val (lastItemIndex, lastVideoIndex) = FeedCtrl.peekLast()
+                            if(lastItemIndex != -1){
+                                val condition1 = feedIdx > lastItemIndex
+                                val condition2 = feedIdx == lastItemIndex && i > lastVideoIndex
+                                if(condition1 || condition2){
+                                    forQueue.add(Pair(feedIdx, i))
+                                }
                             }
                         }
 
-                        val (lastItemIndex, lastVideoIndex) = FeedCtrl.peekLast()
-                        if(lastItemIndex != -1){
-                            val condition1 = mainItemIndex > lastItemIndex
-                            val condition2 = mainItemIndex == lastItemIndex && i > lastVideoIndex
-                            if(condition1 || condition2){
-                                forQueue.add(Pair(mainItemIndex, i))
-                            }
-                        }
                     }
-
-                }
-            }
-
-        }
-    }
-
-
-    private fun calculateVisibilityVideoView() {
-        val (mainItemIndex, videoIndex) = FeedCtrl.peekFirst()
-        if (mainItemIndex != -1 && videoIndex != -1) {
-            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
-            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
-            val view = customGridGroup?.getChildAt(videoIndex)
-            view?.let {
-                if (it is LoadingVideoView){
-                     if(checkLoadingVideoViewIsVisible(it)){
-                         checkWhetherAllVideosArePlayingExceptMain(mainItemIndex, videoIndex)
-                         playVideoUtil()
-                    } else pauseVideoUtil()
                 }
             }
         }
-    }
 
-    private fun checkWhetherAllVideosArePlayingExceptMain(first: Int, second: Int){
-        for (item in FeedCtrl.videoDeque){
-            val (mainItemIndex, videoIndex) = item
-            val condition2 = mainItemIndex == first && videoIndex == second
-            if(condition2) continue
-            val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
-            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
-            val view = customGridGroup?.getChildAt(videoIndex)
-            if(view is LoadingVideoView && view.player.isPlaying){
-                view.pauseAndReleaseVideo()
-            }
+        forStack.reversed().forEach {
+            FeedCtrl.addToFirst(it.first, it.second)
+        }
+        forQueue.forEach {
+            FeedCtrl.addToLast(it.first, it.second)
         }
     }
+
+    private fun putIncomingVideoToQueue(){
+        Log.v("FeedFragment", "Compare two arrays $temporaryVideoSequence ${FeedCtrl.videoDeque}")
+        if(!FeedCtrl.compareDequeWithList(temporaryVideoSequence)){
+            if(temporaryVideoSequence.isEmpty()){
+                temporaryVideoSequence.addAll(FeedCtrl.videoDeque)
+            } else {
+                temporaryVideoSequence.clear()
+                temporaryVideoSequence.addAll(FeedCtrl.videoDeque)
+            }
+
+
+            val pair = FeedCtrl.peekFirst()
+            if(pair.first != -1 && pair.second != -1){
+                //Case we have video in queue
+                if(FeedCtrl.playingQueue.isEmpty()){
+                    //Case 1: No video available in playing queue
+                    FeedCtrl.popFirstSafely()
+                    FeedCtrl.playingQueue.add(pair)
+                } else {
+                    //Case 2: We have video in playing queue
+                    val (itemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
+                    if(itemIndex == pair.first && videoIndex == pair.second){
+                        //Case 2.1: The video in playing queue is the same as the video in queue
+                        FeedCtrl.popFirstSafely()
+                    } else {
+                        //Case 2.2: The video in playing queue is different from the video in queue
+                        Log.v("FeedFragment", "-----------------------")
+                        Log.v("FeedFragment", "Different ${FeedCtrl.playingQueue} ${FeedCtrl.videoDeque}")
+                        pauseVideoUtil()
+                        FeedCtrl.popFirstSafely()
+                        FeedCtrl.playingQueue.clear()
+                        FeedCtrl.playingQueue.add(pair)
+                        Log.v("FeedFragment", "Different ${FeedCtrl.playingQueue} ${FeedCtrl.videoDeque}")
+                        Log.v("FeedFragment", "-----------------------")
+                        temporaryVideoSequence.clear()
+                    }
+                }
+            } else {
+                //Case no video
+                while(FeedCtrl.playingQueue.isNotEmpty()){
+                    pauseVideoUtil()
+                    FeedCtrl.popFirstSafely()
+                }
+                temporaryVideoSequence.clear()
+            }
+
+
+        }
+    }
+
 
 }
