@@ -150,9 +150,6 @@ class AllFeedsFragment : Fragment() {
                     add(lastPartiallyIndex)
                 }.filter { it >= 0 }.toList()
 
-                //Step 0: Clear all videoDeque
-                FeedCtrl.videoDeque.clear()
-
                 //Step 1: Get all visible items
                 retrieveAllVisibleVideosOnScreen(indexLists)
 
@@ -343,8 +340,7 @@ class AllFeedsFragment : Fragment() {
     }
 
     fun retrieveAllVisibleVideosOnScreen(visibleFeeds: List<Int>){
-        val forStack = mutableListOf<Pair<Int, Int>>()
-        val forQueue = mutableListOf<Pair<Int, Int>>()
+        FeedCtrl.videoDeque.clear()
         visibleFeeds.forEach { feedIdx ->
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(feedIdx)
             val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
@@ -352,38 +348,10 @@ class AllFeedsFragment : Fragment() {
                 for(i in 0 until it.size){
                     val view = it.getChildAt(i)
                     if (checkLoadingVideoViewIsVisible(view)) {
-                        if(FeedCtrl.isEmpty()){
-                            FeedCtrl.addToLast(feedIdx, i)
-                        } else{
-                            val (firstItemIndex, firstVideoIndex) = FeedCtrl.peekFirst()
-                            if(firstItemIndex != -1){
-                                val condition1 = feedIdx < firstItemIndex
-                                val condition2 = feedIdx == firstItemIndex && i < firstVideoIndex
-                                if(condition1 || condition2){
-                                    forStack.add(Pair(feedIdx, i))
-                                }
-                            }
-
-                            val (lastItemIndex, lastVideoIndex) = FeedCtrl.peekLast()
-                            if(lastItemIndex != -1){
-                                val condition1 = feedIdx > lastItemIndex
-                                val condition2 = feedIdx == lastItemIndex && i > lastVideoIndex
-                                if(condition1 || condition2){
-                                    forQueue.add(Pair(feedIdx, i))
-                                }
-                            }
-                        }
-
+                        FeedCtrl.addToLast(feedIdx, i)
                     }
                 }
             }
-        }
-
-        forStack.reversed().forEach {
-            FeedCtrl.addToFirst(it.first, it.second)
-        }
-        forQueue.forEach {
-            FeedCtrl.addToLast(it.first, it.second)
         }
     }
 
@@ -425,15 +393,13 @@ class AllFeedsFragment : Fragment() {
                     }
                 }
             } else {
-                //Case no video
+                //Case no video in feeds
                 while(FeedCtrl.playingQueue.isNotEmpty()){
                     pauseVideoUtil()
                     FeedCtrl.popFirstSafely()
                 }
                 temporaryVideoSequence.clear()
             }
-
-
         }
     }
 

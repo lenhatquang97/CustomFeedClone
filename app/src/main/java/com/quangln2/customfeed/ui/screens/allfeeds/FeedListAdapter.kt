@@ -6,6 +6,7 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,7 +27,6 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.constants.ConstantSetup
-import com.quangln2.customfeed.data.controllers.FeedCtrl
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
 import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
@@ -278,22 +278,9 @@ class FeedListAdapter(
 
     }
 
-    override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
-        super.onViewDetachedFromWindow(holder)
-        if (holder is FeedItemViewHolder) {
-            val (mainItemIndex, videoIndex) = FeedCtrl.peekFirst()
-            if(mainItemIndex != -1 && videoIndex != -1) {
-                val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
-                val child = customGridGroup.getChildAt(videoIndex)
-                if (child is LoadingVideoView) {
-                    child.pauseAndReleaseVideo()
-                }
-            }
-        }
-    }
-
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         super.onViewRecycled(holder)
+        Log.v("FeedAdapter", "onViewRecycled")
         if (holder is FeedItemViewHolder) {
             val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
             for (i in 0 until customGridGroup.size) {

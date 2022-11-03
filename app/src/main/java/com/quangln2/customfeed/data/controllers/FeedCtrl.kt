@@ -8,9 +8,6 @@ object FeedCtrl {
     val playingQueue: Queue<Pair<Int, Int>> = LinkedList()
     var isLoadingToUpload = MutableLiveData<Int>().apply { value = -1 }
 
-
-
-    fun addToFirst(itemPosition: Int, i: Int) = videoDeque.addFirst(Pair(itemPosition, i))
     fun addToLast(itemPosition: Int, i: Int) = videoDeque.addLast(Pair(itemPosition, i))
     fun isEmpty(): Boolean = videoDeque.isEmpty()
     fun peekFirst(): Pair<Int, Int> = if(videoDeque.isEmpty()) Pair(-1, -1) else videoDeque.peekFirst()!!
