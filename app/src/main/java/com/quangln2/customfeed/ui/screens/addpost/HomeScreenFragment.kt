@@ -25,7 +25,6 @@ import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.quangln2.customfeed.R
-import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.constants.ConstantSetup
 import com.quangln2.customfeed.data.database.FeedDatabase
 import com.quangln2.customfeed.data.datasource.local.LocalDataSourceImpl
@@ -297,7 +296,7 @@ class HomeScreenFragment : Fragment() {
             when (val viewChild = listOfViews[i]) {
                 is CustomLayer -> {
                     val customLayerSize = listOfViews.filterIsInstance<CustomLayer>().size
-                    viewChild.addedImagesText.text = "+${listOfViews.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID - customLayerSize}"
+                    viewChild.addedImagesText.text = "+${listOfViews.size - ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID - customLayerSize}"
                     val layoutParams = ViewGroup.MarginLayoutParams(widthView,heightView).apply {
                         leftMargin = leftView
                         topMargin = topView

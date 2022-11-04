@@ -26,7 +26,6 @@ import com.bumptech.glide.request.target.Target
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.R
-import com.quangln2.customfeed.data.constants.ConstantClass
 import com.quangln2.customfeed.data.constants.ConstantSetup
 import com.quangln2.customfeed.data.models.uimodel.MyPostRender
 import com.quangln2.customfeed.data.models.uimodel.RectanglePoint
@@ -130,8 +129,8 @@ class FeedListAdapter(
             widthGrid: Int,
             contentPadding: Int
         ): Boolean {
-            if (i >= 8 && item.resources.size > ConstantClass.MAXIMUM_IMAGE_IN_A_GRID) {
-                val numbersOfAddedImages = item.resources.size - ConstantClass.MAXIMUM_IMAGE_IN_A_GRID
+            if (i >= 8 && item.resources.size > ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID) {
+                val numbersOfAddedImages = item.resources.size - ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID
                 val viewChild = CustomLayer(context)
 
                 val leftView = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
