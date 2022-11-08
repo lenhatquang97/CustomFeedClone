@@ -23,12 +23,8 @@ class ImageOrVideoFragment : Fragment() {
     private var currentVideoPosition: Long = -1
     private var urlTmp = ""
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentImageOrVideoBinding.inflate(inflater, container, false)
-
+    override fun onStart(){
+        super.onStart()
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
         val position = arguments?.getInt("position")
 
@@ -95,7 +91,13 @@ class ImageOrVideoFragment : Fragment() {
                 ) .into(binding.fullImageView)
             }
         }
+    }
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentImageOrVideoBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -113,11 +115,18 @@ class ImageOrVideoFragment : Fragment() {
         player.prepare()
     }
 
+    override fun onPause() {
+        super.onPause()
+        val mimeType = DownloadUtils.getMimeType(urlTmp)
+        if(mimeType != null && mimeType.contains("video")){
+            player.pause()
+        }
+    }
+
     override fun onStop() {
         super.onStop()
         val mimeType = DownloadUtils.getMimeType(urlTmp)
         if(mimeType != null && mimeType.contains("video")){
-            player.pause()
             player.release()
         }
     }

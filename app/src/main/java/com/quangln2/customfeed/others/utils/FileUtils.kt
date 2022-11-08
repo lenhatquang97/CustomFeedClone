@@ -55,19 +55,6 @@ object FileUtils {
         return true
     }
 
-    fun getPermissionForCall(context: Context, activity: Activity): Boolean {
-        val permissionCheck = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_PHONE_STATE
-        )
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.READ_PHONE_STATE), 1)
-            return false
-        }
-
-        return true
-    }
-
     fun getPermissionForStorageWithMultipleTimesDenial(context: Context): Boolean {
         val permissionCheck = ContextCompat.checkSelfPermission(
             context,

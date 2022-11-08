@@ -2,6 +2,9 @@ package com.quangln2.customfeed.ui.customview
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +15,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -33,9 +38,8 @@ class LoadingVideoView @JvmOverloads constructor(
     private var url = ""
     private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565)
     private var isMute = false
-    private var isReleased = false
+    var isReleased = false
     private var currentPosition = 0L
-
 
     constructor(context: Context, url: String, player: ExoPlayer) : this(context) {
         this.url = url
@@ -57,15 +61,17 @@ class LoadingVideoView @JvmOverloads constructor(
         crossButton = view.findViewById(R.id.cross_x)
         thumbnailView = view.findViewById(R.id.thumbnail_view)
 
-        thumbnailView.visibility = View.VISIBLE
-        progressBar.visibility = View.GONE
-        Glide.with(context).load(url).apply(requestOptions).into(thumbnailView)
+        Glide.with(context).load(url).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
+            override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                progressBar.visibility = View.GONE
+                thumbnailView.setImageDrawable(resource)
+            }
+        })
     }
 
 
     @SuppressLint("UseCompatLoadingForDrawables")
     private fun init() {
-
         val view = LayoutInflater.from(context).inflate(R.layout.loading_video_view, this, true)
         progressBar = view.findViewById(R.id.my_spinner)
         playButton = view.findViewById(R.id.play_button)
@@ -88,19 +94,21 @@ class LoadingVideoView @JvmOverloads constructor(
             }
         }
 
-        progressBar.visibility = View.VISIBLE
         playButton.visibility = View.VISIBLE
         playerView.visibility = View.INVISIBLE
-        thumbnailView.visibility = View.VISIBLE
 
-        Glide.with(context).load(url).apply(requestOptions).into(thumbnailView)
+        Glide.with(context).load(url).apply(requestOptions).placeholder(ColorDrawable(Color.parseColor("#aaaaaa"))).into(object : SimpleTarget<Drawable>() {
+            override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                progressBar.visibility = View.GONE
+                thumbnailView.setImageDrawable(resource)
+            }
+        })
 
         prepare()
     }
 
     private fun prepare() {
         playerView.player = player
-
         player.addListener(
             object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
@@ -133,7 +141,6 @@ class LoadingVideoView @JvmOverloads constructor(
                         playButton.visibility = View.VISIBLE
                     }
                 }
-
             }
         )
 
@@ -156,14 +163,12 @@ class LoadingVideoView @JvmOverloads constructor(
 
     fun playVideo() {
         playerView.visibility = View.VISIBLE
-        thumbnailView.visibility = View.INVISIBLE
 
         if (isReleased) {
             isReleased = false
             initPlayer()
             player.seekTo(currentPosition)
         }
-        progressBar.visibility = View.GONE
         playButton.visibility = View.INVISIBLE
         player.play()
     }
@@ -171,6 +176,13 @@ class LoadingVideoView @JvmOverloads constructor(
     fun pauseAndReleaseVideo(){
         pauseVideo()
         releaseVideo()
+
+        Glide.with(context).load(url).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
+            override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                progressBar.visibility = View.GONE
+                thumbnailView.setImageDrawable(resource)
+            }
+        })
     }
 
     fun pauseVideo() {

@@ -1,7 +1,6 @@
 package com.quangln2.customfeed.ui.screens.allfeeds
 
 import android.graphics.Rect
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,9 +15,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.SimpleTarget
-import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantSetup
@@ -34,7 +30,6 @@ import com.quangln2.customfeed.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeed.data.repository.FeedRepository
 import com.quangln2.customfeed.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeed.others.callback.EventFeedCallback
-import com.quangln2.customfeed.others.utils.DownloadUtils
 import com.quangln2.customfeed.ui.customview.LoadingVideoView
 import com.quangln2.customfeed.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeed.ui.viewmodel.ViewModelFactory
@@ -107,6 +102,7 @@ class AllFeedsFragment : Fragment() {
         viewModel.getAllFeedsWithPreloadCache()
     }
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -125,6 +121,10 @@ class AllFeedsFragment : Fragment() {
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    //Step 3: Play video
+                    playVideoUtil()
+
+                    //Download video resource
                     val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
                     if (firstVisibleItemPosition > 0) {
                         val item = viewModel.uploadLists.value?.get(firstVisibleItemPosition - 1)
@@ -134,8 +134,6 @@ class AllFeedsFragment : Fragment() {
                     }
                 }
             }
-
-
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager as LinearLayoutManager
                 val firstPartiallyIndex = manager.findFirstVisibleItemPosition()
@@ -156,8 +154,10 @@ class AllFeedsFragment : Fragment() {
                 //Step 2: put incoming video to play
                 putIncomingVideoToQueue()
 
-                //Step 3: Play video
-                playVideoUtil()
+                //Case when first load into fragment
+                if(binding.allFeeds.scrollState == RecyclerView.SCROLL_STATE_IDLE){
+                    playVideoUtil()
+                }
             }
         })
 
@@ -172,7 +172,6 @@ class AllFeedsFragment : Fragment() {
                         listsOfPostRender.add(addNewPostItem)
                         it.forEach { itr ->
                             val myPostRender = MyPostRender.convertMyPostToMyPostRender(itr)
-                            retrieveFirstImageOrFirstVideo(myPostRender)
                             listsOfPostRender.add(myPostRender)
                         }
                         withContext(Dispatchers.Main) {
@@ -228,6 +227,7 @@ class AllFeedsFragment : Fragment() {
 
             }
         }
+
         return binding.root
     }
 
@@ -271,7 +271,7 @@ class AllFeedsFragment : Fragment() {
             val view = customGridGroup?.getChildAt(videoIndex)
 
             if (view is LoadingVideoView) {
-                view.playVideo()
+                (view as LoadingVideoView).playVideo()
                 view.player.addListener(
                     object : Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -306,23 +306,6 @@ class AllFeedsFragment : Fragment() {
 
     }
 
-    private fun retrieveFirstImageOrFirstVideo(myPostRender: MyPostRender) {
-        if (myPostRender.resources.size > 0) {
-            val url = myPostRender.resources[0].url
-            val size = myPostRender.resources[0].size
-            val doesLocalFileExist = DownloadUtils.doesLocalFileExist(url, requireContext())
-            val isValidFile = DownloadUtils.isValidFile(url, requireContext(), size)
-            val temporaryFilePath = DownloadUtils.getTemporaryFilePath(url, requireContext())
-            val value = if (doesLocalFileExist && isValidFile) temporaryFilePath else url
-            Glide.with(requireContext()).load(value).into(object : SimpleTarget<Drawable>() {
-                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                    myPostRender.firstItemWidth = resource.intrinsicWidth
-                    myPostRender.firstItemHeight = resource.intrinsicHeight
-                }
-            })
-        }
-    }
-
     private fun checkLoadingVideoViewIsVisible(view: View): Boolean{
         if(view is LoadingVideoView){
             view.getLocalVisibleRect(currentViewRect)
@@ -333,7 +316,9 @@ class AllFeedsFragment : Fragment() {
             return if (isOutOfBoundsAtTheBottom || isOutOfBoundsOnTheTop) {
                 false
             } else {
-                val percents = height * 100 / view.height
+                val tmp = view.height
+                if(tmp == 0) false
+                val percents = height * 100 / tmp
                 percents >= 50
             }
         }

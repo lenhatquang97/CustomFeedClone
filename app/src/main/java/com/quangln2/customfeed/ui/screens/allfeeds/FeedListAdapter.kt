@@ -289,8 +289,6 @@ class FeedListAdapter(
                 val child = customGridGroup.getChildAt(i)
                 if (child is LoadingVideoView) {
                     child.pauseAndReleaseVideo()
-                } else if(child is ImageView){
-                    Glide.with(context).clear(child)
                 }
             }
 
