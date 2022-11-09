@@ -118,6 +118,7 @@ class FeedViewModel(
                 } else{
                     _feedLoadingCode.value = response.code()
                     loadCache()
+                    onNotChangedData()
                 }
 
             }

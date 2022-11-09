@@ -47,7 +47,9 @@ class AllFeedsFragment : Fragment() {
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
     private val currentViewRect by lazy { Rect() }
     private val positionDeletedOrRefreshed by lazy { AtomicInteger(-1) }
-    private lateinit var player: ExoPlayer
+    private val player by lazy {
+        ExoPlayer.Builder(requireContext()).build()
+    }
     var feedVideoItemPlaying = Pair(-1, -1)
 
     val viewModel: FeedViewModel by activityViewModels {
@@ -101,7 +103,6 @@ class AllFeedsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        player = ExoPlayer.Builder(requireContext()).build()
         viewModel.getAllFeedsWithPreloadCache()
         intializePlayerListener()
 
@@ -126,9 +127,7 @@ class AllFeedsFragment : Fragment() {
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    if(!isVideoPlaying()){
-                        playVideoUtil()
-                    }
+                    if(!isVideoPlaying()) playVideoUtil()
 
                     //Download video resource
                     val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
@@ -273,13 +272,13 @@ class AllFeedsFragment : Fragment() {
         }
     }
     private fun isVideoPlaying(): Boolean {
-        if(FeedCtrl.playingQueue.isEmpty()) return false
-        val (pausedItemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
+        if(feedVideoItemPlaying.first == -1 && feedVideoItemPlaying.second == -1) return false
+        val (pausedItemIndex, videoIndex) = feedVideoItemPlaying
         val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
         val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex)
         if (view is LoadingVideoView) {
-            return player.isPlaying
+            return view.playerView.player?.isPlaying ?: false
         }
         return false
     }
@@ -294,8 +293,9 @@ class AllFeedsFragment : Fragment() {
             val view = customGridGroup?.getChildAt(videoIndex)
 
 
-            if (view is LoadingVideoView) {
+            if (view != null && view is LoadingVideoView) {
                 feedVideoItemPlaying = Pair(mainItemIndex, videoIndex)
+                println("Playing video at $mainItemIndex, $videoIndex")
                 view.playVideo(player)
             }
         }
@@ -306,12 +306,9 @@ class AllFeedsFragment : Fragment() {
             object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     super.onPlaybackStateChanged(playbackState)
-
                     val (mainItemIndex, videoIndex) = feedVideoItemPlaying
                     if (playbackState == Player.STATE_ENDED) {
-                        player.release()
-                        player = ExoPlayer.Builder(requireContext()).build()
-                        player.addListener(this)
+                        onEndPlayVideo(player)
                         if(FeedCtrl.videoDeque.isNotEmpty()){
                             FeedCtrl.playingQueue.remove()
                             val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
@@ -333,6 +330,15 @@ class AllFeedsFragment : Fragment() {
                 }
             }
         )
+    }
+    private fun onEndPlayVideo(player: ExoPlayer){
+        val (mainItemIndex, videoIndex) = feedVideoItemPlaying
+        val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
+        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+        val view = customGridGroup?.getChildAt(videoIndex)
+        if(view != null && view is LoadingVideoView){
+            view.onEndPlayVideo(player)
+        }
     }
 
     private fun checkLoadingVideoViewIsVisible(view: View): Boolean{

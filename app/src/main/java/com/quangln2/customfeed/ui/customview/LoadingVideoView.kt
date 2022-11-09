@@ -19,7 +19,6 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.controllers.FeedCtrl.isMute
@@ -90,23 +89,6 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     private fun prepare(player: ExoPlayer) {
-        player.addListener(
-            object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    super.onPlaybackStateChanged(playbackState)
-                    when (playbackState) {
-                        Player.STATE_ENDED -> {
-                            thumbnailView.visibility = View.VISIBLE
-                            playButton.visibility = View.VISIBLE
-                            currentPosition = player.currentPosition
-                            playerView.player = null
-                        }
-                    }
-                }
-
-            }
-        )
-
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
@@ -147,6 +129,13 @@ class LoadingVideoView @JvmOverloads constructor(
         currentPosition = player.currentPosition
         player.pause()
         player.seekTo(0)
+        playerView.player = null
+    }
+
+    fun onEndPlayVideo(player: ExoPlayer){
+        thumbnailView.visibility = View.VISIBLE
+        playButton.visibility = View.VISIBLE
+        currentPosition = 0
         playerView.player = null
     }
 }
