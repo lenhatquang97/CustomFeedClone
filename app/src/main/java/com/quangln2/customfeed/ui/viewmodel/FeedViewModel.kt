@@ -71,7 +71,7 @@ class FeedViewModel(
         getAllFeeds()
     }
 
-    fun getAllFeeds() {
+    fun getAllFeeds(onNotChangedData: () -> Unit = {}) {
         getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
             override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
                 if (response.code() == 200) {
@@ -111,6 +111,8 @@ class FeedViewModel(
                         _feedLoadingCode.postValue(response.code())
                         if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems)){
                             _uploadLists.postValue(availableItems.toMutableList())
+                        } else {
+                            onNotChangedData()
                         }
                     }
                 } else{

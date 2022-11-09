@@ -214,7 +214,11 @@ class AllFeedsFragment : Fragment() {
             binding.noPostId.imageView.visibility = View.VISIBLE
             binding.noPostId.textNote.text = resources.getString(R.string.loading)
             positionDeletedOrRefreshed.set(1)
-            viewModel.getAllFeeds()
+            val onNotChangedData = fun(){
+                binding.swipeRefreshLayout.isRefreshing = false
+            }
+            viewModel.getAllFeeds(onNotChangedData)
+
         }
 
         FeedCtrl.isLoadingToUpload.observe(viewLifecycleOwner) {
