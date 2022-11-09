@@ -12,9 +12,12 @@ data class MyPost(
     @ColumnInfo(name = "avatar") var avatar: String,
     @ColumnInfo(name = "created_time") var createdTime: String,
     @ColumnInfo(name = "caption") var caption: String,
-    @ColumnInfo(name = "resources") var resources: MutableList<OfflineResource>
+    @ColumnInfo(name = "resources") var resources: MutableList<OfflineResource>,
+    @ColumnInfo(name = "firstWidth") var firstWidth: Int,
+    @ColumnInfo(name = "firstHeight") var firstHeight: Int,
 ) {
-    constructor() : this(UUID.randomUUID().toString(), "", "", "", "", mutableListOf())
+    constructor() : this(UUID.randomUUID().toString(), "", "", "", "", mutableListOf(), 0, 0)
+
 
     override fun equals(other: Any?): Boolean {
         if (other is MyPost) {
@@ -24,12 +27,15 @@ data class MyPost(
             val sameCreatedTime = createdTime == other.createdTime
             val sameCaption = caption == other.caption
             val sameResources = resources.size == other.resources.size
+            val sameFirstWidth = firstWidth == other.firstWidth
+            val sameFirstHeight = firstHeight == other.firstHeight
+
             for ((a, b) in resources.zip(other.resources)) {
                 if (a != b) {
                     return false
                 }
             }
-            return sameFeedId && sameName && sameAvatar && sameCreatedTime && sameCaption && sameResources
+            return sameFeedId && sameName && sameAvatar && sameCreatedTime && sameCaption && sameResources && sameFirstWidth && sameFirstHeight
         }
         return false
     }

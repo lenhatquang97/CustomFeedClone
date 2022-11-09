@@ -59,7 +59,9 @@ class FeedViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val offlinePosts = getAllInDatabaseUseCase()
             _feedLoadingCode.postValue(EnumFeedLoadingCode.OFFLINE.value)
-            _uploadLists.postValue(offlinePosts.toMutableList())
+            if(offlinePosts.isNotEmpty()) {
+                _uploadLists.postValue(offlinePosts.toMutableList())
+            }
         }
 
     }
@@ -107,9 +109,14 @@ class FeedViewModel(
                         //get available items but not in deleted feeds
                         val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
                         _feedLoadingCode.postValue(response.code())
-                        _uploadLists.postValue(availableItems.toMutableList())
+                        if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems)){
+                            _uploadLists.postValue(availableItems.toMutableList())
+                        }
                     }
-                } else loadCache()
+                } else{
+                    _feedLoadingCode.value = response.code()
+                    loadCache()
+                }
 
             }
 
@@ -118,6 +125,15 @@ class FeedViewModel(
             }
 
         })
+    }
+
+    fun compareDBPostsAndFetchPosts(dbPosts: List<MyPost>, fetchedPost: List<MyPost>): Boolean{
+        if(dbPosts.size != fetchedPost.size) return false
+        for((a,b) in dbPosts.zip(fetchedPost)){
+            if(a != b) return false
+        }
+        return true
+
     }
 
     fun getFeedItem(feedId: String): MyPostRender {

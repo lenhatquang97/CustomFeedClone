@@ -161,43 +161,38 @@ class AllFeedsFragment : Fragment() {
             }
         })
 
+        viewModel.feedLoadingCode.observe(viewLifecycleOwner){
+            val allDefinedCodes = listOf(-1, 0, 200)
+            if(it !in allDefinedCodes){
+                binding.noPostId.apply {
+                    imageView.visibility = View.GONE
+                    textNote.visibility = View.GONE
+                }
+                binding.retryButton.visibility = View.VISIBLE
+            } else if(it != EnumFeedLoadingCode.SUCCESS.value && it != EnumFeedLoadingCode.INITIAL.value){
+                binding.noPostId.root.visibility = View.VISIBLE
+            } else if(it == EnumFeedLoadingCode.SUCCESS.value){
+                binding.noPostId.root.visibility = View.GONE
+            }
+        }
+
         viewModel.uploadLists.observe(viewLifecycleOwner) {
             it?.apply {
-                binding.noPostId.root.visibility = View.VISIBLE
-                if (viewModel.feedLoadingCode.value == EnumFeedLoadingCode.SUCCESS.value || it.isNotEmpty()) {
-                    binding.noPostId.root.visibility = View.INVISIBLE
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        val listsOfPostRender = mutableListOf<MyPostRender>()
-                        val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
-                        listsOfPostRender.add(addNewPostItem)
-                        it.forEach { itr ->
-                            val myPostRender = MyPostRender.convertMyPostToMyPostRender(itr)
-                            listsOfPostRender.add(myPostRender)
-                        }
-                        withContext(Dispatchers.Main) {
-                            adapterVal.submitList(listsOfPostRender.toMutableList()){
-                                if(positionDeletedOrRefreshed.get() >= 1){
-                                    binding.allFeeds.scrollToPosition(positionDeletedOrRefreshed.get() - 1)
-                                    positionDeletedOrRefreshed.set(-1)
-                                }
-                            }
-                        }
+                binding.noPostId.root.visibility = View.INVISIBLE
+                binding.retryButton.visibility = View.GONE
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val listsOfPostRender = mutableListOf<MyPostRender>()
+                    val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+                    listsOfPostRender.add(addNewPostItem)
+                    it.forEach { itr ->
+                        val myPostRender = MyPostRender.convertMyPostToMyPostRender(itr)
+                        listsOfPostRender.add(myPostRender)
                     }
-                } else {
-                    val feedLoadingCode = viewModel.feedLoadingCode.value
-                    if (feedLoadingCode != null) {
-                        if (feedLoadingCode != EnumFeedLoadingCode.SUCCESS.value && feedLoadingCode != EnumFeedLoadingCode.INITIAL.value) {
-                            binding.noPostId.root.visibility = View.VISIBLE
-                        } else if (feedLoadingCode == EnumFeedLoadingCode.SUCCESS.value) {
-                            binding.noPostId.root.visibility = View.GONE
-                            val listsOfPostRender = mutableListOf<MyPostRender>()
-                            val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
-                            listsOfPostRender.add(addNewPostItem)
-                            adapterVal.submitList(listsOfPostRender.toMutableList()){
-                                if(positionDeletedOrRefreshed.get() >= 1){
-                                    binding.allFeeds.scrollToPosition(positionDeletedOrRefreshed.get() - 1)
-                                    positionDeletedOrRefreshed.set(-1)
-                                }
+                    withContext(Dispatchers.Main) {
+                        adapterVal.submitList(listsOfPostRender.toMutableList()){
+                            if(positionDeletedOrRefreshed.get() >= 1){
+                                binding.allFeeds.scrollToPosition(positionDeletedOrRefreshed.get() - 1)
+                                positionDeletedOrRefreshed.set(-1)
                             }
                         }
                     }
@@ -205,6 +200,14 @@ class AllFeedsFragment : Fragment() {
                 binding.swipeRefreshLayout.isRefreshing = false
             }
 
+        }
+
+        binding.retryButton.setOnClickListener {
+            println("OnClick")
+            binding.noPostId.imageView.visibility = View.VISIBLE
+            binding.noPostId.textNote.visibility = View.VISIBLE
+            binding.retryButton.visibility = View.GONE
+            viewModel.getAllFeedsWithPreloadCache()
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
@@ -224,7 +227,6 @@ class AllFeedsFragment : Fragment() {
                 binding.noPostId.textNote.text = resources.getString(R.string.loading)
                 viewModel.getAllFeeds()
                 FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.UNDEFINED.value
-
             }
         }
 
@@ -271,7 +273,7 @@ class AllFeedsFragment : Fragment() {
             val view = customGridGroup?.getChildAt(videoIndex)
 
             if (view is LoadingVideoView) {
-                (view as LoadingVideoView).playVideo()
+                view.playVideo()
                 view.player.addListener(
                     object : Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {

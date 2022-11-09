@@ -13,6 +13,9 @@ fun convertFromUploadPostToMyPost(uploadPost: UploadPost, oldPost: List<MyPost>)
     myPost.name = uploadPost.name
     myPost.caption = uploadPost.caption
     myPost.createdTime = uploadPost.createdTime
+    myPost.firstWidth = uploadPost.firstWidth
+    myPost.firstHeight = uploadPost.firstHeight
+
     if (uploadPost.imagesAndVideos != null && uploadPost.imagesAndVideos.size > 0) {
         for (i in 0 until uploadPost.imagesAndVideos.size) {
             val value = uploadPost.imagesAndVideos[i]
