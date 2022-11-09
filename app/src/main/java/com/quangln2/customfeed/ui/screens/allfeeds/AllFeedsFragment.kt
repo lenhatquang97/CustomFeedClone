@@ -15,6 +15,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantSetup
@@ -46,6 +47,7 @@ class AllFeedsFragment : Fragment() {
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
     private val currentViewRect by lazy { Rect() }
     private val positionDeletedOrRefreshed by lazy { AtomicInteger(-1) }
+    private val player by lazy {ExoPlayer.Builder(requireContext()).build()}
 
     val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
@@ -108,7 +110,7 @@ class AllFeedsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentAllFeedsBinding.inflate(inflater, container, false)
-        adapterVal = FeedListAdapter(requireContext(), eventCallback)
+        adapterVal = FeedListAdapter(requireContext(), eventCallback, player)
         adapterVal.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         val linearLayoutManager = LinearLayoutManager(requireContext())
 
@@ -122,7 +124,10 @@ class AllFeedsFragment : Fragment() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     //Step 3: Play video
-                    playVideoUtil()
+                    if(!isVideoPlaying()){
+                        playVideoUtil()
+                    }
+
 
                     //Download video resource
                     val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
@@ -197,13 +202,11 @@ class AllFeedsFragment : Fragment() {
                         }
                     }
                 }
-                binding.swipeRefreshLayout.isRefreshing = false
             }
 
         }
 
         binding.retryButton.setOnClickListener {
-            println("OnClick")
             binding.noPostId.imageView.visibility = View.VISIBLE
             binding.noPostId.textNote.visibility = View.VISIBLE
             binding.retryButton.visibility = View.GONE
@@ -254,7 +257,7 @@ class AllFeedsFragment : Fragment() {
         val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex)
         if (view is LoadingVideoView) {
-            view.pauseAndReleaseVideo()
+            view.pauseAndReleaseVideo(player)
         }
     }
 
@@ -265,11 +268,23 @@ class AllFeedsFragment : Fragment() {
         val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex)
         if (view is LoadingVideoView) {
-            view.pauseAndReleaseVideo()
+            view.pauseAndReleaseVideo(player)
         }
+    }
+    private fun isVideoPlaying(): Boolean {
+        if(FeedCtrl.playingQueue.isEmpty()) return false
+        val (pausedItemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
+        val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
+        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+        val view = customGridGroup?.getChildAt(videoIndex)
+        if (view is LoadingVideoView) {
+            return player.isPlaying
+        }
+        return false
     }
 
     private fun playVideoUtil() {
+        println("Play video util")
         if(FeedCtrl.playingQueue.isNotEmpty()){
             val (mainItemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
@@ -277,14 +292,14 @@ class AllFeedsFragment : Fragment() {
             val view = customGridGroup?.getChildAt(videoIndex)
 
             if (view is LoadingVideoView) {
-                view.playVideo()
-                view.player.addListener(
+                view.playVideo(player)
+                player.addListener(
                     object : Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             super.onPlaybackStateChanged(playbackState)
                             if (playbackState == Player.STATE_ENDED) {
-                                view.player.seekTo(0)
-                                view.pauseAndReleaseVideo()
+                                player.seekTo(0)
+                                view.pauseAndReleaseVideo(player)
 
                                 if(FeedCtrl.videoDeque.isNotEmpty()){
                                     FeedCtrl.playingQueue.remove()

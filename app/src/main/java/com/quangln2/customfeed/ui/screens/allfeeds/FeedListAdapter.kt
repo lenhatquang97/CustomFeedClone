@@ -23,7 +23,6 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
-import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeed.R
 import com.quangln2.customfeed.data.constants.ConstantSetup
@@ -43,7 +42,8 @@ import java.util.concurrent.Executors
 
 class FeedListAdapter(
     private var context: Context,
-    private val eventFeedCallback: EventFeedCallback
+    private val eventFeedCallback: EventFeedCallback,
+    private val player: ExoPlayer
 ) :
     androidx.recyclerview.widget.ListAdapter<MyPostRender, RecyclerView.ViewHolder>(
         AsyncDifferConfig.Builder(FeedListDiffCallback())
@@ -159,6 +159,8 @@ class FeedListAdapter(
             val contentPadding = 16
             val marginHorizontalSum = 16 + 32
             val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
+//            val renderersFactory = DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
+
 
             loadBasicInfoAboutFeed(item)
             loadFeedDescription(item)
@@ -180,10 +182,7 @@ class FeedListAdapter(
                     val heightView = (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
 
                     if (mimeType != null && mimeType.contains("video")) {
-                        val renderersFactory =
-                            DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
-                        val player = ExoPlayer.Builder(context, renderersFactory).build()
-                        val videoView = LoadingVideoView(context, value, player)
+                        val videoView = LoadingVideoView(context, value)
                         val layoutParams = ViewGroup.MarginLayoutParams(widthView, heightView).apply {
                             leftMargin = leftView
                             topMargin = topView
@@ -195,7 +194,7 @@ class FeedListAdapter(
                                 stringArr.add(it.url)
                             }
                             eventFeedCallback.onClickVideoView(
-                                videoView.player.currentPosition,
+                                videoView.currentPosition,
                                 item.resources[i].url,
                                 stringArr
                             )
@@ -288,7 +287,7 @@ class FeedListAdapter(
             for (i in 0 until customGridGroup.size) {
                 val child = customGridGroup.getChildAt(i)
                 if (child is LoadingVideoView) {
-                    child.pauseAndReleaseVideo()
+                    child.pauseAndReleaseVideo(player)
                 }
             }
 

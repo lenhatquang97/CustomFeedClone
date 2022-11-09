@@ -33,20 +33,13 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var soundButton: ImageView
     lateinit var playerView: PlayerView
     lateinit var crossButton: ImageView
-    lateinit var player: ExoPlayer
     lateinit var thumbnailView: ImageView
 
     private var url = ""
     private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565)
-    private var isReleased = false
-    private var currentPosition = 0L
+    private var isPaused = false
+    var currentPosition = 0L
 
-    constructor(context: Context, url: String, player: ExoPlayer) : this(context) {
-        this.url = url
-        this.player = player
-        initFindById()
-        init()
-    }
     constructor(context: Context, url: String) : this(context) {
         this.url = url
         initFindById()
@@ -64,7 +57,7 @@ class LoadingVideoView @JvmOverloads constructor(
 
 
     private fun initForShowThumbnail() {
-        Glide.with(context).load(url).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
+        Glide.with(context).load(url).apply(requestOptions).placeholder(ColorDrawable(Color.parseColor("#aaaaaa"))).into(object : SimpleTarget<Drawable>() {
             override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                 progressBar.visibility = View.GONE
                 thumbnailView.setImageDrawable(resource)
@@ -74,7 +67,8 @@ class LoadingVideoView @JvmOverloads constructor(
 
 
     @SuppressLint("UseCompatLoadingForDrawables")
-    private fun init() {
+    private fun init(player: ExoPlayer) {
+        playerView.player = player
         playButton.visibility = View.VISIBLE
         playerView.visibility = View.INVISIBLE
 
@@ -93,18 +87,10 @@ class LoadingVideoView @JvmOverloads constructor(
             isMute.value = !currentState
         }
 
-        Glide.with(context).load(url).apply(requestOptions).placeholder(ColorDrawable(Color.parseColor("#aaaaaa"))).into(object : SimpleTarget<Drawable>() {
-            override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                progressBar.visibility = View.GONE
-                thumbnailView.setImageDrawable(resource)
-            }
-        })
-
-        prepare()
+        prepare(player)
     }
 
-    private fun prepare() {
-        playerView.player = player
+    private fun prepare(player: ExoPlayer) {
         player.addListener(
             object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
@@ -123,30 +109,6 @@ class LoadingVideoView @JvmOverloads constructor(
         player.setMediaItem(mediaItem)
         player.prepare()
     }
-
-    private fun initPlayer() {
-        player = ExoPlayer.Builder(context).build()
-        playerView.player = player
-
-        player.addListener(
-            object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    super.onPlaybackStateChanged(playbackState)
-                    if (playbackState == Player.STATE_READY) {
-                        progressBar.visibility = View.INVISIBLE
-                    } else if (playbackState == Player.STATE_IDLE) {
-                        playButton.visibility = View.VISIBLE
-                    }
-                }
-            }
-        )
-
-        val mediaItem = MediaItem.fromUri(url)
-        player.setMediaItem(mediaItem)
-        player.prepare()
-
-    }
-
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
 
         val width = MeasureSpec.getSize(widthMeasureSpec)
@@ -158,23 +120,18 @@ class LoadingVideoView @JvmOverloads constructor(
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
-    fun playVideo() {
+    fun playVideo(player: ExoPlayer) {
+        init(player)
         playerView.visibility = View.VISIBLE
         progressBar.visibility = View.GONE
-        if (isReleased) {
-            isReleased = false
-            initPlayer()
-            player.seekTo(currentPosition)
-        }
         playButton.visibility = View.INVISIBLE
         val isMuted = isMute.value
         player.volume = if(isMuted == true) 0f else 1f
         player.play()
     }
 
-    fun pauseAndReleaseVideo(){
-        pauseVideo()
-        releaseVideo()
+    fun pauseAndReleaseVideo(player: ExoPlayer){
+        pauseVideo(player)
 
         Glide.with(context).load(url).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
             override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
@@ -184,18 +141,13 @@ class LoadingVideoView @JvmOverloads constructor(
         })
     }
 
-    private fun pauseVideo() {
+    private fun pauseVideo(player: ExoPlayer) {
         playerView.visibility = View.INVISIBLE
         thumbnailView.visibility = View.VISIBLE
         playButton.visibility = View.VISIBLE
-        player.pause()
-
+        isPaused = true
         currentPosition = player.currentPosition
+        player.pause()
+        playerView.player = null
     }
-
-    private fun releaseVideo() {
-        isReleased = true
-        player.release()
-    }
-
 }

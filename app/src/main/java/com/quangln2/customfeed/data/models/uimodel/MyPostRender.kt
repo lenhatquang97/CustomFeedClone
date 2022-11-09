@@ -20,7 +20,6 @@ data class MyPostRender(
 
     companion object {
         fun convertMyPostToMyPostRender(myPost: MyPost, typeOfPost: TypeOfPost = TypeOfPost.POST): MyPostRender {
-            println("convertMyPostToMyPostRender ${myPost.firstHeight} ${myPost.firstWidth}")
             return MyPostRender(
                 feedId = myPost.feedId,
                 typeOfPost = typeOfPost,
