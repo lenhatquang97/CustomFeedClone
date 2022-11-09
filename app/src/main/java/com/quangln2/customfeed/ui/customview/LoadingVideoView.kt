@@ -30,14 +30,13 @@ class LoadingVideoView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyleAttr) {
     lateinit var progressBar: ProgressBar
     lateinit var playButton: ImageView
-    lateinit var soundButton: ImageView
+    private lateinit var soundButton: ImageView
     lateinit var playerView: PlayerView
     lateinit var crossButton: ImageView
     lateinit var thumbnailView: ImageView
 
     private var url = ""
     private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565)
-    private var isPaused = false
     var currentPosition = 0L
 
     constructor(context: Context, url: String) : this(context) {
@@ -53,6 +52,11 @@ class LoadingVideoView @JvmOverloads constructor(
         playerView = view.findViewById(R.id.player_view)
         crossButton = view.findViewById(R.id.cross_x)
         thumbnailView = view.findViewById(R.id.thumbnail_view)
+
+        soundButton.setOnClickListener {
+            val currentState = isMute.value ?: false
+            isMute.value = !currentState
+        }
     }
 
 
@@ -82,11 +86,6 @@ class LoadingVideoView @JvmOverloads constructor(
             }
         }
 
-        soundButton.setOnClickListener {
-            val currentState = isMute.value ?: false
-            isMute.value = !currentState
-        }
-
         prepare(player)
     }
 
@@ -95,10 +94,13 @@ class LoadingVideoView @JvmOverloads constructor(
             object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     super.onPlaybackStateChanged(playbackState)
-                    if (playbackState == Player.STATE_READY) {
-                        progressBar.visibility = View.INVISIBLE
-                    } else if (playbackState == Player.STATE_IDLE) {
-                        playButton.visibility = View.VISIBLE
+                    when (playbackState) {
+                        Player.STATE_ENDED -> {
+                            thumbnailView.visibility = View.VISIBLE
+                            playButton.visibility = View.VISIBLE
+                            currentPosition = player.currentPosition
+                            playerView.player = null
+                        }
                     }
                 }
 
@@ -122,9 +124,13 @@ class LoadingVideoView @JvmOverloads constructor(
 
     fun playVideo(player: ExoPlayer) {
         init(player)
+
+        player.seekTo(currentPosition)
         playerView.visibility = View.VISIBLE
-        progressBar.visibility = View.GONE
         playButton.visibility = View.INVISIBLE
+        thumbnailView.visibility = View.GONE
+        progressBar.visibility = View.GONE
+
         val isMuted = isMute.value
         player.volume = if(isMuted == true) 0f else 1f
         player.play()
@@ -132,22 +138,15 @@ class LoadingVideoView @JvmOverloads constructor(
 
     fun pauseAndReleaseVideo(player: ExoPlayer){
         pauseVideo(player)
-
-        Glide.with(context).load(url).apply(requestOptions).into(object : SimpleTarget<Drawable>() {
-            override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                progressBar.visibility = View.GONE
-                thumbnailView.setImageDrawable(resource)
-            }
-        })
     }
 
     private fun pauseVideo(player: ExoPlayer) {
         playerView.visibility = View.INVISIBLE
         thumbnailView.visibility = View.VISIBLE
         playButton.visibility = View.VISIBLE
-        isPaused = true
         currentPosition = player.currentPosition
         player.pause()
+        player.seekTo(0)
         playerView.player = null
     }
 }

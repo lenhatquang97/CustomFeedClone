@@ -47,12 +47,12 @@ class AllFeedsFragment : Fragment() {
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
     private val currentViewRect by lazy { Rect() }
     private val positionDeletedOrRefreshed by lazy { AtomicInteger(-1) }
-    private val player by lazy {ExoPlayer.Builder(requireContext()).build()}
+    private lateinit var player: ExoPlayer
+    var feedVideoItemPlaying = Pair(-1, -1)
 
     val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
-
 
     private val temporaryVideoSequence = mutableListOf<Pair<Int, Int>>()
 
@@ -101,7 +101,10 @@ class AllFeedsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        player = ExoPlayer.Builder(requireContext()).build()
         viewModel.getAllFeedsWithPreloadCache()
+        intializePlayerListener()
+
     }
 
 
@@ -123,11 +126,9 @@ class AllFeedsFragment : Fragment() {
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    //Step 3: Play video
                     if(!isVideoPlaying()){
                         playVideoUtil()
                     }
-
 
                     //Download video resource
                     val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
@@ -283,48 +284,55 @@ class AllFeedsFragment : Fragment() {
         return false
     }
 
+
+
     private fun playVideoUtil() {
-        println("Play video util")
         if(FeedCtrl.playingQueue.isNotEmpty()){
             val (mainItemIndex, videoIndex) = FeedCtrl.playingQueue.peek()!!
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
             val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
             val view = customGridGroup?.getChildAt(videoIndex)
 
-            if (view is LoadingVideoView) {
-                view.playVideo(player)
-                player.addListener(
-                    object : Player.Listener {
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            super.onPlaybackStateChanged(playbackState)
-                            if (playbackState == Player.STATE_ENDED) {
-                                player.seekTo(0)
-                                view.pauseAndReleaseVideo(player)
 
-                                if(FeedCtrl.videoDeque.isNotEmpty()){
-                                    FeedCtrl.playingQueue.remove()
-                                    val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
-                                    if(hasDuplicatedVideo.isNotEmpty()){
-                                        while(FeedCtrl.videoDeque.isNotEmpty()){
-                                            val pair = FeedCtrl.videoDeque.remove()
-                                            if(pair.first == mainItemIndex && pair.second == videoIndex){
-                                                break
-                                            }
-                                        }
-                                    }
-                                    val pair = FeedCtrl.videoDeque.peek()
-                                    if(pair != null){
-                                        FeedCtrl.playingQueue.add(pair)
-                                        playVideoUtil()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                )
+            if (view is LoadingVideoView) {
+                feedVideoItemPlaying = Pair(mainItemIndex, videoIndex)
+                view.playVideo(player)
             }
         }
 
+    }
+    private fun intializePlayerListener(){
+        player.addListener(
+            object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    super.onPlaybackStateChanged(playbackState)
+
+                    val (mainItemIndex, videoIndex) = feedVideoItemPlaying
+                    if (playbackState == Player.STATE_ENDED) {
+                        player.release()
+                        player = ExoPlayer.Builder(requireContext()).build()
+                        player.addListener(this)
+                        if(FeedCtrl.videoDeque.isNotEmpty()){
+                            FeedCtrl.playingQueue.remove()
+                            val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
+                            if(hasDuplicatedVideo.isNotEmpty()){
+                                while(FeedCtrl.videoDeque.isNotEmpty()){
+                                    val pair = FeedCtrl.videoDeque.remove()
+                                    if(pair.first == mainItemIndex && pair.second == videoIndex){
+                                        break
+                                    }
+                                }
+                            }
+                            val pair = FeedCtrl.videoDeque.peek()
+                            if(pair != null){
+                                FeedCtrl.playingQueue.add(pair)
+                                playVideoUtil()
+                            }
+                        }
+                    }
+                }
+            }
+        )
     }
 
     private fun checkLoadingVideoViewIsVisible(view: View): Boolean{
@@ -346,7 +354,7 @@ class AllFeedsFragment : Fragment() {
         return false
     }
 
-    fun retrieveAllVisibleVideosOnScreen(visibleFeeds: List<Int>){
+    private fun retrieveAllVisibleVideosOnScreen(visibleFeeds: List<Int>){
         FeedCtrl.videoDeque.clear()
         visibleFeeds.forEach { feedIdx ->
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(feedIdx)
