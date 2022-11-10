@@ -14,7 +14,6 @@
         android:scaleType="centerCrop"
         />
 
-
     <com.google.android.exoplayer2.ui.PlayerView
         android:visibility="visible"
         android:id="@+id/player_view"
@@ -25,6 +24,8 @@
         app:resize_mode="zoom"
         app:surface_type="texture_view"
         app:use_controller="false" />
+
+
 
 
     <ImageView
