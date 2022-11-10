@@ -197,10 +197,12 @@ class AllFeedsFragment : Fragment() {
                     textNote.visibility = View.GONE
                 }
                 binding.retryButton.visibility = View.VISIBLE
+                binding.swipeRefreshLayout.isRefreshing = false
             } else if(it != EnumFeedLoadingCode.SUCCESS.value && it != EnumFeedLoadingCode.INITIAL.value){
                 binding.noPostId.root.visibility = View.VISIBLE
             } else if(it == EnumFeedLoadingCode.SUCCESS.value){
                 binding.noPostId.root.visibility = View.GONE
+                binding.swipeRefreshLayout.isRefreshing = false
             }
         }
 

@@ -81,19 +81,8 @@ class FeedListAdapter(
         private fun loadFeedDescription(item: MyPostRender) {
             if (item.caption.isEmpty()) {
                 binding.caption.visibility = View.GONE
-                binding.learnMore.visibility = View.GONE
-                binding.learnLess.visibility = View.GONE
             } else {
-                binding.caption.visibility = View.VISIBLE
-                if (item.caption.length > 50) {
-                    binding.caption.text = "${item.caption.substring(0, 50)}..."
-                    binding.learnMore.visibility = View.VISIBLE
-                    binding.learnLess.visibility = View.GONE
-                } else {
-                    binding.caption.text = item.caption
-                    binding.learnMore.visibility = View.GONE
-                    binding.learnLess.visibility = View.GONE
-                }
+                binding.caption.text = item.caption
             }
         }
 
@@ -102,18 +91,6 @@ class FeedListAdapter(
             binding.deleteButton.setOnClickListener {
                 val itr = currentList[adapterPosition]
                 eventFeedCallback.onDeleteItem(itr.feedId, position)
-            }
-
-            binding.learnMore.setOnClickListener {
-                binding.caption.text = item.caption
-                binding.learnMore.visibility = View.GONE
-                binding.learnLess.visibility = View.VISIBLE
-            }
-
-            binding.learnLess.setOnClickListener {
-                binding.caption.text = "${item.caption.substring(0, 50)}..."
-                binding.learnMore.visibility = View.VISIBLE
-                binding.learnLess.visibility = View.GONE
             }
         }
 
