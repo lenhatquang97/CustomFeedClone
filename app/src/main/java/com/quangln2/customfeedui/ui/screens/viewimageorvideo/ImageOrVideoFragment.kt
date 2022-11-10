@@ -13,6 +13,7 @@ import com.bumptech.glide.request.target.Target
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.databinding.FragmentImageOrVideoBinding
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 
@@ -66,7 +67,7 @@ class ImageOrVideoFragment : Fragment() {
             } else {
                 binding.fullVideoView.visibility = View.GONE
                 binding.fullImageView.visibility = View.VISIBLE
-                Glide.with(requireContext()).load(url).listener(
+                Glide.with(requireContext()).load(url).apply(ConstantSetup.REQUEST_WITH_RGB_565).listener(
                     object : RequestListener<Drawable> {
                         override fun onLoadFailed(
                             e: GlideException?,
@@ -88,7 +89,7 @@ class ImageOrVideoFragment : Fragment() {
                             return false
                         }
                     }
-                ) .into(binding.fullImageView)
+                ).centerInside().into(binding.fullImageView)
             }
         }
     }

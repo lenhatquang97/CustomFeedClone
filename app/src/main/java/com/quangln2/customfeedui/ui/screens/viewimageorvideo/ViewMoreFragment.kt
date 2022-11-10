@@ -11,11 +11,10 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.quangln2.customfeedui.R
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.database.FeedDatabase
 import com.quangln2.customfeedui.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
@@ -40,9 +39,6 @@ class ViewMoreFragment : Fragment() {
     private val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
-    private val requestOptions by lazy {
-        RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).override(100)
-    }
     private lateinit var item: MyPostRender
 
 
@@ -52,7 +48,7 @@ class ViewMoreFragment : Fragment() {
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
         binding.caption.text = item.caption
 
-        Glide.with(requireContext()).load(item.avatar).apply(requestOptions).into(binding.myAvatarImage)
+        Glide.with(requireContext()).load(item.avatar).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100).into(binding.myAvatarImage)
 
         CoroutineScope(Dispatchers.IO).launch {
             for (i in 0 until item.resources.size) {
@@ -67,7 +63,7 @@ class ViewMoreFragment : Fragment() {
                 if (value.contains("mp4")) {
                     withContext(Dispatchers.Main) {
                         val imageView = ImageView(context)
-                        Glide.with(requireContext()).load(value).thumbnail(0.1f).apply(requestOptions).into(imageView)
+                        Glide.with(requireContext()).load(value).thumbnail(0.1f).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100).into(imageView)
                         imageView.setOnClickListener {
                             val urlArrayList = ArrayList<String>()
                             item.resources.forEach {
@@ -122,7 +118,7 @@ class ViewMoreFragment : Fragment() {
                             }
                         )
                     }
-                    Glide.with(requireContext()).load(value).apply(requestOptions)
+                    Glide.with(requireContext()).load(value).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
                         .into(object : SimpleTarget<Drawable>() {
                             override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                                 CoroutineScope(Dispatchers.Main).launch {

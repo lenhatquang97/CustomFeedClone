@@ -7,9 +7,8 @@ import android.widget.ImageView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.net.toUri
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DecodeFormat
-import com.bumptech.glide.request.RequestOptions
 import com.quangln2.customfeedui.R
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 
 class CustomImageView {
     companion object {
@@ -41,7 +40,7 @@ class CustomImageView {
             imageView.layoutParams =
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-            Glide.with(context).load(url.toUri()).apply(RequestOptions().format(DecodeFormat.PREFER_RGB_565)).into(imageView)
+            Glide.with(context).load(url.toUri()).apply(ConstantSetup.REQUEST_WITH_RGB_565).into(imageView)
             return imageView
         }
     }

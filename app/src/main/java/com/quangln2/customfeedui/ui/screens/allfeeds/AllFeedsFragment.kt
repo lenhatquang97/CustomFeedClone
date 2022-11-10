@@ -47,16 +47,40 @@ class AllFeedsFragment : Fragment() {
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
     private val currentViewRect by lazy { Rect() }
     private val positionDeletedOrRefreshed by lazy { AtomicInteger(-1) }
-    private val player by lazy {
-        ExoPlayer.Builder(requireContext()).build()
-    }
-    var feedVideoItemPlaying = Pair(-1, -1)
+    private val player by lazy { ExoPlayer.Builder(requireContext()).build() }
 
     val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
     private val temporaryVideoSequence = mutableListOf<Pair<Int, Int>>()
+
+    private val playerListener: Player.Listener get() = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            super.onPlaybackStateChanged(playbackState)
+            val (mainItemIndex, videoIndex) = viewModel.feedVideoItemPlaying
+            if (playbackState == Player.STATE_ENDED) {
+                onEndPlayVideo(player)
+                if(FeedCtrl.videoDeque.isNotEmpty()){
+                    FeedCtrl.playingQueue.remove()
+                    val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
+                    if(hasDuplicatedVideo.isNotEmpty()){
+                        while(FeedCtrl.videoDeque.isNotEmpty()){
+                            val pair = FeedCtrl.videoDeque.remove()
+                            if(pair.first == mainItemIndex && pair.second == videoIndex){
+                                break
+                            }
+                        }
+                    }
+                    val pair = FeedCtrl.videoDeque.peek()
+                    if(pair != null){
+                        FeedCtrl.playingQueue.add(pair)
+                        playVideoUtil()
+                    }
+                }
+            }
+        }
+    }
 
     private val eventCallback: EventFeedCallback
         get() = object : EventFeedCallback {
@@ -104,8 +128,7 @@ class AllFeedsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.getAllFeedsWithPreloadCache()
-        intializePlayerListener()
-
+        player.addListener(playerListener)
     }
 
 
@@ -250,6 +273,11 @@ class AllFeedsFragment : Fragment() {
         pauseVideoWithoutPop()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        player.removeListener(playerListener)
+    }
+
     private fun pauseVideoUtil() {
         if(FeedCtrl.playingQueue.isEmpty()) return
         val (pausedItemIndex, videoIndex) = FeedCtrl.playingQueue.remove()
@@ -272,8 +300,8 @@ class AllFeedsFragment : Fragment() {
         }
     }
     private fun isVideoPlaying(): Boolean {
-        if(feedVideoItemPlaying.first == -1 && feedVideoItemPlaying.second == -1) return false
-        val (pausedItemIndex, videoIndex) = feedVideoItemPlaying
+        if(viewModel.feedVideoItemPlaying.first == -1 && viewModel.feedVideoItemPlaying.second == -1) return false
+        val (pausedItemIndex, videoIndex) = viewModel.feedVideoItemPlaying
         val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(pausedItemIndex)
         val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex)
@@ -294,45 +322,15 @@ class AllFeedsFragment : Fragment() {
 
 
             if (view != null && view is LoadingVideoView) {
-                feedVideoItemPlaying = Pair(mainItemIndex, videoIndex)
+                viewModel.feedVideoItemPlaying = Pair(mainItemIndex, videoIndex)
                 println("Playing video at $mainItemIndex, $videoIndex")
                 view.playVideo(player)
             }
         }
 
     }
-    private fun intializePlayerListener(){
-        player.addListener(
-            object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    super.onPlaybackStateChanged(playbackState)
-                    val (mainItemIndex, videoIndex) = feedVideoItemPlaying
-                    if (playbackState == Player.STATE_ENDED) {
-                        onEndPlayVideo(player)
-                        if(FeedCtrl.videoDeque.isNotEmpty()){
-                            FeedCtrl.playingQueue.remove()
-                            val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
-                            if(hasDuplicatedVideo.isNotEmpty()){
-                                while(FeedCtrl.videoDeque.isNotEmpty()){
-                                    val pair = FeedCtrl.videoDeque.remove()
-                                    if(pair.first == mainItemIndex && pair.second == videoIndex){
-                                        break
-                                    }
-                                }
-                            }
-                            val pair = FeedCtrl.videoDeque.peek()
-                            if(pair != null){
-                                FeedCtrl.playingQueue.add(pair)
-                                playVideoUtil()
-                            }
-                        }
-                    }
-                }
-            }
-        )
-    }
     private fun onEndPlayVideo(player: ExoPlayer){
-        val (mainItemIndex, videoIndex) = feedVideoItemPlaying
+        val (mainItemIndex, videoIndex) = viewModel.feedVideoItemPlaying
         val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
         val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
         val view = customGridGroup?.getChildAt(videoIndex)
@@ -423,6 +421,7 @@ class AllFeedsFragment : Fragment() {
             }
         }
     }
+
 
 
 }

@@ -21,9 +21,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DecodeFormat
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.database.FeedDatabase
@@ -78,7 +75,7 @@ class HomeScreenFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel._uriLists.value?.clear()
+        viewModel.clearImageAndVideoGrid()
 
         val arrayListOfUris = savedInstanceState?.getStringArrayList(KEY_INSTANCE) ?: arrayListOf()
         val uriSource = arrayListOfUris.map { uriString -> uriString.toUri() }.toMutableList()
@@ -136,7 +133,7 @@ class HomeScreenFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        viewModel._uriLists.value?.clear()
+        viewModel.clearImageAndVideoGrid()
     }
 
     private fun buttonHandleChooseImagesOrVideos(){
@@ -156,8 +153,7 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun loadInitialProfile() {
-        val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565).override(100)
-        Glide.with(requireContext()).load(ConstantSetup.AVATAR_LINK).apply(requestOptions).into(binding.myAvatarImage)
+        Glide.with(requireContext()).load(ConstantSetup.AVATAR_LINK).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100).into(binding.myAvatarImage)
     }
 
     private fun buttonHandleSubmitToServer() {
@@ -277,7 +273,7 @@ class HomeScreenFragment : Fragment() {
                 listOfViews.add(8, CustomLayer(requireContext()))
                 listOfUris.add(8, Uri.EMPTY)
             }
-            viewModel._uriLists.postValue(ls?.toMutableList())
+            viewModel.addImageAndVideoGridInBackground(ls)
         }
     }
 

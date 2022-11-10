@@ -35,7 +35,7 @@ class FeedViewModel(
     val deleteDatabaseUseCase: DeleteDatabaseUseCase,
     val getAllInDatabaseUseCase: GetAllInDatabaseUseCase
 ) : ViewModel() {
-    var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
+    private var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
     val uriLists: LiveData<MutableList<Uri>> = _uriLists
 
     private var _uploadLists = MutableLiveData<MutableList<MyPost>>().apply { value = mutableListOf() }
@@ -44,6 +44,10 @@ class FeedViewModel(
     private var _feedLoadingCode = MutableLiveData<Int>().apply { value = EnumFeedLoadingCode.INITIAL.value }
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
+    var feedVideoItemPlaying = Pair(-1, -1)
+
+    fun clearImageAndVideoGrid() = _uriLists.value?.clear()
+    fun addImageAndVideoGridInBackground(ls: MutableList<Uri>?) = _uriLists.postValue(ls?.toMutableList())
 
     fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
         val uriStringLists = uriLists.map { it.toString() }
@@ -63,6 +67,15 @@ class FeedViewModel(
                 _uploadLists.postValue(offlinePosts.toMutableList())
             }
         }
+
+    }
+
+    private fun compareDBPostsAndFetchPosts(dbPosts: List<MyPost>, fetchedPost: List<MyPost>): Boolean{
+        if(dbPosts.size != fetchedPost.size) return false
+        for((a,b) in dbPosts.zip(fetchedPost)){
+            if(a != b) return false
+        }
+        return true
 
     }
 
@@ -128,15 +141,6 @@ class FeedViewModel(
             }
 
         })
-    }
-
-    fun compareDBPostsAndFetchPosts(dbPosts: List<MyPost>, fetchedPost: List<MyPost>): Boolean{
-        if(dbPosts.size != fetchedPost.size) return false
-        for((a,b) in dbPosts.zip(fetchedPost)){
-            if(a != b) return false
-        }
-        return true
-
     }
 
     fun getFeedItem(feedId: String): MyPostRender {

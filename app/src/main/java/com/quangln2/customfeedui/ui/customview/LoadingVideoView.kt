@@ -12,15 +12,13 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DecodeFormat
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeedui.R
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.controllers.FeedCtrl.isMute
 
 
@@ -35,7 +33,6 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var thumbnailView: ImageView
 
     private var url = ""
-    private val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565)
     var currentPosition = 0L
 
     constructor(context: Context, url: String) : this(context) {
@@ -60,7 +57,7 @@ class LoadingVideoView @JvmOverloads constructor(
 
 
     private fun initForShowThumbnail() {
-        Glide.with(context).load(url).apply(requestOptions).placeholder(ColorDrawable(Color.parseColor("#aaaaaa"))).into(object : SimpleTarget<Drawable>() {
+        Glide.with(context).load(url).apply(ConstantSetup.REQUEST_WITH_RGB_565).placeholder(ColorDrawable(Color.parseColor("#aaaaaa"))).into(object : SimpleTarget<Drawable>() {
             override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                 progressBar.visibility = View.GONE
                 thumbnailView.setImageDrawable(resource)

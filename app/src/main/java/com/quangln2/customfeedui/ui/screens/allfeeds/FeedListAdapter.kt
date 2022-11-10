@@ -17,11 +17,8 @@ import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DecodeFormat
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeedui.R
@@ -54,8 +51,7 @@ class FeedListAdapter(
     inner class AddNewItemViewHolder constructor(private val binding: FeedCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(context: Context) {
-            val requestOptions = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565).override(50)
-            Glide.with(context).load(ConstantSetup.AVATAR_LINK).apply(requestOptions).into(binding.circleAvatar)
+            Glide.with(context).load(ConstantSetup.AVATAR_LINK).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100).into(binding.circleAvatar)
             binding.root.setOnClickListener {
                 eventFeedCallback.onClickAddPost()
             }
@@ -218,7 +214,7 @@ class FeedListAdapter(
                         }
 
                         Glide.with(context).load(value).apply(
-                            RequestOptions().format(DecodeFormat.PREFER_RGB_565)
+                           ConstantSetup.REQUEST_WITH_RGB_565
                         ).placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
                             .listener(
                                 object : RequestListener<Drawable> {
@@ -243,7 +239,7 @@ class FeedListAdapter(
                                         return false
                                     }
                                 }
-                            ).centerInside().into(imageView)
+                            ).centerCrop().into(imageView)
                         binding.customGridGroup.addView(imageView)
                     }
                 }
