@@ -58,20 +58,11 @@ class AllFeedsFragment : Fragment() {
     private val playerListener: Player.Listener get() = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
-            val (mainItemIndex, videoIndex) = viewModel.feedVideoItemPlaying
             if (playbackState == Player.STATE_ENDED) {
                 onEndPlayVideo(player)
                 if(FeedCtrl.videoDeque.isNotEmpty()){
                     FeedCtrl.playingQueue.remove()
-                    val hasDuplicatedVideo = FeedCtrl.videoDeque.filter { it.first == mainItemIndex && it.second == videoIndex }
-                    if(hasDuplicatedVideo.isNotEmpty()){
-                        while(FeedCtrl.videoDeque.isNotEmpty()){
-                            val pair = FeedCtrl.videoDeque.remove()
-                            if(pair.first == mainItemIndex && pair.second == videoIndex){
-                                break
-                            }
-                        }
-                    }
+                    FeedCtrl.videoDeque.remove()
                     val pair = FeedCtrl.videoDeque.peek()
                     if(pair != null){
                         FeedCtrl.playingQueue.add(pair)
@@ -198,9 +189,9 @@ class AllFeedsFragment : Fragment() {
                 }
                 binding.retryButton.visibility = View.VISIBLE
                 binding.swipeRefreshLayout.isRefreshing = false
-            } else if(it != EnumFeedLoadingCode.SUCCESS.value && it != EnumFeedLoadingCode.INITIAL.value){
+            } else if(it == EnumFeedLoadingCode.INITIAL.value){
                 binding.noPostId.root.visibility = View.VISIBLE
-            } else if(it == EnumFeedLoadingCode.SUCCESS.value){
+            } else if(it == EnumFeedLoadingCode.SUCCESS.value || it == EnumFeedLoadingCode.OFFLINE.value){
                 binding.noPostId.root.visibility = View.GONE
                 binding.swipeRefreshLayout.isRefreshing = false
             }
@@ -275,10 +266,10 @@ class AllFeedsFragment : Fragment() {
         pauseVideoWithoutPop()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        player.removeListener(playerListener)
-    }
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        //player.removeListener(playerListener)
+//    }
 
     private fun pauseVideoUtil() {
         if(FeedCtrl.playingQueue.isEmpty()) return

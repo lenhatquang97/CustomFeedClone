@@ -130,9 +130,11 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     fun onEndPlayVideo(player: ExoPlayer){
+        player.pause()
         thumbnailView.visibility = View.VISIBLE
         playButton.visibility = View.VISIBLE
         currentPosition = 0
         playerView.player = null
+
     }
 }
