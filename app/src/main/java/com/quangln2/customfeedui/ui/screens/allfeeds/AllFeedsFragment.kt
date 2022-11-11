@@ -266,11 +266,6 @@ class AllFeedsFragment : Fragment() {
         pauseVideoWithoutPop()
     }
 
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        //player.removeListener(playerListener)
-//    }
-
     private fun pauseVideoUtil() {
         if(FeedCtrl.playingQueue.isEmpty()) return
         val (pausedItemIndex, videoIndex) = FeedCtrl.playingQueue.remove()
@@ -316,7 +311,6 @@ class AllFeedsFragment : Fragment() {
 
             if (view != null && view is LoadingVideoView) {
                 viewModel.feedVideoItemPlaying = Pair(mainItemIndex, videoIndex)
-                println("Playing video at $mainItemIndex, $videoIndex")
                 view.playVideo(player)
             }
         }

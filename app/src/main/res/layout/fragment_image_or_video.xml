@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".ui.screens.viewimageorvideo.ImageOrVideoFragment">
 
     <ImageView
@@ -30,8 +31,6 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         />
-
-
 
     <ProgressBar
         android:id="@+id/fullVideoProgressBar"

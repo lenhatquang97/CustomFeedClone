@@ -78,7 +78,9 @@ class FeedListAdapter(
             binding.feedId.text = item.feedId
             binding.myName.text = item.name
             binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
-            Glide.with(context).load(item.avatar).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
+            Glide.with(context)
+                .load(item.avatar)
+                .apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
                 .into(binding.myAvatarImage)
         }
 
@@ -133,8 +135,6 @@ class FeedListAdapter(
             val contentPadding = 16
             val marginHorizontalSum = 16 + 32
             val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
-//            val renderersFactory = DefaultRenderersFactory(context).forceEnableMediaCodecAsynchronousQueueing()
-
 
             loadBasicInfoAboutFeed(item)
             loadFeedDescription(item)
@@ -272,6 +272,7 @@ class FeedListAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         val itemType = getItemViewType(position)
+
         if (itemType == TypeOfPost.ADD_NEW_POST.value) {
             (holder as AddNewItemViewHolder).bind(context)
         } else {

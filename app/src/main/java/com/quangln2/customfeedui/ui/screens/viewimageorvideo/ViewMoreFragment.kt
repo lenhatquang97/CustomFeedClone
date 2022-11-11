@@ -60,10 +60,45 @@ class ViewMoreFragment : Fragment() {
                     item.resources[i].url,
                     requireContext()
                 ) else item.resources[i].url
-                if (value.contains("mp4")) {
-                    withContext(Dispatchers.Main) {
+                val mimeType = DownloadUtils.getMimeType(value)
+                mimeType?.apply {
+                    if (mimeType.contains("video")) {
+                        withContext(Dispatchers.Main) {
+                            val imageView = ImageView(context)
+                            Glide.with(requireContext()).load(value).thumbnail(0.1f).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
+                                .into(imageView)
+                            imageView.setOnClickListener {
+                                val urlArrayList = ArrayList<String>()
+                                item.resources.forEach {
+                                    urlArrayList.add(it.url)
+                                }
+                                findNavController().navigate(
+                                    R.id.action_viewMoreFragment_to_viewFullVideoFragment,
+                                    Bundle().apply {
+                                        putString("value", item.resources[i].url)
+                                        putStringArrayList(
+                                            "listOfUrls",
+                                            urlArrayList
+                                        )
+                                    },
+                                    navOptions {
+                                        anim {
+                                            enter = android.R.animator.fade_in
+                                            exit = android.R.animator.fade_out
+                                        }
+                                    }
+                                )
+                            }
+                            binding.extendedCustomGridGroup.addView(imageView)
+                        }
+                    } else {
                         val imageView = ImageView(context)
-                        Glide.with(requireContext()).load(value).thumbnail(0.1f).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100).into(imageView)
+                        imageView.layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+
                         imageView.setOnClickListener {
                             val urlArrayList = ArrayList<String>()
                             item.resources.forEach {
@@ -86,50 +121,19 @@ class ViewMoreFragment : Fragment() {
                                 }
                             )
                         }
-                        binding.extendedCustomGridGroup.addView(imageView)
-                    }
-                } else {
-                    val imageView = ImageView(context)
-                    imageView.layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-
-                    imageView.setOnClickListener {
-                        val urlArrayList = ArrayList<String>()
-                        item.resources.forEach {
-                            urlArrayList.add(it.url)
+                        Glide.with(requireContext()).load(value).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
+                            .into(object : SimpleTarget<Drawable>() {
+                                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        binding.extendedCustomGridGroup.firstItemWidth = resource.intrinsicWidth
+                                        binding.extendedCustomGridGroup.firstItemHeight = resource.intrinsicHeight
+                                    }
+                                    imageView.setImageDrawable(resource)
+                                }
+                            })
+                        withContext(Dispatchers.Main) {
+                            binding.extendedCustomGridGroup.addView(imageView)
                         }
-                        findNavController().navigate(
-                            R.id.action_viewMoreFragment_to_viewFullVideoFragment,
-                            Bundle().apply {
-                                putString("value", item.resources[i].url)
-                                putStringArrayList(
-                                    "listOfUrls",
-                                    urlArrayList
-                                )
-                            },
-                            navOptions {
-                                anim {
-                                    enter = android.R.animator.fade_in
-                                    exit = android.R.animator.fade_out
-                                }
-                            }
-                        )
-                    }
-                    Glide.with(requireContext()).load(value).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
-                        .into(object : SimpleTarget<Drawable>() {
-                            override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    binding.extendedCustomGridGroup.firstItemWidth = resource.intrinsicWidth
-                                    binding.extendedCustomGridGroup.firstItemHeight = resource.intrinsicHeight
-                                }
-                                imageView.setImageDrawable(resource)
-                            }
-                        })
-                    withContext(Dispatchers.Main) {
-                        binding.extendedCustomGridGroup.addView(imageView)
                     }
                 }
             }
