@@ -33,35 +33,15 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
 
         if (listOfUrls != null && position != null) {
-            urlTmp = if (DownloadUtils.doesLocalFileExist(listOfUrls[position], requireContext())) {
+            val doesLocalFileExist = DownloadUtils.doesLocalFileExist(listOfUrls[position], requireContext())
+            urlTmp = if (doesLocalFileExist) {
                 DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
             } else {
                 listOfUrls[position]
             }
 
-            Glide.with(requireContext()).load(urlTmp).apply(RequestOptions().diskCacheStrategy(DiskCacheStrategy.DATA).format(DecodeFormat.PREFER_RGB_565)).listener(
-                object : RequestListener<Drawable> {
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: Target<Drawable>?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        return false
-                    }
+            loadImageThumbnail()
 
-                    override fun onResourceReady(
-                        resource: Drawable?,
-                        model: Any?,
-                        target: Target<Drawable>?,
-                        dataSource: com.bumptech.glide.load.DataSource?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        binding.fullVideoProgressBar.visibility = View.GONE
-                        return false
-                    }
-                }
-            ).centerInside().into(binding.fullImageView)
             val mimeType = DownloadUtils.getMimeType(urlTmp)
             mimeType?.apply {
                 if (this.contains("video")) {
@@ -100,6 +80,31 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         return binding.root
     }
 
+    private fun loadImageThumbnail(){
+        Glide.with(requireContext()).load(urlTmp).apply(RequestOptions().diskCacheStrategy(DiskCacheStrategy.DATA).format(DecodeFormat.PREFER_RGB_565)).listener(
+            object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable>?,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable?,
+                    model: Any?,
+                    target: Target<Drawable>?,
+                    dataSource: com.bumptech.glide.load.DataSource?,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    binding.fullVideoProgressBar.visibility = View.GONE
+                    return false
+                }
+            }
+        ).centerInside().into(binding.fullImageView)
+    }
 
     private fun initializeVideoForLoading(url: String) {
         binding.fullVideoView.player = player
@@ -119,6 +124,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
             if (this.contains("video")) {
                 player.pause()
                 currentVideoPosition = player.currentPosition
+
                 binding.fullVideoView.player = null
                 binding.fullImageView.visibility = View.VISIBLE
                 binding.fullVideoPlayButton.visibility = View.VISIBLE
