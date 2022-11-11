@@ -7,21 +7,22 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
-import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.databinding.FragmentImageOrVideoBinding
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 
 
-class ImageOrVideoFragment : Fragment() {
+class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     private lateinit var binding: FragmentImageOrVideoBinding
-    private lateinit var player: Player
-    private var currentVideoPosition: Long = -1
+    private var currentVideoPosition = -1L
     private var urlTmp = ""
 
     override fun onStart(){
@@ -32,65 +33,49 @@ class ImageOrVideoFragment : Fragment() {
         currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
 
         if (listOfUrls != null && position != null) {
-            val url = if (DownloadUtils.doesLocalFileExist(
-                    listOfUrls[position],
-                    requireContext()
-                )
-            ) DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext()) else listOfUrls[position]
-            if (url.contains(".mp4")) {
-                binding.fullVideoView.visibility = View.VISIBLE
-                binding.fullImageView.visibility = View.GONE
-                binding.fullVideoProgressBar.visibility = View.VISIBLE
-                binding.fullVideoPlayButton.visibility = View.INVISIBLE
-
-                initializeVideoForLoading(url)
-
-                binding.fullVideoProgressBar.visibility = View.INVISIBLE
-                binding.fullVideoPlayButton.visibility = View.VISIBLE
-
-                player.addListener(
-                    object : Player.Listener {
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            super.onPlaybackStateChanged(playbackState)
-                            when (playbackState) {
-                                Player.STATE_READY -> {
-                                    binding.fullVideoPlayButton.visibility = View.INVISIBLE
-                                }
-                                Player.STATE_ENDED -> {
-                                    binding.fullVideoPlayButton.visibility = View.VISIBLE
-                                }
-                            }
-                        }
-                    }
-                )
-
+            urlTmp = if (DownloadUtils.doesLocalFileExist(listOfUrls[position], requireContext())) {
+                DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
             } else {
-                binding.fullVideoView.visibility = View.GONE
-                binding.fullImageView.visibility = View.VISIBLE
-                Glide.with(requireContext()).load(url).apply(ConstantSetup.REQUEST_WITH_RGB_565).listener(
-                    object : RequestListener<Drawable> {
-                        override fun onLoadFailed(
-                            e: GlideException?,
-                            model: Any?,
-                            target: Target<Drawable>?,
-                            isFirstResource: Boolean
-                        ): Boolean {
-                            return false
-                        }
-
-                        override fun onResourceReady(
-                            resource: Drawable?,
-                            model: Any?,
-                            target: Target<Drawable>?,
-                            dataSource: com.bumptech.glide.load.DataSource?,
-                            isFirstResource: Boolean
-                        ): Boolean {
-                            binding.fullVideoProgressBar.visibility = View.GONE
-                            return false
-                        }
-                    }
-                ).centerInside().into(binding.fullImageView)
+                listOfUrls[position]
             }
+
+            Glide.with(requireContext()).load(urlTmp).apply(RequestOptions().diskCacheStrategy(DiskCacheStrategy.DATA).format(DecodeFormat.PREFER_RGB_565)).listener(
+                object : RequestListener<Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable>?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return false
+                    }
+
+                    override fun onResourceReady(
+                        resource: Drawable?,
+                        model: Any?,
+                        target: Target<Drawable>?,
+                        dataSource: com.bumptech.glide.load.DataSource?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        binding.fullVideoProgressBar.visibility = View.GONE
+                        return false
+                    }
+                }
+            ).centerInside().into(binding.fullImageView)
+            val mimeType = DownloadUtils.getMimeType(urlTmp)
+            mimeType?.apply {
+                if (this.contains("video")) {
+                    binding.fullVideoView.visibility = View.VISIBLE
+                    binding.fullImageView.visibility = View.INVISIBLE
+                    binding.fullVideoPlayButton.visibility = View.INVISIBLE
+                } else {
+                    binding.fullVideoView.visibility = View.INVISIBLE
+                    binding.fullImageView.visibility = View.VISIBLE
+                }
+            }
+
+
+
         }
     }
 
@@ -99,36 +84,60 @@ class ImageOrVideoFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentImageOrVideoBinding.inflate(inflater, container, false)
+        player.addListener(
+            object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    super.onPlaybackStateChanged(playbackState)
+                    when (playbackState) {
+                        Player.STATE_ENDED -> {
+                            binding.fullVideoPlayButton.visibility = View.VISIBLE
+                            player.seekTo(0)
+                        }
+                    }
+                }
+            }
+        )
         return binding.root
     }
 
 
     private fun initializeVideoForLoading(url: String) {
-        urlTmp = url
-
-        player = ExoPlayer.Builder(requireContext()).build()
         binding.fullVideoView.player = player
         val mediaItem = MediaItem.fromUri(url)
-
         player.setMediaItem(mediaItem)
         player.seekTo(currentVideoPosition)
-        player.playWhenReady = true
         player.prepare()
+        player.play()
+        binding.fullImageView.visibility = View.INVISIBLE
+        binding.fullVideoPlayButton.visibility = View.INVISIBLE
     }
 
     override fun onPause() {
         super.onPause()
         val mimeType = DownloadUtils.getMimeType(urlTmp)
-        if(mimeType != null && mimeType.contains("video")){
-            player.pause()
+        mimeType?.apply {
+            if (this.contains("video")) {
+                player.pause()
+                currentVideoPosition = player.currentPosition
+                binding.fullVideoView.player = null
+                binding.fullImageView.visibility = View.VISIBLE
+                binding.fullVideoPlayButton.visibility = View.VISIBLE
+            }
         }
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onResume() {
+        super.onResume()
         val mimeType = DownloadUtils.getMimeType(urlTmp)
-        if(mimeType != null && mimeType.contains("video")){
-            player.release()
+        mimeType?.apply {
+            if(this.contains("video")){
+                initializeVideoForLoading(urlTmp)
+            }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        player.release()
     }
 }
