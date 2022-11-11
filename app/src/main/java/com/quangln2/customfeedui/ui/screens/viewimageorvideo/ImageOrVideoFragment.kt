@@ -53,9 +53,6 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
                     binding.fullImageView.visibility = View.VISIBLE
                 }
             }
-
-
-
         }
     }
 
