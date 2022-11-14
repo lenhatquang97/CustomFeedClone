@@ -1,11 +1,14 @@
 package com.quangln2.customfeedui.domain.workmanager
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
@@ -14,10 +17,18 @@ import com.google.gson.Gson
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.controllers.FeedCtrl
 import com.quangln2.customfeedui.data.database.FeedDatabase
+import com.quangln2.customfeedui.data.datasource.local.LocalDataSourceImpl
+import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.models.datamodel.UploadPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
+import com.quangln2.customfeedui.data.repository.FeedRepository
+import com.quangln2.customfeedui.domain.usecase.UploadPostV2UseCase
 import com.quangln2.customfeedui.others.utils.FileUtils
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import java.util.*
 
@@ -28,7 +39,6 @@ class UploadService : Service() {
     }
     val builder = NotificationCompat.Builder(this, "FeedPost")
         .setContentTitle("CustomFeed")
-        .setContentText("Uploading...")
         .setSmallIcon(R.drawable.ic_baseline_post_add_24)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
@@ -40,7 +50,6 @@ class UploadService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        builder.setProgress(0, 0, true)
         startForeground(1, builder.build())
     }
 
@@ -48,24 +57,30 @@ class UploadService : Service() {
         if (intent != null) {
             //Get data from intent
             val jsonString = intent.getStringExtra(resources.getString(R.string.jsonStringKey))
-            val uploadWorkerModel = Gson().fromJson(jsonString, UploadWorkerModel::class.java)
+            if(jsonString != null){
+                FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.LOADING.value)
 
-            val uriLists = uploadWorkerModel.uriLists.map { it.toUri() }
-            val uriListsForCompressing = if (uriLists.isEmpty()) emptyList() else FileUtils.compressImagesAndVideos(
-                uriLists.toMutableList(),
-                applicationContext
-            )
+                val uploadWorkerModel = Gson().fromJson(jsonString, UploadWorkerModel::class.java)
 
-            val uploadingPost = UploadPost.initializeUploadPost(applicationContext).copy(caption = uploadWorkerModel.caption)
+                val uriLists = uploadWorkerModel.uriLists.map { it.toUri() }
+                val uriListsForCompressing = if (uriLists.isEmpty()) emptyList() else FileUtils.compressImagesAndVideos(
+                    uriLists.toMutableList(),
+                    applicationContext
+                )
 
-            FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.LOADING.value)
+                val uploadingPost = UploadPost.initializeUploadPost(applicationContext).copy(caption = uploadWorkerModel.caption)
 
-            uploadFiles(uriListsForCompressing, uploadingPost)
+                uploadFiles(uriListsForCompressing, uploadingPost, applicationContext)
+            }
         }
         return START_NOT_STICKY
     }
 
-    private fun uploadFiles(uriLists: List<Uri>, uploadingPost: UploadPost){
+
+
+    private fun uploadFiles(uriLists: List<Uri>, uploadingPost: UploadPost, context: Context){
+        showLoadingUI(applicationContext)
+
         val listOfUrls = mutableListOf<String>()
         if(uriLists.isEmpty()){
             uploadToServer(uploadingPost)
@@ -73,7 +88,7 @@ class UploadService : Service() {
         }
         for(uri in uriLists){
             val filePath = "files/${uploadingPost.feedId}/${uri.path?.let { File(it).name }}"
-            val mimeType = applicationContext.contentResolver.getType(uri)
+            val mimeType = context.contentResolver.getType(uri)
 
             MediaManager.get().upload(uri)
                 .option("public_id", filePath)
@@ -81,7 +96,10 @@ class UploadService : Service() {
                 .callback(object: UploadCallback {
                     override fun onStart(requestId: String?) {}
                     override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
-                    override fun onReschedule(requestId: String?, error: ErrorInfo?) {}
+                    override fun onReschedule(requestId: String?, error: ErrorInfo?) {
+                        Log.d("UploadServicePart", "onReschedule: ${error?.description}")
+                        showWaitingUI(context)
+                    }
 
                     override fun onSuccess(requestId: String?, resultData: MutableMap<Any?, Any?>?) {
                         Log.d("Cloudinary", resultData.toString())
@@ -109,11 +127,85 @@ class UploadService : Service() {
                     }
 
                     override fun onError(requestId: String?, error: ErrorInfo?) {
-                        showFailedUI(applicationContext, cause = error?.description.toString())
+                        Log.d("UploadServicePart", "onError: ${error?.description}")
+                        showFailedUI(context, cause = error?.description.toString())
                         stopSelf()
                     }
                 })
                 .dispatch()
+
+
         }
+    }
+    private fun showWaitingUI(context: Context){
+        builder.setContentText("Waiting...")
+        with(NotificationManagerCompat.from(context)) {
+            notify(id, builder.build())
+        }
+    }
+
+    private fun showLoadingUI(context: Context){
+        builder.apply {
+            setProgress(0, 0, true)
+            setContentText("Uploading...")
+        }
+        with(NotificationManagerCompat.from(context)) {
+            notify(id, builder.build())
+        }
+    }
+
+
+    private fun showSuccessfulUI(context: Context){
+        FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.COMPLETE.value)
+        builder.apply {
+            setProgress(0, 0, false)
+            setContentText(resources.getString(R.string.upload_success))
+            setAutoCancel(true)
+        }
+        with(NotificationManagerCompat.from(context)) {
+            notify(id, builder.build())
+        }
+
+        //show toast
+        Toast.makeText(context, resources.getString(R.string.upload_success), Toast.LENGTH_LONG).show()
+
+        stopSelf()
+    }
+
+    private fun showFailedUI(context: Context, cause: String = ""){
+        //close loading card screen
+        FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.COMPLETE.value)
+
+        //create notification
+        builder.apply {
+            setProgress(0, 0, false)
+            setContentText("${resources.getString(R.string.upload_failed)}. $cause")
+            setAutoCancel(true)
+        }
+        with(NotificationManagerCompat.from(context)) {
+            notify(id, builder.build())
+        }
+
+        //show toast
+        Toast.makeText(context, "${resources.getString(R.string.upload_failed)}. $cause", Toast.LENGTH_LONG).show()
+
+        stopSelf()
+    }
+
+    private fun uploadToServer(uploadingPost: UploadPost){
+        val uploadPostV2UseCase = UploadPostV2UseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
+        uploadPostV2UseCase(uploadingPost).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if(response.code() == 200){
+                    showSuccessfulUI(applicationContext)
+                } else {
+                    showFailedUI(applicationContext, cause = "Response code: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                showFailedUI(applicationContext, cause = t.cause.toString())
+            }
+        })
     }
 }

@@ -1,5 +1,6 @@
 package com.quangln2.customfeedui.ui.screens.allfeeds
 
+import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
@@ -30,6 +31,7 @@ import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentAllFeedsBinding
+import com.quangln2.customfeedui.domain.workmanager.UploadService
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.viewmodel.FeedViewModel
@@ -118,6 +120,10 @@ class AllFeedsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val intent = Intent(requireContext(), UploadService::class.java)
+        requireContext().startService(intent)
+
         viewModel.getAllFeedsWithPreloadCache()
         player.addListener(playerListener)
     }
