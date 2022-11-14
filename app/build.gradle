@@ -114,7 +114,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
 
     //Cloudinary
-    implementation 'com.cloudinary:cloudinary-android:2.2.0'
+    implementation 'com.cloudinary:cloudinary-android:2.3.0'
 
     implementation platform('com.google.firebase:firebase-bom:31.0.2')
     implementation 'com.google.firebase:firebase-config-ktx'
