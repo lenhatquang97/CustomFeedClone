@@ -1,6 +1,9 @@
 package com.quangln2.customfeedui.data.models.datamodel
 
+import android.content.Context
 import com.google.gson.annotations.SerializedName
+import com.quangln2.customfeedui.R
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import java.util.*
 
 data class UploadPost(
@@ -14,4 +17,15 @@ data class UploadPost(
     @SerializedName("firstHeight") var firstHeight: Int = 0,
     //Transient
     @Transient var localPaths: MutableList<String> = mutableListOf()
-)
+){
+    companion object{
+        fun initializeUploadPost(context: Context): UploadPost{
+            return UploadPost(
+                feedId = UUID.randomUUID().toString(),
+                name = context.resources.getString(R.string.account_name),
+                avatar = ConstantSetup.AVATAR_LINK,
+                createdTime = System.currentTimeMillis().toString(),
+                )
+        }
+    }
+}

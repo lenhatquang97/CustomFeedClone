@@ -26,4 +26,6 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
     suspend fun delete(id: String) = localDataSource.delete(id)
     suspend fun getAll(): List<MyPost> = localDataSource.getAll()
     suspend fun getListById(id: String): MyPost = localDataSource.getFeedWithId(id)
+    fun uploadPostV2(requestBody: UploadPost): Call<ResponseBody> = remoteDataSource.uploadPostV2(requestBody)
+
 }

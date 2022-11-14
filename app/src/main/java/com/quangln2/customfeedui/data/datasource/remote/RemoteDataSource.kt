@@ -8,6 +8,7 @@ import retrofit2.Call
 
 interface RemoteDataSource {
     fun uploadPost(requestBody: List<MultipartBody.Part>): Call<ResponseBody>
+    fun uploadPostV2(requestBody: UploadPost): Call<ResponseBody>
     fun getAllFeeds(): Call<MutableList<UploadPost>>
     fun deleteFeed(id: String): Call<ResponseBody>
 }

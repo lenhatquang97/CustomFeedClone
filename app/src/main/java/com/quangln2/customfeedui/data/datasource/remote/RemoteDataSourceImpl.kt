@@ -18,4 +18,8 @@ class RemoteDataSourceImpl : RemoteDataSource {
     override fun deleteFeed(id: String): Call<ResponseBody> {
         return RetrofitSetup.gitHubService.deleteFeed(id)
     }
+
+    override fun uploadPostV2(requestBody: UploadPost): Call<ResponseBody> {
+        return RetrofitSetup.gitHubService.uploadFeedsV2(requestBody)
+    }
 }

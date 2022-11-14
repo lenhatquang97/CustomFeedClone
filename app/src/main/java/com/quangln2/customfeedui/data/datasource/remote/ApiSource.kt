@@ -17,4 +17,7 @@ interface ApiSource {
     @DELETE("feeds/{id}")
     fun deleteFeed(@Path("id") id: String): Call<ResponseBody>
 
+    @POST("feeds/upload_v2")
+    fun uploadFeedsV2(@Body requestBody: UploadPost): Call<ResponseBody>
+
 }
