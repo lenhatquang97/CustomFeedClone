@@ -16,10 +16,10 @@ abstract class FeedDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: FeedDatabase? = null
-        fun getFeedDatabase(context: Context): FeedDatabase {
+        fun getFeedDatabase(context: Context, databaseName: String = "feed_database.db"): FeedDatabase {
             if (INSTANCE == null) {
                 synchronized(this) {
-                    INSTANCE = Room.databaseBuilder(context, FeedDatabase::class.java, "feed_database.db").build()
+                    INSTANCE = Room.databaseBuilder(context, FeedDatabase::class.java, databaseName).build()
                 }
             }
             return INSTANCE!!

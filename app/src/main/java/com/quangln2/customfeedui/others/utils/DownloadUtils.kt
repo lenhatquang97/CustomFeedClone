@@ -95,6 +95,26 @@ object DownloadUtils {
         }
     }
 
+    fun downloadVideoSynchronous(videoUrl: String, context: Context){
+        try {
+            val req = Request.Builder().url(videoUrl).build()
+            val fileName = URLUtil.guessFileName(videoUrl, null, null)
+            val file = File(context.cacheDir, fileName)
+            val response = downloadClient.newCall(req).execute()
+            if (response.isSuccessful) {
+                val fout = FileOutputStream(file)
+                write(response.body!!.byteStream(), fout)
+                fout.close()
+                response.close()
+            } else {
+                Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
+                response.close()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     private fun write(inputStream: InputStream?, outputStream: FileOutputStream): Long {
         BufferedInputStream(inputStream).use { input ->
             val dataBuffer = ByteArray(4 * 1024)

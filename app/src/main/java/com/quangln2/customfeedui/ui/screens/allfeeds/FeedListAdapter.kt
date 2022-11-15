@@ -6,7 +6,6 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -255,7 +254,6 @@ class FeedListAdapter(
 
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         super.onViewRecycled(holder)
-        Log.v("FeedAdapter", "onViewRecycled")
         if (holder is FeedItemViewHolder) {
             val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
             for (i in 0 until customGridGroup.size) {

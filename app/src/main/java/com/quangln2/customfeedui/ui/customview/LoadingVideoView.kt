@@ -48,11 +48,6 @@ class LoadingVideoView @JvmOverloads constructor(
         playerView = view.findViewById(R.id.player_view)
         crossButton = view.findViewById(R.id.cross_x)
         thumbnailView = view.findViewById(R.id.thumbnail_view)
-
-        soundButton.setOnClickListener {
-            val currentState = isMute.value ?: false
-            isMute.value = !currentState
-        }
     }
 
 
@@ -72,8 +67,14 @@ class LoadingVideoView @JvmOverloads constructor(
         playButton.visibility = View.VISIBLE
         playerView.visibility = View.INVISIBLE
 
-        isMute.observeForever {
-            if (it) {
+        //Set icon whether mute or not
+        if (isMute) soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_off))
+        else soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_on))
+
+        //Button for changing sound
+        soundButton.setOnClickListener {
+            isMute = !isMute
+            if (isMute) {
                 soundButton.setImageDrawable(context.getDrawable(R.drawable.volume_off))
                 player.volume = 0f
             } else {
@@ -97,7 +98,6 @@ class LoadingVideoView @JvmOverloads constructor(
 
         playerView.layoutParams.width = width
         playerView.layoutParams.height = height
-        setMeasuredDimension(width, height)
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
@@ -109,9 +109,9 @@ class LoadingVideoView @JvmOverloads constructor(
         playButton.visibility = View.INVISIBLE
         thumbnailView.visibility = View.VISIBLE
         progressBar.visibility = View.GONE
+        soundButton.visibility = View.VISIBLE
 
-        val isMuted = isMute.value
-        player.volume = if(isMuted == true) 0f else 1f
+        player.volume = if(isMute) 0f else 1f
         player.play()
     }
 

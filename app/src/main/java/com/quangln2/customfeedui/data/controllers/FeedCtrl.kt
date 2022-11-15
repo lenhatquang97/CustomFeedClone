@@ -7,7 +7,7 @@ object FeedCtrl {
     val videoDeque: Deque<Pair<Int, Int>> = LinkedList()
     val playingQueue: Queue<Pair<Int, Int>> = LinkedList()
     var isLoadingToUpload = MutableLiveData<Int>().apply { value = -1 }
-    var isMute = MutableLiveData<Boolean>().apply { value = false }
+    var isMute = false
 
     fun addToLast(itemPosition: Int, i: Int) = videoDeque.addLast(Pair(itemPosition, i))
     fun peekFirst(): Pair<Int, Int> = if(videoDeque.isEmpty()) Pair(-1, -1) else videoDeque.peekFirst()!!
