@@ -23,6 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         app:shutter_background_color="@android:color/transparent"
+        app:controller_layout_id="@layout/exo_playback_control_view"
         />
 
     <ImageView
