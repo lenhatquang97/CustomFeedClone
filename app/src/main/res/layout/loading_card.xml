@@ -23,7 +23,7 @@
         android:layout_marginHorizontal="16dp"
         android:text="Uploading your posts..."
         android:textAlignment="center"
-        android:textSize="16dp"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"

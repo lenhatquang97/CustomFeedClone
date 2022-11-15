@@ -10,7 +10,7 @@ import com.quangln2.customfeedui.data.models.uimodel.RectanglePoint
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 
 class ExtendedCustomGridGroup : ViewGroup {
-    val rectangles = mutableListOf<RectanglePoint>()
+    private val rectangles = mutableListOf<RectanglePoint>()
     private val contentPadding = 5
 
     var firstItemWidth = 0

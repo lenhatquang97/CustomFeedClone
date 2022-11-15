@@ -142,5 +142,6 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         player.release()
+        Glide.with(requireContext()).clear(binding.fullImageView)
     }
 }

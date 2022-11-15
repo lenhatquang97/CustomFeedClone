@@ -188,18 +188,22 @@ class AllFeedsFragment : Fragment() {
 
         viewModel.feedLoadingCode.observe(viewLifecycleOwner){
             val allDefinedCodes = listOf(-1, 0, 200)
-            if(it !in allDefinedCodes){
-                binding.noPostId.apply {
-                    imageView.visibility = View.GONE
-                    textNote.visibility = View.GONE
+            when (it) {
+                !in allDefinedCodes -> {
+                    binding.noPostId.apply {
+                        imageView.visibility = View.GONE
+                        textNote.visibility = View.GONE
+                    }
+                    binding.retryButton.visibility = View.VISIBLE
+                    binding.swipeRefreshLayout.isRefreshing = false
                 }
-                binding.retryButton.visibility = View.VISIBLE
-                binding.swipeRefreshLayout.isRefreshing = false
-            } else if(it == EnumFeedLoadingCode.INITIAL.value){
-                binding.noPostId.root.visibility = View.VISIBLE
-            } else if(it == EnumFeedLoadingCode.SUCCESS.value || it == EnumFeedLoadingCode.OFFLINE.value){
-                binding.noPostId.root.visibility = View.GONE
-                binding.swipeRefreshLayout.isRefreshing = false
+                EnumFeedLoadingCode.INITIAL.value -> {
+                    binding.noPostId.root.visibility = View.VISIBLE
+                }
+                EnumFeedLoadingCode.SUCCESS.value, EnumFeedLoadingCode.OFFLINE.value -> {
+                    binding.noPostId.root.visibility = View.GONE
+                    binding.swipeRefreshLayout.isRefreshing = false
+                }
             }
         }
 
@@ -413,6 +417,12 @@ class AllFeedsFragment : Fragment() {
                 temporaryVideoSequence.clear()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        player.removeListener(playerListener)
+        player.release()
     }
 
 
