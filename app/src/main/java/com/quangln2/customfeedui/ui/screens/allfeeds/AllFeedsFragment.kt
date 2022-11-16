@@ -162,16 +162,18 @@ class AllFeedsFragment : Fragment() {
             }
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val manager = recyclerView.layoutManager as LinearLayoutManager
-                val firstPartiallyIndex = manager.findFirstVisibleItemPosition()
-                val tmpFirstFullIndex = manager.findFirstCompletelyVisibleItemPosition()
-                val firstFullIndex = if(tmpFirstFullIndex <= 0) 1 else tmpFirstFullIndex
-                val lastFullIndex = manager.findLastCompletelyVisibleItemPosition()
+                val tmpFirstVisibleItemPosition = manager.findFirstVisibleItemPosition()
+
+                val firstPartiallyIndex = if(tmpFirstVisibleItemPosition < 0) 0 else tmpFirstVisibleItemPosition
                 val lastPartiallyIndex = manager.findLastVisibleItemPosition()
+
                 val indexLists = HashSet<Int>().apply {
-                    add(firstPartiallyIndex)
-                    add(firstFullIndex)
-                    add(lastFullIndex)
-                    add(lastPartiallyIndex)
+                    if(firstPartiallyIndex <= lastPartiallyIndex){
+                        for(i in firstPartiallyIndex..lastPartiallyIndex) add(i)
+                    } else {
+                        add(firstPartiallyIndex)
+                        add(lastPartiallyIndex)
+                    }
                 }.filter { it >= 0 }.toList()
 
                 //Step 1: Get all visible items
@@ -218,7 +220,7 @@ class AllFeedsFragment : Fragment() {
                     }
                     withContext(Dispatchers.Main) {
                         //Handle whether to have loading screen or not
-                        val emptyFeedCondition = listsOfPostRender.size == 1 && viewModel.feedLoadingCode.value == 200
+                        val emptyFeedCondition = listsOfPostRender.size == 1 && viewModel.feedLoadingCode.value == EnumFeedLoadingCode.SUCCESS.value
                         val havePostCondition = listsOfPostRender.size > 1
                         if(emptyFeedCondition || havePostCondition){
                             binding.noPostId.root.visibility = View.GONE
