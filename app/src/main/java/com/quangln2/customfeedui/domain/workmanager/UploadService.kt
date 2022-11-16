@@ -54,7 +54,7 @@ class UploadService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent != null) {
+        if (intent?.getStringExtra(resources.getString(R.string.jsonStringKey)) != null) {
             //Get data from intent
             val jsonString = intent.getStringExtra(resources.getString(R.string.jsonStringKey))
             if(jsonString != null){
