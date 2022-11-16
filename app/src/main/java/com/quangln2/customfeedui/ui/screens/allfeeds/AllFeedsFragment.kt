@@ -1,6 +1,7 @@
 package com.quangln2.customfeedui.ui.screens.allfeeds
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
@@ -8,6 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -33,6 +36,7 @@ import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentAllFeedsBinding
 import com.quangln2.customfeedui.domain.workmanager.UploadService
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
+import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeedui.ui.viewmodel.ViewModelFactory
@@ -82,13 +86,25 @@ class AllFeedsFragment : Fragment() {
                 positionDeletedOrRefreshed.set(position)
             }
 
-            override fun onClickAddPost() =
-                findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment, null, navOptions {
-                    anim {
-                        enter = android.R.animator.fade_in
-                        exit = android.R.animator.fade_out
-                    }
-                })
+            override fun onClickAddPost(){
+                val permissionCheck = ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+                if(permissionCheck == PackageManager.PERMISSION_GRANTED){
+                    findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment, null, navOptions {
+                        anim {
+                            enter = android.R.animator.fade_in
+                            exit = android.R.animator.fade_out
+                        }
+                    })
+                } else if(shouldShowRequestPermissionRationale(android.Manifest.permission.READ_EXTERNAL_STORAGE)){
+                    FileUtils.getPermissionForStorageWithMultipleTimesDenial(requireContext())
+                } else{
+                    ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+                }
+            }
+
 
             override fun onClickVideoView(currentVideoPosition: Long, url: String, listOfUrls: ArrayList<String>) =
                 findNavController().navigate(

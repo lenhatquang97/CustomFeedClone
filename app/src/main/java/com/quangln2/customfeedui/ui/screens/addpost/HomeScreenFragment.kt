@@ -30,7 +30,6 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentHomeScreenBinding
-import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.CustomImageView
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
@@ -141,16 +140,13 @@ class HomeScreenFragment : Fragment() {
     private fun buttonHandleChooseImagesOrVideos(){
         // Handle choose image or video
         binding.buttonChooseImageVideo.setOnClickListener {
-            val isStoragePermissionAllowed = FileUtils.getPermissionForStorageWithMultipleTimesDenial(requireContext())
-            if (isStoragePermissionAllowed) {
-                val pickerIntent = Intent(Intent.ACTION_PICK)
-                pickerIntent.apply {
-                    type = "*/*"
-                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                    putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(IMAGE_MIMETYPE, VIDEO_MIMETYPE))
-                }
-                resultLauncher.launch(pickerIntent)
+            val pickerIntent = Intent(Intent.ACTION_PICK)
+            pickerIntent.apply {
+                type = "*/*"
+                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(IMAGE_MIMETYPE, VIDEO_MIMETYPE))
             }
+            resultLauncher.launch(pickerIntent)
         }
     }
 

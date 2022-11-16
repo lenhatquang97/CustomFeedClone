@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.quangln2.customfeedui.databinding.ActivityMainBinding
-import com.quangln2.customfeedui.others.utils.FileUtils
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
@@ -23,8 +22,6 @@ class MainActivity : AppCompatActivity() {
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
-
-        FileUtils.getPermissionForStorage(applicationContext, this)
 
         connectivityManager.registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {
