@@ -124,6 +124,7 @@ class AllFeedsFragment : Fragment() {
         val intent = Intent(requireContext(), UploadService::class.java)
         requireContext().startService(intent)
 
+
         viewModel.getAllFeedsWithPreloadCache()
         player.addListener(playerListener)
     }
@@ -260,6 +261,10 @@ class AllFeedsFragment : Fragment() {
                 binding.noPostId.textNote.text = resources.getString(R.string.loading)
                 viewModel.getAllFeeds()
                 FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.UNDEFINED.value
+
+                val intent = Intent(requireContext(), UploadService::class.java)
+                requireContext().stopService(intent)
+
             }
         }
 
@@ -423,6 +428,14 @@ class AllFeedsFragment : Fragment() {
         super.onDestroy()
         player.removeListener(playerListener)
         player.release()
+        if(FeedCtrl.isLoadingToUpload.value != null){
+            val value = FeedCtrl.isLoadingToUpload.value
+            if(value == EnumFeedSplashScreenState.COMPLETE.value || value == EnumFeedSplashScreenState.UNDEFINED.value){
+                val intent = Intent(requireContext(), UploadService::class.java)
+                requireContext().stopService(intent)
+            }
+
+        }
     }
 
 
