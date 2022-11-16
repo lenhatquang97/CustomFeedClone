@@ -112,7 +112,7 @@ class UploadService : Service() {
                                 uploadingPost.firstHeight = it["height"] as Int
                             }
 
-                            //Do this
+                            //Do by adding URL to list
                             listOfUrls.add(it["url"].toString())
 
                             //Check have enough data
