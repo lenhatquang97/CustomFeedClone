@@ -11,16 +11,20 @@ import com.quangln2.customfeedui.databinding.FragmentViewFullVideoBinding
 
 class ViewFullVideoFragment : Fragment() {
     private lateinit var binding: FragmentViewFullVideoBinding
+    private lateinit var player: ExoPlayer
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentViewFullVideoBinding.inflate(inflater, container, false)
+
         val value = arguments?.getString("value")
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
         val currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
-        val player = ExoPlayer.Builder(requireContext()).build()
+
+        player = ExoPlayer.Builder(requireContext()).build()
+
         if (value != null && listOfUrls != null) {
             binding.viewPager.adapter = FullImageVideoAdapter(this, listOfUrls, currentVideoPosition, player)
             binding.viewPager.setCurrentItem(listOfUrls.indexOf(value), false)
@@ -28,5 +32,8 @@ class ViewFullVideoFragment : Fragment() {
         return binding.root
     }
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        player.release()
+    }
 }

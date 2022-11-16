@@ -44,14 +44,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
             val mimeType = DownloadUtils.getMimeType(urlTmp)
             mimeType?.apply {
-                if (this.contains("video")) {
-                    binding.fullVideoView.visibility = View.VISIBLE
-                    binding.fullImageView.visibility = View.INVISIBLE
-                    binding.fullVideoPlayButton.visibility = View.INVISIBLE
-                } else {
-                    binding.fullVideoView.visibility = View.INVISIBLE
-                    binding.fullImageView.visibility = View.VISIBLE
-                }
+                binding.fullVideoView.visibility = if(mimeType.contains("video")) View.VISIBLE else View.INVISIBLE
             }
         }
     }
@@ -67,7 +60,6 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
                     super.onPlaybackStateChanged(playbackState)
                     when (playbackState) {
                         Player.STATE_ENDED -> {
-                            binding.fullVideoPlayButton.visibility = View.VISIBLE
                             player.seekTo(0)
                         }
                     }
@@ -104,14 +96,17 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     }
 
     private fun initializeVideoForLoading(url: String) {
-        binding.fullVideoView.player = player
         val mediaItem = MediaItem.fromUri(url)
-        player.setMediaItem(mediaItem)
-        player.seekTo(currentVideoPosition)
-        player.prepare()
-        player.play()
+        player.apply {
+            setMediaItem(mediaItem)
+            seekTo(currentVideoPosition)
+            prepare()
+            playWhenReady = true
+
+        }
+
+        binding.fullVideoView.player = player
         binding.fullImageView.visibility = View.INVISIBLE
-        binding.fullVideoPlayButton.visibility = View.INVISIBLE
     }
 
     override fun onPause() {
@@ -124,7 +119,6 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
                 binding.fullVideoView.player = null
                 binding.fullImageView.visibility = View.VISIBLE
-                binding.fullVideoPlayButton.visibility = View.VISIBLE
             }
         }
     }
@@ -141,7 +135,6 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        player.release()
         Glide.with(requireContext()).clear(binding.fullImageView)
     }
 }
