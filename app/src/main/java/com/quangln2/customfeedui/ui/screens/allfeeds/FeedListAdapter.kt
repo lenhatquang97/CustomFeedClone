@@ -66,11 +66,6 @@ class FeedListAdapter(
             } else {
                 binding.customGridGroup.visibility = View.VISIBLE
             }
-            if(item.caption.isEmpty()){
-                binding.caption.visibility = View.GONE
-            } else {
-                binding.caption.visibility = View.VISIBLE
-            }
         }
 
         private fun loadBasicInfoAboutFeed(item: MyPostRender) {
@@ -86,6 +81,11 @@ class FeedListAdapter(
         @SuppressLint("SetTextI18n")
         private fun loadFeedDescription(item: MyPostRender) {
             binding.caption.text = item.caption
+            if(item.caption.isEmpty()){
+                binding.caption.visibility = View.GONE
+            } else {
+                binding.caption.visibility = View.VISIBLE
+            }
         }
 
         @SuppressLint("SetTextI18n")

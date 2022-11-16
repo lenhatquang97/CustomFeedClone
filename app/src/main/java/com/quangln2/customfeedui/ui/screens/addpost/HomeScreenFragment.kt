@@ -23,9 +23,11 @@ import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.constants.ConstantSetup
+import com.quangln2.customfeedui.data.controllers.FeedCtrl
 import com.quangln2.customfeedui.data.database.FeedDatabase
 import com.quangln2.customfeedui.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
+import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentHomeScreenBinding
 import com.quangln2.customfeedui.others.utils.FileUtils
@@ -157,20 +159,31 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun buttonHandleSubmitToServer() {
-        // Handle submit to server
+        binding.sendTitle.setOnClickListener {
+            if(FeedCtrl.isLoadingToUpload.value == EnumFeedSplashScreenState.LOADING.value){
+                Toast.makeText(requireContext(), resources.getString(R.string.wait_for_previous_upload), Toast.LENGTH_SHORT).show()
+            } else submitToServer()
+        }
+
         binding.buttonSubmitToServer.setOnClickListener {
-            val (uriLists, caption) = preUploadFiles()
-            if (caption.isEmpty() && uriLists.size == 0) {
-                Toast.makeText(context, resources.getString(R.string.please_add_content), Toast.LENGTH_SHORT).show()
-            } else {
-                findNavController().navigate(R.id.action_homeScreenFragment_to_allFeedsFragment, null, navOptions {
-                    anim {
-                        enter = android.R.animator.fade_in
-                        exit = android.R.animator.fade_out
-                    }
-                })
-                viewModel.uploadFiles(caption, uriLists, requireContext())
-            }
+            if(FeedCtrl.isLoadingToUpload.value == EnumFeedSplashScreenState.LOADING.value){
+                Toast.makeText(requireContext(), resources.getString(R.string.wait_for_previous_upload), Toast.LENGTH_SHORT).show()
+            } else submitToServer()
+        }
+    }
+
+    private fun submitToServer(){
+        val (uriLists, caption) = preUploadFiles()
+        if (caption.isEmpty() && uriLists.size == 0) {
+            Toast.makeText(context, resources.getString(R.string.please_add_content), Toast.LENGTH_SHORT).show()
+        } else {
+            findNavController().navigate(R.id.action_homeScreenFragment_to_allFeedsFragment, null, navOptions {
+                anim {
+                    enter = android.R.animator.fade_in
+                    exit = android.R.animator.fade_out
+                }
+            })
+            viewModel.uploadFiles(caption, uriLists, requireContext())
         }
     }
 
