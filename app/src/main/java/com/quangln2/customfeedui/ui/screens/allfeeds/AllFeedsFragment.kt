@@ -201,10 +201,6 @@ class AllFeedsFragment : Fragment() {
                 EnumFeedLoadingCode.INITIAL.value -> {
                     binding.noPostId.root.visibility = View.VISIBLE
                 }
-                EnumFeedLoadingCode.SUCCESS.value, EnumFeedLoadingCode.OFFLINE.value -> {
-                    binding.noPostId.root.visibility = View.GONE
-                    binding.swipeRefreshLayout.isRefreshing = false
-                }
             }
         }
 
@@ -221,6 +217,21 @@ class AllFeedsFragment : Fragment() {
                         listsOfPostRender.add(myPostRender)
                     }
                     withContext(Dispatchers.Main) {
+                        //Handle whether to have loading screen or not
+                        val emptyFeedCondition = listsOfPostRender.size == 1 && viewModel.feedLoadingCode.value == 200
+                        val havePostCondition = listsOfPostRender.size > 1
+                        if(emptyFeedCondition || havePostCondition){
+                            binding.noPostId.root.visibility = View.GONE
+                            binding.swipeRefreshLayout.isRefreshing = false
+                            binding.retryButton.visibility = View.GONE
+                            binding.allFeeds.visibility = View.VISIBLE
+                        } else {
+                            binding.noPostId.root.visibility = View.VISIBLE
+                            binding.allFeeds.visibility = View.GONE
+                        }
+
+                        //only submitList
+
                         adapterVal.submitList(listsOfPostRender.toMutableList()){
                             if(positionDeletedOrRefreshed.get() >= 1){
                                 binding.allFeeds.scrollToPosition(positionDeletedOrRefreshed.get() - 1)
