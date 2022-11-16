@@ -435,6 +435,7 @@ class AllFeedsFragment : Fragment() {
                 temporaryVideoSequence.clear()
             }
         }
+        Log.v("FeedFragment", "After processing $temporaryVideoSequence ${FeedCtrl.videoDeque}")
     }
 
     override fun onDestroy() {
