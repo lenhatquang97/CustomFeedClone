@@ -67,14 +67,32 @@ class AllFeedsFragment : Fragment() {
             if (playbackState == Player.STATE_ENDED) {
                 onEndPlayVideo(player)
                 if(FeedCtrl.videoDeque.isNotEmpty()){
-                    FeedCtrl.playingQueue.remove()
-                    FeedCtrl.videoDeque.remove()
+                    val playedPair = FeedCtrl.playingQueue.remove()
+                    val index = FeedCtrl.videoDeque.indexOfFirst { it == playedPair }
+                    if(index != -1){
+                        for(i in 0 .. index){
+                            FeedCtrl.videoDeque.removeFirst()
+                        }
+                    }
                     val pair = FeedCtrl.videoDeque.peek()
                     if(pair != null){
                         FeedCtrl.playingQueue.add(pair)
                         playVideoUtil()
+                    } else {
+                        temporaryVideoSequence.forEach{
+                            FeedCtrl.videoDeque.add(it)
+                        }
+                        val pair = FeedCtrl.videoDeque.peek()
+                        if(pair != null){
+                            FeedCtrl.playingQueue.add(pair)
+                            playVideoUtil()
+                        }
+
                     }
                 }
+
+
+
             }
         }
     }
