@@ -138,7 +138,7 @@ class UploadService : Service() {
         }
     }
     private fun showWaitingUI(context: Context){
-        builder.setContentText("Waiting...")
+        builder.setContentText("Waiting for uploading...")
         with(NotificationManagerCompat.from(context)) {
             notify(id, builder.build())
         }

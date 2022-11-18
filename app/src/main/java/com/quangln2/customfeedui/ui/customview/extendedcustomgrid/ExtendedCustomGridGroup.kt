@@ -171,8 +171,9 @@ class ExtendedCustomGridGroup : ViewGroup {
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val width = MeasureSpec.getSize(widthMeasureSpec)
-        val height = MeasureSpec.getSize(heightMeasureSpec)
-        setMeasuredDimension(width, height)
+        val numOfHeight = if(childCount.mod(9) == 0) childCount / 9 else childCount / 9 + 1
+
+        setMeasuredDimension(width, numOfHeight * width)
     }
 
     private fun drawHorizontalGridMoreThanTwoAndLessThanFour() {
