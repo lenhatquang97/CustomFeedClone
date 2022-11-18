@@ -2,8 +2,10 @@ package com.quangln2.customfeedui.ui.screens.addpost
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -69,6 +71,19 @@ class HomeScreenFragment : Fragment() {
                 }
             }
         }
+    }
+
+    var firstItemWidth = 0
+    var firstItemHeight = 0
+
+    fun Uri.getImageDimensions(context: Context): Pair<Int, Int> {
+        val inputStream = context.contentResolver.openInputStream(this)!!
+        val exif = ExifInterface(inputStream)
+
+        val width = exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0)
+        val height = exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0)
+
+        return Pair(width, height)
     }
 
     private var listOfViews: MutableList<View> = mutableListOf()
@@ -287,7 +302,13 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun initCustomGrid() {
-        val rectangles = getGridItemsLocation(listOfViews.size)
+        if(listOfUris.size > 0){
+            val pair = listOfUris[0].getImageDimensions(requireContext())
+            firstItemWidth = pair.first
+            firstItemHeight = pair.second
+        }
+
+        val rectangles = getGridItemsLocation(listOfViews.size, firstItemWidth, firstItemHeight)
         val marginLeft = 8
         val contentPadding = 32
         val marginHorizontalSum = 2 * marginLeft + contentPadding
