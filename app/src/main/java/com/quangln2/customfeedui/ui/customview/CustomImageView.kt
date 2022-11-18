@@ -40,7 +40,7 @@ class CustomImageView {
             imageView.layoutParams =
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-            Glide.with(context).load(url.toUri()).apply(ConstantSetup.REQUEST_WITH_RGB_565).into(imageView)
+            Glide.with(context).load(url.toUri()).apply(ConstantSetup.REQUEST_WITH_RGB_565.override(300)).into(imageView)
             return imageView
         }
     }
