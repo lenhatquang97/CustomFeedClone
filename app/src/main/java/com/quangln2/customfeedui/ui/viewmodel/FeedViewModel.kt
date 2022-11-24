@@ -3,37 +3,28 @@ package com.quangln2.customfeedui.ui.viewmodel
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.quangln2.customfeedui.R
-import com.quangln2.customfeedui.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.datamodel.OfflineResource
-import com.quangln2.customfeedui.data.models.datamodel.UploadPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
 import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
-import com.quangln2.customfeedui.domain.usecase.*
+import com.quangln2.customfeedui.domain.usecase.DeleteFeedUseCase
+import com.quangln2.customfeedui.domain.usecase.GetAllFeedsModifiedUseCase
 import com.quangln2.customfeedui.domain.workmanager.UploadService
+import com.quangln2.customfeedui.others.callback.GetDataCallback
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class FeedViewModel(
-    val getAllFeedsUseCase: GetAllFeedsUseCase,
     val deleteFeedUseCase: DeleteFeedUseCase,
-    val insertDatabaseUseCase: InsertDatabaseUseCase,
-    val deleteDatabaseUseCase: DeleteDatabaseUseCase,
-    val getAllInDatabaseUseCase: GetAllInDatabaseUseCase
+    val getAllFeedsModifiedUseCase: GetAllFeedsModifiedUseCase
 ) : ViewModel() {
     private var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
     val uriLists: LiveData<MutableList<Uri>> = _uriLists
@@ -45,6 +36,16 @@ class FeedViewModel(
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
     var feedVideoItemPlaying = Pair(-1, -1)
+
+    private val onTakeData = object : GetDataCallback{
+        override fun onGetFeedLoadingCode(loadingCode: Int) {
+            _feedLoadingCode.value = loadingCode
+        }
+
+        override fun onGetUploadList(postList: List<MyPost>) {
+            _uploadLists.postValue(postList.toMutableList())
+        }
+    }
 
     fun clearImageAndVideoGrid() = _uriLists.value?.clear()
     fun addImageAndVideoGridInBackground(ls: MutableList<Uri>?) = _uriLists.postValue(ls?.toMutableList())
@@ -59,93 +60,13 @@ class FeedViewModel(
 
     }
 
-    private fun loadCache() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val offlinePosts = getAllInDatabaseUseCase()
-            _feedLoadingCode.postValue(EnumFeedLoadingCode.OFFLINE.value)
-            if(offlinePosts.isNotEmpty()) {
-                _uploadLists.postValue(offlinePosts.toMutableList())
-            }
-        }
-
-    }
-
-    private fun compareDBPostsAndFetchPosts(dbPosts: List<MyPost>, fetchedPost: List<MyPost>): Boolean{
-        if(dbPosts.size != fetchedPost.size) return false
-        for((a,b) in dbPosts.zip(fetchedPost)){
-            if(a != b) return false
-        }
-        return true
-
-    }
-
-    fun getAllFeedsWithPreloadCache() {
-        loadCache()
-        getAllFeeds()
-    }
-
-    fun getAllFeeds(onNotChangedData: () -> Unit = {}) {
-        getAllFeedsUseCase().enqueue(object : Callback<MutableList<UploadPost>> {
-            override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
-                if (response.code() == 200) {
-                    val ls = mutableListOf<MyPost>()
-                    val body = response.body()
-                    val deletedFeeds = mutableListOf<MyPost>()
-
-                    viewModelScope.launch(Dispatchers.IO) {
-                        val offlinePosts = getAllInDatabaseUseCase()
-                        if (body != null) {
-                            //add to offline feeds
-                            body.forEach {
-                                val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
-                                ls.add(itemConverted)
-                            }
-
-                            //find in offline feeds if there are no online posts in online database
-                            offlinePosts.forEach {
-                                val filterId = body.find { item -> item.feedId == it.feedId }
-                                if (filterId == null) {
-                                    deletedFeeds.add(it)
-                                }
-                            }
-                            //deleted first
-                            deletedFeeds.forEach {
-                                deleteDatabaseUseCase(it.feedId)
-                            }
-
-                            val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
-                            availableItems.forEach {
-                                insertDatabaseUseCase(it)
-                            }
-
-                        }
-                        //get available items but not in deleted feeds
-                        val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
-                        _feedLoadingCode.postValue(response.code())
-                        if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems)){
-                            _uploadLists.postValue(availableItems.toMutableList())
-                        } else {
-                            onNotChangedData()
-                        }
-                    }
-                } else{
-                    _feedLoadingCode.value = response.code()
-                    loadCache()
-                    onNotChangedData()
-                }
-
-            }
-
-            override fun onFailure(call: Call<MutableList<UploadPost>>, t: Throwable) {
-                loadCache()
-            }
-
-        })
+    fun getAllFeeds(onNotChangedData: () -> Unit = {}, preloadCache: Boolean = false) {
+        getAllFeedsModifiedUseCase(onTakeData, onNotChangedData, viewModelScope, preloadCache)
     }
 
     fun getFeedItem(feedId: String): MyPostRender {
         val ls = _uploadLists.value
-        if (ls != null) {
+        ls?.apply {
             val indexOfFirst = ls.indexOfFirst { it.feedId == feedId }
             return MyPostRender.convertMyPostToMyPostRender(ls[indexOfFirst])
         }
@@ -154,26 +75,10 @@ class FeedViewModel(
     }
 
     fun deleteFeed(id: String, context: Context) {
-        deleteFeedUseCase(id).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if (response.errorBody() == null && response.code() == 200) {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        deleteDatabaseUseCase(id)
-                    }
-                    val ls = uploadLists.value
-                    val filteredList = ls?.filter { it.feedId != id }
-                    _uploadLists.value = filteredList?.toMutableList()
-                    Toast.makeText(context, context.resources.getString(R.string.delete_successfully), Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, context.resources.getString(R.string.delete_failed), Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(context, context.resources.getString(R.string.delete_failed), Toast.LENGTH_SHORT).show()
-            }
-
-        })
+        val oldLists = uploadLists.value
+        oldLists?.apply {
+            deleteFeedUseCase(id, onTakeData, oldLists, viewModelScope, context)
+        }
     }
 
     fun downloadResourceWithId(resources: MutableList<OfflineResource>, context: Context) {

@@ -159,7 +159,7 @@ class AllFeedsFragment : Fragment() {
         requireContext().startService(intent)
 
 
-        viewModel.getAllFeedsWithPreloadCache()
+        viewModel.getAllFeeds(preloadCache = true)
         player.addListener(playerListener)
     }
 
@@ -284,7 +284,7 @@ class AllFeedsFragment : Fragment() {
             binding.noPostId.imageView.visibility = View.VISIBLE
             binding.noPostId.textNote.visibility = View.VISIBLE
             binding.retryButton.visibility = View.GONE
-            viewModel.getAllFeedsWithPreloadCache()
+            viewModel.getAllFeeds(preloadCache = true)
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {

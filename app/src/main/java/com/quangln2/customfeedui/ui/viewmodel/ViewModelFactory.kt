@@ -13,11 +13,8 @@ class ViewModelFactory constructor(private val feedRepository: FeedRepository) :
             when {
                 isAssignableFrom(FeedViewModel::class.java) ->
                     FeedViewModel(
-                        GetAllFeedsUseCase(feedRepository),
                         DeleteFeedUseCase(feedRepository),
-                        InsertDatabaseUseCase(feedRepository),
-                        DeleteDatabaseUseCase(feedRepository),
-                        GetAllInDatabaseUseCase(feedRepository)
+                        GetAllFeedsModifiedUseCase(feedRepository)
                     )
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
