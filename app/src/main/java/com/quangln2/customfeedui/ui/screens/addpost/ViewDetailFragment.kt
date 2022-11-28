@@ -54,16 +54,15 @@ class ViewDetailFragment : Fragment() {
             AlertDialog.Builder(requireContext()).apply {
                 setTitle(resources.getString(R.string.not_saved_changes))
                 setMessage(resources.getString(R.string.cancel_ask))
-                setPositiveButton("Yes") { _, _ ->
+                setPositiveButton(requireContext().getText(R.string.positive_title)) { _, _ ->
                     findNavController().popBackStack()
                 }
-                setNegativeButton("No") { dialog, _ ->
+                setNegativeButton(requireContext().getText(R.string.negative_title)) { dialog, _ ->
                     dialog.dismiss()
                 }
             }.show()
         }
         initCustomGrid(listOfUris)
-
         return binding.root
     }
 
