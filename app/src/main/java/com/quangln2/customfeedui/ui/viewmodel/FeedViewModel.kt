@@ -32,16 +32,23 @@ class FeedViewModel(
     val deleteFeedUseCase: DeleteFeedUseCase,
     val getAllFeedsModifiedUseCase: GetAllFeedsModifiedUseCase
 ) : ViewModel() {
-    private var _uriLists = MutableLiveData<MutableList<Uri>>().apply { value = mutableListOf() }
+    private var _uriLists = MutableLiveData<MutableList<Uri>>()
     val uriLists: LiveData<MutableList<Uri>> = _uriLists
 
-    private var _uploadLists = MutableLiveData<MutableList<MyPost>>().apply { value = mutableListOf() }
+    private var _uploadLists = MutableLiveData<MutableList<MyPost>>()
     val uploadLists: LiveData<MutableList<MyPost>> = _uploadLists
 
-    private var _feedLoadingCode = MutableLiveData<Int>().apply { value = EnumFeedLoadingCode.INITIAL.value }
+    private var _feedLoadingCode = MutableLiveData<Int>()
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
-    var feedVideoItemPlaying = Pair(-1, -1)
+    private val temporaryVideoSequence by lazy { mutableListOf<Pair<Int, Int>>() }
+
+    init {
+        _uriLists.apply { value = mutableListOf() }
+        _uploadLists.apply { value = mutableListOf() }
+        _feedLoadingCode.apply { value = EnumFeedLoadingCode.INITIAL.value }
+    }
+
 
     private val onTakeData = object : GetDataCallback{
         override fun onGetFeedLoadingCode(loadingCode: Int) {
@@ -179,7 +186,7 @@ class FeedViewModel(
             FeedCtrl.addToLast(videoPair.first, videoPair.second)
         }
     }
-    fun onPlaybackStateEnded(playbackState: Int, temporaryVideoSequence: MutableList<Pair<Int, Int>>, onEndPlayVideo: () -> Unit, onPlayVideo: () -> Unit){
+    fun onPlaybackStateEnded(playbackState: Int, onEndPlayVideo: () -> Unit, onPlayVideo: () -> Unit){
         if (playbackState == Player.STATE_ENDED) {
             onEndPlayVideo()
             if(FeedCtrl.videoDeque.isNotEmpty()){
@@ -209,4 +216,18 @@ class FeedViewModel(
         }
     }
 
+    fun putIncomingVideoIntoQueueWrapper(onQueueNotEmpty: () -> Unit){
+        putIncomingVideoToQueue(temporaryVideoSequence) {
+            onQueueNotEmpty()
+        }
+    }
+
+    fun stopUploadService(context: Context){
+        val intent = Intent(context, UploadService::class.java)
+        context.stopService(intent)
+    }
+    fun startUploadService(context: Context){
+        val intent = Intent(context, UploadService::class.java)
+        context.startService(intent)
+    }
 }

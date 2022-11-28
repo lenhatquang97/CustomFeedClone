@@ -22,6 +22,7 @@ import com.bumptech.glide.request.target.Target
 import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.constants.ConstantSetup
+import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.models.uimodel.RectanglePoint
 import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
@@ -89,7 +90,7 @@ class FeedListAdapter(
         }
 
         @SuppressLint("SetTextI18n")
-        private fun bindingButton(item: MyPostRender) {
+        private fun bindingButton() {
             binding.deleteButton.setOnClickListener {
                 val itr = currentList[adapterPosition]
                 eventFeedCallback.onDeleteItem(itr.feedId, position)
@@ -137,14 +138,14 @@ class FeedListAdapter(
 
             loadBasicInfoAboutFeed(item)
             loadFeedDescription(item)
-            bindingButton(item)
+            bindingButton()
             if (rectangles.isNotEmpty()) {
                 for (i in rectangles.indices) {
                     if (addMoreImageOrVideoLayer(i, item, rectangles, widthGrid, contentPadding)) return
                     val url = item.resources[i].url
                     val doesLocalFileExist = DownloadUtils.doesLocalFileExist(url, context)
                     val isValidFile = DownloadUtils.isValidFile(url, context, item.resources[i].size)
-                    val temporaryFilePath = DownloadUtils.getTemporaryFilePath(url, context)
+                    val temporaryFilePath = DownloadUtils.getTemporaryFilePath(url, context, item.resources[i].size)
                     val value = if (doesLocalFileExist && isValidFile) temporaryFilePath else url
                     val mimeType = getMimeType(value)
 
@@ -162,15 +163,18 @@ class FeedListAdapter(
                         }
                         videoView.layoutParams = layoutParams
                         videoView.setOnClickListener {
-                            val stringArr = ArrayList<String>()
-                            item.resources.forEach {
-                                stringArr.add(it.url)
+                            val stringArr = ArrayList<String>().apply {
+                                item.resources.forEach {
+                                    add(it.url)
+                                }
                             }
-                            eventFeedCallback.onClickVideoView(
-                                videoView.currentPosition,
-                                item.resources[i].url,
-                                stringArr
-                            )
+
+                            val currentVideo = CurrentVideo(
+                                currentVideoPosition = -1L,
+                                url = item.resources[i].url,
+                                listOfUrls = stringArr)
+
+                            eventFeedCallback.onClickVideoView(currentVideo)
                         }
 
                         binding.customGridGroup.addView(videoView)
@@ -185,9 +189,17 @@ class FeedListAdapter(
                         imageView.layoutParams = layoutParams
 
                         imageView.setOnClickListener {
-                            val urlArrayList = ArrayList<String>()
-                            item.resources.forEach { urlArrayList.add(it.url) }
-                            eventFeedCallback.onClickVideoView(-1L, item.resources[i].url, urlArrayList)
+                            val urlArrayList = ArrayList<String>().apply {
+                                item.resources.forEach {
+                                    add(it.url)
+                                }
+                            }
+
+                            val currentVideo = CurrentVideo(
+                                currentVideoPosition = -1L,
+                                url = item.resources[i].url,
+                                listOfUrls = urlArrayList)
+                            eventFeedCallback.onClickVideoView(currentVideo)
                         }
 
                         Glide.with(context).load(value).apply(
@@ -262,7 +274,6 @@ class FeedListAdapter(
                     child.pauseAndReleaseVideo(player)
                 }
             }
-
             customGridGroup.removeAllViews()
         }
     }

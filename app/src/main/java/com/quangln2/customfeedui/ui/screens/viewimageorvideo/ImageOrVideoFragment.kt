@@ -33,15 +33,8 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
 
         if (listOfUrls != null && position != null) {
-            val doesLocalFileExist = DownloadUtils.doesLocalFileExist(listOfUrls[position], requireContext())
-            urlTmp = if (doesLocalFileExist) {
-                DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
-            } else {
-                listOfUrls[position]
-            }
-
+            urlTmp = DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
             loadImageThumbnail()
-
             val mimeType = DownloadUtils.getMimeType(urlTmp)
             mimeType?.apply {
                 binding.fullVideoView.visibility = if(mimeType.contains("video")) View.VISIBLE else View.INVISIBLE

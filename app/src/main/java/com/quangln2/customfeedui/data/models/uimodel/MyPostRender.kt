@@ -4,8 +4,9 @@ import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.datamodel.OfflineResource
 
 data class MyPostRender(
-    //Key
+    //Primary key
     var feedId: String,
+
 
     var typeOfPost: TypeOfPost,
     var name: String,
@@ -16,7 +17,6 @@ data class MyPostRender(
     var firstItemWidth: Int = 0,
     var firstItemHeight: Int = 0
 ) {
-    constructor() : this("", TypeOfPost.POST, "", "", "", "", mutableListOf(), 0, 0)
 
     companion object {
         fun convertMyPostToMyPostRender(myPost: MyPost, typeOfPost: TypeOfPost = TypeOfPost.POST): MyPostRender {
@@ -31,6 +31,17 @@ data class MyPostRender(
                 firstItemHeight = myPost.firstHeight,
                 firstItemWidth = myPost.firstWidth
             )
+        }
+
+        fun convertToListWithRenderedPost(posts: List<MyPost>): List<MyPostRender>{
+            val listsOfPostRender = mutableListOf<MyPostRender>()
+            val addNewPostItem = convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+            listsOfPostRender.add(addNewPostItem)
+            posts.forEach { itr ->
+                val myPostRender = convertMyPostToMyPostRender(itr)
+                listsOfPostRender.add(myPostRender)
+            }
+            return listsOfPostRender
         }
     }
 

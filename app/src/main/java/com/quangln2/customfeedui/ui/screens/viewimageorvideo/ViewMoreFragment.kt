@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.bumptech.glide.Glide
@@ -50,16 +51,13 @@ class ViewMoreFragment : Fragment() {
 
         Glide.with(requireContext()).load(item.avatar).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100).into(binding.myAvatarImage)
 
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             for (i in 0 until item.resources.size) {
-                val existsLocal = DownloadUtils.doesLocalFileExist(
+                val value = DownloadUtils.getTemporaryFilePath(
                     item.resources[i].url,
-                    requireContext()
-                ) && DownloadUtils.isValidFile(item.resources[i].url, requireContext(), item.resources[i].size)
-                val value = if (existsLocal) DownloadUtils.getTemporaryFilePath(
-                    item.resources[i].url,
-                    requireContext()
-                ) else item.resources[i].url
+                    requireContext(),
+                    item.resources[i].size
+                )
                 val mimeType = DownloadUtils.getMimeType(value)
                 mimeType?.apply {
                     if (mimeType.contains("video")) {

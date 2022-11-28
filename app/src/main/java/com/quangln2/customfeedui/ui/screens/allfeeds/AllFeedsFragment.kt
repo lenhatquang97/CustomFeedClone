@@ -1,6 +1,5 @@
 package com.quangln2.customfeedui.ui.screens.allfeeds
 
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
@@ -25,14 +24,12 @@ import com.quangln2.customfeedui.data.controllers.FeedCtrl
 import com.quangln2.customfeedui.data.database.FeedDatabase
 import com.quangln2.customfeedui.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
-import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
+import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
-import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentAllFeedsBinding
-import com.quangln2.customfeedui.domain.workmanager.UploadService
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
@@ -53,18 +50,17 @@ class AllFeedsFragment : Fragment() {
     private val positionDeletedOrRefreshed by lazy { AtomicInteger(-1) }
     private val player by lazy { ExoPlayer.Builder(requireContext()).build() }
 
-    val viewModel: FeedViewModel by activityViewModels {
+    private var feedVideoItemPlaying = Pair(-1, -1)
+
+    private val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
-
-    private val temporaryVideoSequence = mutableListOf<Pair<Int, Int>>()
 
     private val playerListener: Player.Listener get() = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
             viewModel.onPlaybackStateEnded(
                 playbackState = playbackState,
-                temporaryVideoSequence = temporaryVideoSequence,
                 onEndPlayVideo =  {onEndPlayVideo(player)},
                 onPlayVideo = { playVideoUtil() })
         }
@@ -97,14 +93,10 @@ class AllFeedsFragment : Fragment() {
             }
 
 
-            override fun onClickVideoView(currentVideoPosition: Long, url: String, listOfUrls: ArrayList<String>) =
+            override fun onClickVideoView(currentVideo: CurrentVideo) =
                 findNavController().navigate(
                     R.id.action_allFeedsFragment_to_viewFullVideoFragment,
-                    Bundle().apply {
-                        putLong("currentVideoPosition", currentVideoPosition)
-                        putString("value", url)
-                        putStringArrayList("listOfUrls", listOfUrls)
-                    },
+                    currentVideo.encapsulateToBundle(),
                     navOptions {
                         anim {
                             enter = android.R.animator.fade_in
@@ -127,8 +119,7 @@ class AllFeedsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val intent = Intent(requireContext(), UploadService::class.java)
-        requireContext().startService(intent)
+        viewModel.startUploadService(requireContext())
         viewModel.getAllFeeds(preloadCache = true)
         player.addListener(playerListener)
     }
@@ -171,14 +162,13 @@ class AllFeedsFragment : Fragment() {
                 }
 
                 //Step 2: put incoming video to play
-                viewModel.putIncomingVideoToQueue(temporaryVideoSequence) {
+                viewModel.putIncomingVideoIntoQueueWrapper {
                     if(FeedCtrl.playingQueue.isNotEmpty()){
                         val (pausedItemIndex, videoIndex) = FeedCtrl.playingQueue.remove()
                         pauseVideoUtil(pausedItemIndex, videoIndex)
                     }
                 }
 
-                //Case when first load into fragment
                 if(binding.allFeeds.scrollState == RecyclerView.SCROLL_STATE_IDLE){
                     playVideoUtil()
                 }
@@ -207,16 +197,11 @@ class AllFeedsFragment : Fragment() {
                 binding.noPostId.root.visibility = View.INVISIBLE
                 binding.retryButton.visibility = View.GONE
                 lifecycleScope.launch(Dispatchers.IO) {
-                    val listsOfPostRender = mutableListOf<MyPostRender>()
-                    val addNewPostItem = MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
-                    listsOfPostRender.add(addNewPostItem)
-                    it.forEach { itr ->
-                        val myPostRender = MyPostRender.convertMyPostToMyPostRender(itr)
-                        listsOfPostRender.add(myPostRender)
-                    }
+                    val listsOfPostRender = MyPostRender.convertToListWithRenderedPost(it)
                     withContext(Dispatchers.Main) {
                         //Handle whether to have loading screen or not
-                        val emptyFeedCondition = listsOfPostRender.size == 1 && viewModel.feedLoadingCode.value == EnumFeedLoadingCode.SUCCESS.value
+                        val feedLoadingCode = viewModel.feedLoadingCode.value
+                        val emptyFeedCondition = listsOfPostRender.size == 1 && feedLoadingCode == EnumFeedLoadingCode.SUCCESS.value
                         val havePostCondition = listsOfPostRender.size > 1
                         if(emptyFeedCondition || havePostCondition){
                             binding.noPostId.root.visibility = View.GONE
@@ -241,21 +226,7 @@ class AllFeedsFragment : Fragment() {
 
         }
 
-        binding.retryButton.setOnClickListener {
-            binding.noPostId.imageView.visibility = View.VISIBLE
-            binding.noPostId.textNote.visibility = View.VISIBLE
-            binding.retryButton.visibility = View.GONE
-            viewModel.getAllFeeds(preloadCache = true)
-        }
 
-        binding.swipeRefreshLayout.setOnRefreshListener {
-            binding.noPostId.imageView.visibility = View.VISIBLE
-            binding.noPostId.textNote.text = resources.getString(R.string.loading)
-            positionDeletedOrRefreshed.set(1)
-            viewModel.getAllFeeds{
-                binding.swipeRefreshLayout.isRefreshing = false
-            }
-        }
 
         FeedCtrl.isLoadingToUpload.observe(viewLifecycleOwner) {
             binding.loadingCard.root.visibility = when(it){
@@ -263,18 +234,42 @@ class AllFeedsFragment : Fragment() {
                 else -> View.GONE
             }
             if (it == EnumFeedSplashScreenState.COMPLETE.value) {
+                //UI State
                 binding.swipeRefreshLayout.isRefreshing = true
                 binding.noPostId.imageView.visibility = View.VISIBLE
                 binding.noPostId.textNote.text = resources.getString(R.string.loading)
+
+                //Code state
                 FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.UNDEFINED.value
 
                 viewModel.getAllFeeds()
-                val intent = Intent(requireContext(), UploadService::class.java)
-                requireContext().stopService(intent)
+                viewModel.stopUploadService(requireContext())
             }
         }
 
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.retryButton.setOnClickListener {
+            binding.noPostId.imageView.visibility = View.VISIBLE
+            binding.noPostId.textNote.visibility = View.VISIBLE
+            binding.retryButton.visibility = View.GONE
+
+            viewModel.getAllFeeds(preloadCache = true)
+        }
+
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            binding.noPostId.imageView.visibility = View.VISIBLE
+            binding.noPostId.textNote.text = resources.getString(R.string.loading)
+
+            positionDeletedOrRefreshed.set(1)
+            viewModel.getAllFeeds{
+                binding.swipeRefreshLayout.isRefreshing = false
+            }
+        }
     }
 
     override fun onStart() {
@@ -291,8 +286,7 @@ class AllFeedsFragment : Fragment() {
     }
 
     private fun isVideoPlaying(): Boolean {
-        if(viewModel.feedVideoItemPlaying.first == -1 && viewModel.feedVideoItemPlaying.second == -1) return false
-        val (pausedItemIndex, videoIndex) = viewModel.feedVideoItemPlaying
+        val (pausedItemIndex, videoIndex) = feedVideoItemPlaying
         val view = getVideoView(pausedItemIndex, videoIndex)
         if (view is LoadingVideoView) {
             return view.playerView.player?.isPlaying ?: false
@@ -313,14 +307,14 @@ class AllFeedsFragment : Fragment() {
             val view = getVideoView(mainItemIndex, videoIndex)
 
             if (view != null && view is LoadingVideoView) {
-                viewModel.feedVideoItemPlaying = Pair(mainItemIndex, videoIndex)
+                feedVideoItemPlaying = Pair(mainItemIndex, videoIndex)
                 view.playVideo(player)
             }
         }
 
     }
     private fun onEndPlayVideo(player: ExoPlayer){
-        val (mainItemIndex, videoIndex) = viewModel.feedVideoItemPlaying
+        val (mainItemIndex, videoIndex) = feedVideoItemPlaying
         val view = getVideoView(mainItemIndex, videoIndex)
         if(view != null && view is LoadingVideoView){
             view.onEndPlayVideo(player)
@@ -353,11 +347,12 @@ class AllFeedsFragment : Fragment() {
         super.onDestroy()
         player.removeListener(playerListener)
         player.release()
-        if(FeedCtrl.isLoadingToUpload.value != null){
-            val value = FeedCtrl.isLoadingToUpload.value
-            if(value == EnumFeedSplashScreenState.COMPLETE.value || value == EnumFeedSplashScreenState.UNDEFINED.value){
-                val intent = Intent(requireContext(), UploadService::class.java)
-                requireContext().stopService(intent)
+        FeedCtrl.isLoadingToUpload.value?.apply {
+            when(this){
+                EnumFeedSplashScreenState.COMPLETE.value,
+                EnumFeedSplashScreenState.UNDEFINED.value -> {
+                    viewModel.stopUploadService(requireContext())
+                }
             }
         }
     }

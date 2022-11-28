@@ -50,10 +50,21 @@ object DownloadUtils {
         return false
     }
 
+    fun getTemporaryFilePath(url: String, context: Context, fileSize: Long): String {
+        val fileName = URLUtil.guessFileName(url, null, null)
+        val file = File(context.cacheDir, fileName)
+        if(file.exists() && file.length() == fileSize && fileSize != 0L){
+            return file.absolutePath
+        }
+        return url
+    }
     fun getTemporaryFilePath(url: String, context: Context): String {
         val fileName = URLUtil.guessFileName(url, null, null)
         val file = File(context.cacheDir, fileName)
-        return file.absolutePath
+        if(file.exists()){
+            return file.absolutePath
+        }
+        return url
     }
 
     fun downloadResource(url: String, context: Context) {
