@@ -128,15 +128,16 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup
+            <FrameLayout
                 android:id="@+id/customGridGroup"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="16dp"
+                android:layout_marginVertical="16dp"
+                android:layout_marginHorizontal="8dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/textField">
 
-            </com.quangln2.customfeed.ui.customview.customgrid.CustomGridGroup>
+            </FrameLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -7,16 +7,19 @@
 
     <fragment
         android:id="@+id/homeScreenFragment"
-        android:name="com.quangln2.customfeed.ui.screens.addpost.HomeScreenFragment"
+        android:name="com.quangln2.customfeedui.ui.screens.addpost.HomeScreenFragment"
         android:label="fragment_home_screen"
         tools:layout="@layout/fragment_home_screen">
         <action
             android:id="@+id/action_homeScreenFragment_to_allFeedsFragment"
             app:destination="@id/allFeedsFragment" />
+        <action
+            android:id="@+id/action_homeScreenFragment_to_viewDetailFragment"
+            app:destination="@id/viewDetailFragment" />
     </fragment>
     <fragment
         android:id="@+id/allFeedsFragment"
-        android:name="com.quangln2.customfeed.ui.screens.allfeeds.AllFeedsFragment"
+        android:name="com.quangln2.customfeedui.ui.screens.allfeeds.AllFeedsFragment"
         android:label="fragment_all_feeds"
         tools:layout="@layout/fragment_all_feeds">
         <action
@@ -31,15 +34,24 @@
     </fragment>
     <fragment
         android:id="@+id/viewFullVideoFragment"
-        android:name="com.quangln2.customfeed.ui.screens.viewimageorvideo.ViewFullVideoFragment"
+        android:name="com.quangln2.customfeedui.ui.screens.viewimageorvideo.ViewFullVideoFragment"
         android:label="ViewFullVideoFragment" />
     <fragment
         android:id="@+id/viewMoreFragment"
-        android:name="com.quangln2.customfeed.ui.screens.viewimageorvideo.ViewMoreFragment"
+        android:name="com.quangln2.customfeedui.ui.screens.viewimageorvideo.ViewMoreFragment"
         android:label="fragment_view_more"
         tools:layout="@layout/fragment_view_more">
         <action
             android:id="@+id/action_viewMoreFragment_to_viewFullVideoFragment"
             app:destination="@id/viewFullVideoFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/viewDetailFragment"
+        android:name="com.quangln2.customfeedui.ui.screens.addpost.ViewDetailFragment"
+        android:label="fragment_view_detail"
+        tools:layout="@layout/fragment_view_detail" >
+        <action
+            android:id="@+id/action_viewDetailFragment_to_homeScreenFragment"
+            app:destination="@id/homeScreenFragment" />
     </fragment>
 </navigation>

@@ -7,8 +7,12 @@
         <entry key="app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/black_background.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/circle_shape.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ic_baseline_arrow_back_24.xml" value="0.215" />
         <entry key="app/src/main/res/drawable/ic_baseline_crisis_alert_24.xml" value="0.1245" />
+        <entry key="app/src/main/res/drawable/ic_baseline_delete_24.xml" value="0.215" />
         <entry key="app/src/main/res/drawable/ic_baseline_post_add_24.xml" value="0.17" />
+        <entry key="app/src/main/res/drawable/ic_baseline_send_24.xml" value="0.109" />
+        <entry key="app/src/main/res/drawable/ic_baseline_video_library_24.xml" value="0.109" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_triangle_right.xml" value="0.1985" />
         <entry key="app/src/main/res/drawable/remove_icon.xml" value="0.206" />
@@ -17,17 +21,18 @@
         <entry key="app/src/main/res/layout/custom_image_view.xml" value="0.1780911400204613" />
         <entry key="app/src/main/res/layout/custom_layer.xml" value="0.33489583333333334" />
         <entry key="app/src/main/res/layout/feed_card.xml" value="0.234375" />
-        <entry key="app/src/main/res/layout/feed_item.xml" value="0.35599975585937504" />
+        <entry key="app/src/main/res/layout/feed_item.xml" value="0.2909604519774011" />
         <entry key="app/src/main/res/layout/fragment_all_feeds.xml" value="0.30732421875000004" />
         <entry key="app/src/main/res/layout/fragment_home_screen.xml" value="0.27034759521484375" />
         <entry key="app/src/main/res/layout/fragment_image_or_video.xml" value="0.17119565217391305" />
+        <entry key="app/src/main/res/layout/fragment_view_detail.xml" value="0.31871345029239767" />
         <entry key="app/src/main/res/layout/fragment_view_full_video.xml" value="0.12731481481481483" />
-        <entry key="app/src/main/res/layout/fragment_view_more.xml" value="0.2030360531309298" />
+        <entry key="app/src/main/res/layout/fragment_view_more.xml" value="0.1" />
         <entry key="app/src/main/res/layout/image_layer_view.xml" value="0.2291041056315104" />
         <entry key="app/src/main/res/layout/image_video_view.xml" value="0.10677083333333333" />
         <entry key="app/src/main/res/layout/loading_card.xml" value="0.3379562377929688" />
         <entry key="app/src/main/res/layout/loading_video_view.xml" value="0.19755249023437502" />
-        <entry key="app/src/main/res/layout/no_post_screen.xml" value="0.16906127929687503" />
+        <entry key="app/src/main/res/layout/no_post_screen.xml" value="0.18457031250000006" />
         <entry key="app/src/main/res/layout/video_thumbnail_view.xml" value="0.18854166666666666" />
       </map>
     </option>
