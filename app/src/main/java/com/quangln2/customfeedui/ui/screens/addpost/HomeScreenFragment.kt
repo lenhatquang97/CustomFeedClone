@@ -2,10 +2,7 @@ package com.quangln2.customfeedui.ui.screens.addpost
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
-import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -35,8 +32,7 @@ import com.quangln2.customfeedui.databinding.FragmentHomeScreenBinding
 import com.quangln2.customfeedui.ui.customview.CustomImageView
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
-import com.quangln2.customfeedui.ui.customview.customgrid.getGridItemsLocation
-import com.quangln2.customfeedui.ui.viewmodel.FeedViewModel
+import com.quangln2.customfeedui.ui.viewmodel.UploadViewModel
 import com.quangln2.customfeedui.ui.viewmodel.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -54,7 +50,7 @@ class HomeScreenFragment : Fragment() {
     private lateinit var binding: FragmentHomeScreenBinding
 
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
-    private val viewModel: FeedViewModel by activityViewModels {
+    private val viewModel: UploadViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -71,19 +67,6 @@ class HomeScreenFragment : Fragment() {
                 }
             }
         }
-    }
-
-    var firstItemWidth = 0
-    var firstItemHeight = 0
-
-    fun Uri.getImageDimensions(context: Context): Pair<Int, Int> {
-        val inputStream = context.contentResolver.openInputStream(this)!!
-        val exif = ExifInterface(inputStream)
-
-        val width = exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0)
-        val height = exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0)
-
-        return Pair(width, height)
     }
 
     private var listOfViews: MutableList<View> = mutableListOf()
@@ -199,6 +182,7 @@ class HomeScreenFragment : Fragment() {
     }
 
 
+    @SuppressLint("SetTextI18n")
     private fun onHandleMoreImagesOrVideos(customView: View) {
         val imageAboutDeleted = listOfViews.indexOf(customView)
         val (index, textValue) = hasCustomLayer()
@@ -301,32 +285,19 @@ class HomeScreenFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun initCustomGrid() {
-        if(listOfUris.size > 0){
-            val pair = listOfUris[0].getImageDimensions(requireContext())
-            firstItemWidth = pair.first
-            firstItemHeight = pair.second
-        }
-
-        val rectangles = getGridItemsLocation(listOfViews.size, firstItemWidth, firstItemHeight)
-        val marginLeft = 8
-        val contentPadding = 32
-        val marginHorizontalSum = 2 * marginLeft + contentPadding
-        val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
-
+        val rectangles = viewModel.initializeDataForShowingGrid(listOfUris, listOfViews.size, requireContext())
         for (i in rectangles.indices) {
-            val leftView = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
-            val topView = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
-            val widthView = (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding
-            val heightView = (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+            val layoutParams = ViewGroup.MarginLayoutParams(rectangles[i].width,rectangles[i].height).apply {
+                leftMargin = rectangles[i].left
+                topMargin = rectangles[i].top
+            }
+
             when (val viewChild = listOfViews[i]) {
                 is CustomLayer -> {
                     val customLayerSize = listOfViews.filterIsInstance<CustomLayer>().size
                     viewChild.addedImagesText.text = "+${listOfViews.size - ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID - customLayerSize}"
-                    val layoutParams = ViewGroup.MarginLayoutParams(widthView,heightView).apply {
-                        leftMargin = leftView
-                        topMargin = topView
-                    }
                     viewChild.layoutParams = layoutParams
                     viewChild.setOnClickListener {
                         //First: remove all views
@@ -338,6 +309,7 @@ class HomeScreenFragment : Fragment() {
                         listsOfNotEmptyUri.forEach {
                             arrayListsOfUri.add(it.toString())
                         }
+
 
                         findNavController().navigate(R.id.action_homeScreenFragment_to_viewDetailFragment,
                             Bundle().apply {
@@ -361,20 +333,12 @@ class HomeScreenFragment : Fragment() {
                             onHandleMoreImagesOrVideos(viewChild)
                         }
                     }
-                    val layoutParams = ViewGroup.MarginLayoutParams(widthView, heightView).apply {
-                        leftMargin = leftView
-                        topMargin = topView
-                    }
                     viewChild.layoutParams = layoutParams
                     binding.customGridGroup.addView(viewChild)
                 }
                 is FrameLayout -> {
                     viewChild[1].setOnClickListener {
                         onHandleMoreImagesOrVideos(viewChild)
-                    }
-                    val layoutParams = ViewGroup.MarginLayoutParams(widthView, heightView).apply {
-                        leftMargin = leftView
-                        topMargin = topView
                     }
                     viewChild.layoutParams = layoutParams
                     binding.customGridGroup.addView(viewChild)

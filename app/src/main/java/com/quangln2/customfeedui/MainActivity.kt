@@ -31,8 +31,7 @@ class MainActivity : AppCompatActivity() {
                         findViewById(android.R.id.content),
                         resources.getString(R.string.internet_connected),
                         Snackbar.LENGTH_LONG
-                    )
-                        .show()
+                    ).show()
                 }
 
                 override fun onLost(network: android.net.Network) {

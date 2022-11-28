@@ -16,6 +16,8 @@ class ViewModelFactory constructor(private val feedRepository: FeedRepository) :
                         DeleteFeedUseCase(feedRepository),
                         GetAllFeedsModifiedUseCase(feedRepository)
                     )
+                isAssignableFrom(UploadViewModel::class.java) ->
+                    UploadViewModel()
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

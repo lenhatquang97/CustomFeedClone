@@ -3,7 +3,6 @@ package com.quangln2.customfeedui.ui.viewmodel
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
-import android.net.Uri
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.LiveData
@@ -11,12 +10,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.exoplayer2.Player
-import com.google.gson.Gson
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.controllers.FeedCtrl
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
-import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeedui.domain.usecase.DeleteFeedUseCase
@@ -32,9 +29,6 @@ class FeedViewModel(
     val deleteFeedUseCase: DeleteFeedUseCase,
     val getAllFeedsModifiedUseCase: GetAllFeedsModifiedUseCase
 ) : ViewModel() {
-    private var _uriLists = MutableLiveData<MutableList<Uri>>()
-    val uriLists: LiveData<MutableList<Uri>> = _uriLists
-
     private var _uploadLists = MutableLiveData<MutableList<MyPost>>()
     val uploadLists: LiveData<MutableList<MyPost>> = _uploadLists
 
@@ -42,14 +36,6 @@ class FeedViewModel(
     val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
     private val temporaryVideoSequence by lazy { mutableListOf<Pair<Int, Int>>() }
-
-    init {
-        _uriLists.apply { value = mutableListOf() }
-        _uploadLists.apply { value = mutableListOf() }
-        _feedLoadingCode.apply { value = EnumFeedLoadingCode.INITIAL.value }
-    }
-
-
     private val onTakeData = object : GetDataCallback{
         override fun onGetFeedLoadingCode(loadingCode: Int) {
             _feedLoadingCode.value = loadingCode
@@ -60,16 +46,9 @@ class FeedViewModel(
         }
     }
 
-    fun clearImageAndVideoGrid() = _uriLists.value?.clear()
-    fun addImageAndVideoGridInBackground(ls: MutableList<Uri>?) = _uriLists.postValue(ls?.toMutableList())
-
-    fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
-        val uriStringLists = uriLists.map { it.toString() }
-        val uploadWorkerModel = UploadWorkerModel(caption, uriStringLists)
-        val jsonString = Gson().toJson(uploadWorkerModel)
-        val intent = Intent(context, UploadService::class.java)
-        intent.putExtra("jsonString", jsonString)
-        context.startService(intent)
+    init {
+        _uploadLists.apply { value = mutableListOf() }
+        _feedLoadingCode.apply { value = EnumFeedLoadingCode.INITIAL.value }
     }
 
     fun getAllFeeds(preloadCache: Boolean = false, onNotChangedData: () -> Unit = {}) {
@@ -118,7 +97,7 @@ class FeedViewModel(
         retrieveAllVisibleVideosOnScreen(indexLists)
     }
 
-    fun putIncomingVideoToQueue(temporaryVideoSequence: MutableList<Pair<Int, Int>>, pauseVideoUtil: () -> Unit){
+    private fun putIncomingVideoToQueue(temporaryVideoSequence: MutableList<Pair<Int, Int>>, pauseVideoUtil: () -> Unit){
         Log.v("FeedFragment", "Compare two arrays $temporaryVideoSequence ${FeedCtrl.videoDeque}")
         if(!FeedCtrl.compareDequeWithList(temporaryVideoSequence)){
             if(temporaryVideoSequence.isEmpty()){
