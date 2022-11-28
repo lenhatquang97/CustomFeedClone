@@ -18,6 +18,9 @@ data class MyPost(
 ) {
     constructor() : this(UUID.randomUUID().toString(), "", "", "", "", mutableListOf(), 0, 0)
 
+    override fun hashCode(): Int {
+        return super.hashCode()
+    }
 
     override fun equals(other: Any?): Boolean {
         if (other is MyPost) {

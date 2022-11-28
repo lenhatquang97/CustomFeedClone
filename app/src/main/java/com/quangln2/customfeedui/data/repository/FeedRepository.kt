@@ -77,8 +77,6 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
         })
     }
 
-
-    fun getAllFeeds(): Call<MutableList<UploadPost>> = remoteDataSource.getAllFeeds()
     fun deleteFeed(id: String, onTakeData: GetDataCallback, oldLists: List<MyPost>, coroutineScope: CoroutineScope, context: Context) {
         remoteDataSource.deleteFeed(id).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
@@ -101,9 +99,7 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
         })
     }
 
-    suspend fun insert(myPost: MyPost) = localDataSource.insert(myPost)
     suspend fun delete(id: String) = localDataSource.delete(id)
-    suspend fun getAll(): List<MyPost> = localDataSource.getAll()
     fun uploadPostV2(requestBody: UploadPost): Call<ResponseBody> = remoteDataSource.uploadPostV2(requestBody)
 
 

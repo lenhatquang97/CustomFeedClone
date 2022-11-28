@@ -1,16 +1,16 @@
 package com.quangln2.customfeedui.others.utils
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.provider.Settings
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.quangln2.customfeedui.R
@@ -37,22 +37,9 @@ object FileUtils {
 
     fun convertUnixTimestampToTime(unixTimestamp: String): String {
         val date = if (unixTimestamp.isEmpty()) Date() else Date(unixTimestamp.toLong())
-        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy - HH:mm")
+        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
         sdf.timeZone = TimeZone.getTimeZone("GMT+7")
         return sdf.format(date)
-    }
-
-    fun getPermissionForStorage(context: Context, activity: Activity): Boolean {
-        val permissionCheck = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_EXTERNAL_STORAGE
-        )
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
-            return false
-        }
-
-        return true
     }
 
     fun getPermissionForStorageWithMultipleTimesDenial(context: Context): Boolean {
@@ -84,7 +71,7 @@ object FileUtils {
             if (mimeTypeForMultipart != null) {
                 if (mimeTypeForMultipart.startsWith("image/")) {
                     val file = File(context.filesDir, "${UUID.randomUUID()}.jpg")
-                    val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                    val bitmap = getBitmapItem(uri, context)
                     val out = FileOutputStream(file)
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 50, out)
                     result.add(file.toUri())
@@ -95,5 +82,20 @@ object FileUtils {
         }
 
         return result
+    }
+
+
+
+    private fun getBitmapItem(uri: Uri, context: Context): Bitmap{
+        return when{
+            Build.VERSION.SDK_INT < 28 -> MediaStore.Images.Media.getBitmap(
+                context.contentResolver,
+                uri
+            )
+            else -> {
+                val source = ImageDecoder.createSource(context.contentResolver, uri)
+                ImageDecoder.decodeBitmap(source)
+            }
+        }
     }
 }

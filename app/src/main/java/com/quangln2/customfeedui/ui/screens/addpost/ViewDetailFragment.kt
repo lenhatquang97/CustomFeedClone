@@ -80,21 +80,20 @@ class ViewDetailFragment : Fragment() {
                 val it = iterator.next()
                 val mimeType = requireContext().contentResolver.getType(it.toUri())
                 if (mimeType != null) {
+                    val layoutParams = ViewGroup.MarginLayoutParams(
+                        (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
+                        (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
+                    ).apply {
+                        leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
+                        topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
+                    }
                     if (mimeType.contains("image")) {
                         withContext(Dispatchers.Main) {
                             val imageView = CustomImageView.generateCustomImageView(requireContext(), it)
-                            val layoutParams = ViewGroup.MarginLayoutParams(
-                                (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
-                                (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
-                            ).apply {
-                                leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
-                                topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
-                            }
-                            imageView.layoutParams = layoutParams
                             imageView[1].setOnClickListener {
                                 onHandleMoreImagesOrVideos(imageView, listOfUris)
-
                             }
+                            imageView.layoutParams = layoutParams
                             listOfViews.add(imageView)
                             binding.customGridGroup.addView(imageView)
                         }
@@ -107,14 +106,6 @@ class ViewDetailFragment : Fragment() {
                                 crossButton.setOnClickListener {
                                     onHandleMoreImagesOrVideos(videoView, listOfUris)
                                 }
-                            }
-
-                            val layoutParams = ViewGroup.MarginLayoutParams(
-                                (rectangles[i].rightBottom.x * widthGrid).toInt() - (rectangles[i].leftTop.x * widthGrid).toInt() - contentPadding,
-                                (rectangles[i].rightBottom.y * widthGrid).toInt() - (rectangles[i].leftTop.y * widthGrid).toInt() - contentPadding
-                            ).apply {
-                                leftMargin = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding
-                                topMargin = (rectangles[i].leftTop.y * widthGrid).toInt() + contentPadding
                             }
                             videoView.layoutParams = layoutParams
                             listOfViews.add(videoView)

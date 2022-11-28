@@ -9,7 +9,7 @@ object ConstantSetup {
     const val AVATAR_LINK = "https://res.cloudinary.com/dnirizque/image/upload/v1666060641/samples/sheep.jpg"
     const val DEFAULT_ENDPOINT = "https://db58-2a09-bac0-35-00-819-600d.ap.ngrok.io/"
     const val MAXIMUM_IMAGE_IN_A_GRID = 9
-    val REQUEST_OPTIONS_WITH_SIZE_100 = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565).override(100)
-    val REQUEST_WITH_RGB_565 = RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL).format(DecodeFormat.PREFER_RGB_565).override(500)
+    val REQUEST_OPTIONS_WITH_SIZE_100 = RequestOptions().diskCacheStrategy(DiskCacheStrategy.RESOURCE).format(DecodeFormat.PREFER_RGB_565).override(100)
+    val REQUEST_WITH_RGB_565 = RequestOptions().diskCacheStrategy(DiskCacheStrategy.RESOURCE).format(DecodeFormat.PREFER_RGB_565).override(500)
     val PHONE_HEIGHT = Resources.getSystem().displayMetrics.heightPixels
 }

@@ -6,8 +6,6 @@ import com.quangln2.customfeedui.data.models.datamodel.OfflineResource
 data class MyPostRender(
     //Primary key
     var feedId: String,
-
-
     var typeOfPost: TypeOfPost,
     var name: String,
     var avatar: String,

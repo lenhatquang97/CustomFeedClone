@@ -23,15 +23,8 @@ object DownloadUtils {
             response.close()
         } catch (e: Exception) {
             exception = e
-        } finally {
-            return Pair(value, exception)
         }
-    }
-
-    fun doesLocalFileExist(url: String, context: Context): Boolean {
-        val fileName = URLUtil.guessFileName(url, null, null)
-        val file = File(context.cacheDir, fileName)
-        return file.exists()
+        return Pair(value, exception)
     }
 
     fun isValidFile(url: String, context: Context, anotherSize: Long): Boolean {
@@ -78,34 +71,6 @@ object DownloadUtils {
         }
     }
 
-    private fun downloadVideo(videoUrl: String, context: Context) {
-        try {
-            val req = Request.Builder().url(videoUrl).build()
-            val fileName = URLUtil.guessFileName(videoUrl, null, null)
-            val file = File(context.cacheDir, fileName)
-            downloadClient.newCall(req).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    e.printStackTrace()
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    if (response.isSuccessful) {
-                        val fout = FileOutputStream(file)
-                        write(response.body!!.byteStream(), fout)
-                        fout.close()
-                        response.close()
-                    } else {
-                        Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
-                        response.close()
-                    }
-                }
-
-            })
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
     fun downloadVideoSynchronous(videoUrl: String, context: Context){
         try {
             val req = Request.Builder().url(videoUrl).build()
@@ -113,9 +78,9 @@ object DownloadUtils {
             val file = File(context.cacheDir, fileName)
             val response = downloadClient.newCall(req).execute()
             if (response.isSuccessful) {
-                val fout = FileOutputStream(file)
-                write(response.body!!.byteStream(), fout)
-                fout.close()
+                val fileOut = FileOutputStream(file)
+                write(response.body!!.byteStream(), fileOut)
+                fileOut.close()
                 response.close()
             } else {
                 Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
@@ -124,6 +89,21 @@ object DownloadUtils {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    fun getMimeType(url: String?): String? {
+        var type: String? = null
+        val extension = MimeTypeMap.getFileExtensionFromUrl(url)
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+        }
+        return type
+    }
+
+    private fun doesLocalFileExist(url: String, context: Context): Boolean {
+        val fileName = URLUtil.guessFileName(url, null, null)
+        val file = File(context.cacheDir, fileName)
+        return file.exists()
     }
 
     private fun write(inputStream: InputStream?, outputStream: FileOutputStream): Long {
@@ -139,13 +119,32 @@ object DownloadUtils {
         }
     }
 
-    fun getMimeType(url: String?): String? {
-        var type: String? = null
-        val extension = MimeTypeMap.getFileExtensionFromUrl(url)
-        if (extension != null) {
-            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+    private fun downloadVideo(videoUrl: String, context: Context) {
+        try {
+            val req = Request.Builder().url(videoUrl).build()
+            val fileName = URLUtil.guessFileName(videoUrl, null, null)
+            val file = File(context.cacheDir, fileName)
+            downloadClient.newCall(req).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    if (response.isSuccessful) {
+                        val fileOut = FileOutputStream(file)
+                        write(response.body!!.byteStream(), fileOut)
+                        fileOut.close()
+                        response.close()
+                    } else {
+                        Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
+                        response.close()
+                    }
+                }
+
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-        return type
     }
 
 

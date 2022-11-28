@@ -19,7 +19,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
-import com.google.android.exoplayer2.ExoPlayer
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.models.uimodel.*
@@ -36,8 +35,7 @@ import java.util.concurrent.Executors
 
 class FeedListAdapter(
     private var context: Context,
-    private val eventFeedCallback: EventFeedCallback,
-    private val player: ExoPlayer
+    private val eventFeedCallback: EventFeedCallback
 ) :
     androidx.recyclerview.widget.ListAdapter<MyPostRender, RecyclerView.ViewHolder>(
         AsyncDifferConfig.Builder(FeedListDiffCallback())
@@ -236,9 +234,7 @@ class FeedListAdapter(
             val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
             for (i in 0 until customGridGroup.size) {
                 val child = customGridGroup.getChildAt(i)
-                if (child is LoadingVideoView) {
-                    child.pauseAndReleaseVideo(player)
-                }
+                eventFeedCallback.onRecycled(child)
             }
             customGridGroup.removeAllViews()
         }

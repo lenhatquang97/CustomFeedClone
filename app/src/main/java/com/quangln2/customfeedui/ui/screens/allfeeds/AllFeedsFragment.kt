@@ -115,6 +115,12 @@ class AllFeedsFragment : Fragment() {
                     }
                 }
             )
+
+            override fun onRecycled(child: View) {
+                if(child is LoadingVideoView){
+                    child.pauseAndReleaseVideo(player)
+                }
+            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,7 +136,7 @@ class AllFeedsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentAllFeedsBinding.inflate(inflater, container, false)
-        adapterVal = FeedListAdapter(requireContext(), eventCallback, player)
+        adapterVal = FeedListAdapter(requireContext(), eventCallback)
         adapterVal.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         val linearLayoutManager = LinearLayoutManager(requireContext())
 
