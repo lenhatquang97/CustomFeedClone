@@ -45,6 +45,7 @@ class ViewMoreFragment : Fragment() {
 
     private fun fetchPostById(id: String) {
         item = viewModel.getFeedItem(id)
+
         binding.myName.text = item.name
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
         binding.caption.text = item.caption

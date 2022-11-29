@@ -49,15 +49,20 @@ class FeedViewModel(
         }
     }
 
-    val noPostIdVisibility = MutableLiveData(false)
-    val retryButtonVisibility = MutableLiveData(false)
-    val allFeedsVisibility = MutableLiveData(true)
-    val isRefreshingLoadState = MutableLiveData(false)
-    val isGoingToUploadState = MutableLiveData(false)
+    val noPostIdVisibility = MutableLiveData<Boolean>()
+    val retryButtonVisibility = MutableLiveData<Boolean>()
+    val allFeedsVisibility = MutableLiveData<Boolean>()
+    val isRefreshingLoadState = MutableLiveData<Boolean>()
+    val isGoingToUploadState = MutableLiveData<Boolean>()
 
     init {
         _uploadLists.apply { value = mutableListOf() }
         _feedLoadingCode.apply { value = EnumFeedLoadingCode.INITIAL.value }
+        noPostIdVisibility.apply { value = false }
+        retryButtonVisibility.apply { value = false }
+        allFeedsVisibility.apply { value = false }
+        isRefreshingLoadState.apply { value = false }
+        isGoingToUploadState.apply { value = false }
     }
 
     fun getAllFeeds(preloadCache: Boolean = false) = getAllFeedsModifiedUseCase(onTakeData, viewModelScope, preloadCache)
@@ -114,8 +119,6 @@ class FeedViewModel(
                 temporaryVideoSequence.clear()
                 temporaryVideoSequence.addAll(FeedCtrl.videoDeque)
             }
-
-
             val pair = FeedCtrl.peekFirst()
             if(pair.first != -1 && pair.second != -1){
                 //Case we have video in queue
@@ -243,8 +246,8 @@ class FeedViewModel(
                 getAllFeeds()
             }
             stopUploadService(context)
+            FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.UNDEFINED.value
         }
-        FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.UNDEFINED.value
     }
 
     fun onHandleRetryButton(){

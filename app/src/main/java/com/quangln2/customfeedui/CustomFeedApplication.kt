@@ -5,30 +5,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import com.cloudinary.android.MediaManager
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException
-import com.google.android.gms.common.GooglePlayServicesRepairableException
-import com.google.android.gms.security.ProviderInstaller
 
 
 class CustomFeedApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        updateAndroidSecurityProvider()
         MediaManager.init(this)
         createNotificationChannel()
-    }
-
-    private fun updateAndroidSecurityProvider() {
-        try {
-            ProviderInstaller.installIfNeeded(this)
-        } catch (e: GooglePlayServicesRepairableException) {
-            Log.d("Ignore", e.message.toString())
-        } catch (e: GooglePlayServicesNotAvailableException) {
-            Log.d("Ignore", e.message.toString())
-        }
     }
 
     private fun createNotificationChannel() {

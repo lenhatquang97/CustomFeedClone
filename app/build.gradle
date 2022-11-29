@@ -103,8 +103,6 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
     implementation "com.squareup.okhttp3:logging-interceptor"
 
-    implementation "com.google.android.gms:play-services-auth:20.3.0"
-
     implementation "com.google.android.exoplayer:exoplayer:$exo_player_version"
     implementation "com.google.android.exoplayer:exoplayer-core:$exo_player_version"
     implementation "com.google.android.exoplayer:exoplayer-dash:$exo_player_version"
@@ -121,7 +119,7 @@ dependencies {
 
     implementation 'androidx.work:work-runtime-ktx:2.7.1'
 
-    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
 
 
 

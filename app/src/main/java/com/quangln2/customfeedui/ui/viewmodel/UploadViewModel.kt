@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
+import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,6 +14,8 @@ import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
 import com.quangln2.customfeedui.domain.workmanager.UploadService
 import com.quangln2.customfeedui.others.extensions.getImageDimensions
 import com.quangln2.customfeedui.ui.customview.customgrid.getGridItemsLocation
+import com.quangln2.customfeedui.ui.screens.addpost.IMAGE_MIMETYPE
+import com.quangln2.customfeedui.ui.screens.addpost.VIDEO_MIMETYPE
 
 class UploadViewModel: ViewModel() {
     private var _uriLists = MutableLiveData<MutableList<Uri>>()
@@ -52,5 +55,14 @@ class UploadViewModel: ViewModel() {
             itemLocations.add(itemLocation)
         }
         return itemLocations
+    }
+    fun handleChooseImagesOrVideos(resultLauncher: ActivityResultLauncher<Intent>){
+        val pickerIntent = Intent(Intent.ACTION_PICK)
+        pickerIntent.apply {
+            type = "*/*"
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(IMAGE_MIMETYPE, VIDEO_MIMETYPE))
+        }
+        resultLauncher.launch(pickerIntent)
     }
 }

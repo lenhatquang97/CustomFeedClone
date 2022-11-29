@@ -138,13 +138,7 @@ class HomeScreenFragment : Fragment() {
     private fun buttonHandleChooseImagesOrVideos(){
         // Handle choose image or video
         binding.buttonChooseImageVideo.setOnClickListener {
-            val pickerIntent = Intent(Intent.ACTION_PICK)
-            pickerIntent.apply {
-                type = "*/*"
-                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(IMAGE_MIMETYPE, VIDEO_MIMETYPE))
-            }
-            resultLauncher.launch(pickerIntent)
+            viewModel.handleChooseImagesOrVideos(resultLauncher)
         }
     }
 

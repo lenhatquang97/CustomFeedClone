@@ -49,6 +49,14 @@ class AllFeedsFragment : Fragment() {
     private val currentViewRect by lazy { Rect() }
     private val positionDeletedOrRefreshed by lazy { AtomicInteger(-1) }
     private val player by lazy { ExoPlayer.Builder(requireContext()).build() }
+    private val navTransition by lazy {
+        navOptions {
+            anim {
+                enter = android.R.animator.fade_in
+                exit = android.R.animator.fade_out
+            }
+        }
+    }
 
     private val viewModel: FeedViewModel by activityViewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
@@ -68,24 +76,19 @@ class AllFeedsFragment : Fragment() {
         }
     }
 
-    private val eventCallback: EventFeedCallback
-        get() = object : EventFeedCallback {
+
+
+    private val eventCallback: EventFeedCallback get() = object : EventFeedCallback {
             override fun onDeleteItem(id: String, position: Int) {
                 viewModel.deleteFeed(id, requireContext())
                 positionDeletedOrRefreshed.set(position)
             }
             override fun onClickAddPost(){
-                val permissionCheck = ContextCompat.checkSelfPermission(
-                    requireContext(),
+                val permissionCheck = ContextCompat.checkSelfPermission(requireContext(),
                     android.Manifest.permission.READ_EXTERNAL_STORAGE
                 )
                 if(permissionCheck == PackageManager.PERMISSION_GRANTED){
-                    findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment, null, navOptions {
-                        anim {
-                            enter = android.R.animator.fade_in
-                            exit = android.R.animator.fade_out
-                        }
-                    })
+                    findNavController().navigate(R.id.action_allFeedsFragment_to_homeScreenFragment, null, navTransition)
                 } else if(shouldShowRequestPermissionRationale(android.Manifest.permission.READ_EXTERNAL_STORAGE)){
                     FileUtils.getPermissionForStorageWithMultipleTimesDenial(requireContext())
                 } else{
@@ -93,26 +96,9 @@ class AllFeedsFragment : Fragment() {
                 }
             }
             override fun onClickVideoView(currentVideo: CurrentVideo) =
-                findNavController().navigate(
-                    R.id.action_allFeedsFragment_to_viewFullVideoFragment,
-                    currentVideo.encapsulateToBundle(),
-                    navOptions {
-                        anim {
-                            enter = android.R.animator.fade_in
-                            exit = android.R.animator.fade_out
-                        }
-                    }
-                )
-            override fun onClickViewMore(id: String) = findNavController().navigate(
-                R.id.action_allFeedsFragment_to_viewMoreFragment,
-                Bundle().apply { putString("id", id) },
-                navOptions {
-                    anim {
-                        enter = android.R.animator.fade_in
-                        exit = android.R.animator.fade_out
-                    }
-                }
-            )
+                findNavController().navigate(R.id.action_allFeedsFragment_to_viewFullVideoFragment, currentVideo.encapsulateToBundle(), navTransition)
+            override fun onClickViewMore(id: String) = findNavController().
+                navigate(R.id.action_allFeedsFragment_to_viewMoreFragment, Bundle().apply { putString("id", id) }, navTransition)
             override fun onRecycled(child: View) {
                 if(child is LoadingVideoView){
                     child.pauseAndReleaseVideo(player)
@@ -137,20 +123,19 @@ class AllFeedsFragment : Fragment() {
         //Initialize data binding
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_all_feeds, container,false)
         binding.viewmodel = viewModel
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
         //Initialize recycler view
         adapterVal = FeedListAdapter(requireContext(), eventCallback)
         adapterVal.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
-        val linearLayoutManager = LinearLayoutManager(requireContext())
         binding.allFeeds.apply {
             adapter = adapterVal
-            layoutManager = linearLayoutManager
+            layoutManager = LinearLayoutManager(requireContext())
             animation = null
         }
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
+                    val firstVisibleItemPosition = (binding.allFeeds.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
                     lifecycleScope.launch(Dispatchers.Main){
                         viewModel.onHandlePlayVideoAndDownloadVideo(firstVisibleItemPosition, requireContext()).collect{
                             when(it){
@@ -185,10 +170,6 @@ class AllFeedsFragment : Fragment() {
                         }
                     }
                 }
-                //Step 3: Play initial video
-                if(binding.allFeeds.scrollState == RecyclerView.SCROLL_STATE_IDLE){
-                    playVideoUtil()
-                }
             }
         })
 
@@ -205,19 +186,18 @@ class AllFeedsFragment : Fragment() {
                 }
             }
         }
-
         //Handle uploading
         FeedCtrl.isLoadingToUpload.observe(viewLifecycleOwner) {
-            viewModel.manageUploadState(it, requireContext())
+            it?.apply {
+                viewModel.manageUploadState(it, requireContext())
+            }
+
         }
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.retryButton.setOnClickListener {
-            viewModel.onHandleRetryButton()
-        }
         binding.swipeRefreshLayout.setOnRefreshListener {
             positionDeletedOrRefreshed.set(1)
             viewModel.onHandleSwipeRefresh()
