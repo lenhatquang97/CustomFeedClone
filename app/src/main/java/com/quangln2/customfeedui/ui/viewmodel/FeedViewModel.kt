@@ -14,6 +14,7 @@ import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.controllers.FeedCtrl
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
+import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeedui.domain.usecase.DeleteFeedUseCase
@@ -23,6 +24,8 @@ import com.quangln2.customfeedui.others.callback.GetDataCallback
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 
 class FeedViewModel(
@@ -33,12 +36,12 @@ class FeedViewModel(
     val uploadLists: LiveData<MutableList<MyPost>> = _uploadLists
 
     private var _feedLoadingCode = MutableLiveData<Int>()
-    val feedLoadingCode: LiveData<Int> = _feedLoadingCode
+    private val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
     private val temporaryVideoSequence by lazy { mutableListOf<Pair<Int, Int>>() }
     private val onTakeData = object : GetDataCallback{
         override fun onGetFeedLoadingCode(loadingCode: Int) {
-            _feedLoadingCode.value = loadingCode
+            _feedLoadingCode.postValue(loadingCode)
         }
 
         override fun onGetUploadList(postList: List<MyPost>) {
@@ -46,14 +49,18 @@ class FeedViewModel(
         }
     }
 
+    val noPostIdVisibility = MutableLiveData(false)
+    val retryButtonVisibility = MutableLiveData(false)
+    val allFeedsVisibility = MutableLiveData(true)
+    val isRefreshingLoadState = MutableLiveData(false)
+    val isGoingToUploadState = MutableLiveData(false)
+
     init {
         _uploadLists.apply { value = mutableListOf() }
         _feedLoadingCode.apply { value = EnumFeedLoadingCode.INITIAL.value }
     }
 
-    fun getAllFeeds(preloadCache: Boolean = false, onNotChangedData: () -> Unit = {}) {
-        getAllFeedsModifiedUseCase(onTakeData, onNotChangedData, viewModelScope, preloadCache)
-    }
+    fun getAllFeeds(preloadCache: Boolean = false) = getAllFeedsModifiedUseCase(onTakeData, viewModelScope, preloadCache)
 
     fun getFeedItem(feedId: String): MyPostRender {
         val ls = _uploadLists.value
@@ -71,8 +78,8 @@ class FeedViewModel(
         }
     }
 
-    fun onHandlePlayVideoAndDownloadVideo(firstVisibleItemPosition: Int, context: Context, playVideoWrapper: () -> Unit){
-        playVideoWrapper()
+    fun onHandlePlayVideoAndDownloadVideo(firstVisibleItemPosition: Int, context: Context): Flow<String> = flow{
+        emit("playVideoWrapper")
         if(firstVisibleItemPosition > 0){
             val item = uploadLists.value?.get(firstVisibleItemPosition - 1)
             item?.apply {
@@ -85,19 +92,20 @@ class FeedViewModel(
         }
     }
 
-    fun retrieveAllVisibleItems(firstPartiallyIndex: Int, lastPartiallyIndex: Int, retrieveAllVisibleVideosOnScreen: (List<Int>) -> Unit){
-        val indexLists = HashSet<Int>().apply {
-            if(firstPartiallyIndex <= lastPartiallyIndex){
-                for(i in firstPartiallyIndex..lastPartiallyIndex) add(i)
+    fun retrieveAllVisibleItems(firstPartiallyIndex: Int, lastPartiallyIndex: Int): List<Int>{
+        val firstActualIndex = if(firstPartiallyIndex < 0) 0 else firstPartiallyIndex
+
+        return HashSet<Int>().apply {
+            if (firstActualIndex <= lastPartiallyIndex) {
+                for (i in firstActualIndex..lastPartiallyIndex) add(i)
             } else {
-                add(firstPartiallyIndex)
+                add(firstActualIndex)
                 add(lastPartiallyIndex)
             }
         }.filter { it >= 0 }.toList()
-        retrieveAllVisibleVideosOnScreen(indexLists)
     }
 
-    private fun putIncomingVideoToQueue(temporaryVideoSequence: MutableList<Pair<Int, Int>>, pauseVideoUtil: () -> Unit){
+    fun putIncomingVideoToQueue(): Flow<String> = flow{
         Log.v("FeedFragment", "Compare two arrays $temporaryVideoSequence ${FeedCtrl.videoDeque}")
         if(!FeedCtrl.compareDequeWithList(temporaryVideoSequence)){
             if(temporaryVideoSequence.isEmpty()){
@@ -125,7 +133,7 @@ class FeedViewModel(
                         //Case 2.2: The video in playing queue is different from the video in queue
                         Log.v("FeedFragment", "-----------------------")
                         Log.v("FeedFragment", "Different ${FeedCtrl.playingQueue} ${FeedCtrl.videoDeque}")
-                        pauseVideoUtil()
+                        emit("pauseVideoUtilCustom")
                         FeedCtrl.popFirstSafely()
                         FeedCtrl.playingQueue.clear()
                         FeedCtrl.playingQueue.add(pair)
@@ -137,7 +145,7 @@ class FeedViewModel(
             } else {
                 //Case no video in feeds
                 while(FeedCtrl.playingQueue.isNotEmpty()){
-                    pauseVideoUtil()
+                    emit("pauseVideoUtilCustom")
                     FeedCtrl.popFirstSafely()
                 }
                 temporaryVideoSequence.clear()
@@ -165,9 +173,12 @@ class FeedViewModel(
             FeedCtrl.addToLast(videoPair.first, videoPair.second)
         }
     }
-    fun onPlaybackStateEnded(playbackState: Int, onEndPlayVideo: () -> Unit, onPlayVideo: () -> Unit){
+    fun onPlaybackStateEnded(playbackState: Int): Flow<String> =  flow{
+        val onEndPlayVideo = "onEndPlayVideo"
+        val onPlayVideo = "onPlayVideo"
+
         if (playbackState == Player.STATE_ENDED) {
-            onEndPlayVideo()
+            emit(onEndPlayVideo)
             if(FeedCtrl.videoDeque.isNotEmpty()){
                 val playedPair = FeedCtrl.playingQueue.remove()
                 val index = FeedCtrl.videoDeque.indexOfFirst { it == playedPair }
@@ -179,7 +190,7 @@ class FeedViewModel(
                 val pair = FeedCtrl.videoDeque.peek()
                 if(pair != null){
                     FeedCtrl.playingQueue.add(pair)
-                    onPlayVideo()
+                    emit(onPlayVideo)
                 } else {
                     temporaryVideoSequence.forEach{
                         FeedCtrl.videoDeque.add(it)
@@ -187,17 +198,11 @@ class FeedViewModel(
                     val anotherPair = FeedCtrl.videoDeque.peek()
                     if(anotherPair != null){
                         FeedCtrl.playingQueue.add(anotherPair)
-                        onPlayVideo()
+                        emit(onPlayVideo)
                     }
 
                 }
             }
-        }
-    }
-
-    fun putIncomingVideoIntoQueueWrapper(onQueueNotEmpty: () -> Unit){
-        putIncomingVideoToQueue(temporaryVideoSequence) {
-            onQueueNotEmpty()
         }
     }
 
@@ -208,5 +213,52 @@ class FeedViewModel(
     fun startUploadService(context: Context){
         val intent = Intent(context, UploadService::class.java)
         context.startService(intent)
+    }
+
+    fun manageUploadList(listOfPostRender: List<MyPostRender>){
+        noPostIdVisibility.value = false
+        retryButtonVisibility.value = true
+        val feedLoadingCode = feedLoadingCode.value
+        val emptyFeedCondition = listOfPostRender.size == 1 && feedLoadingCode == EnumFeedLoadingCode.SUCCESS.value
+        val havePostCondition = listOfPostRender.size > 1
+        val condition = emptyFeedCondition || havePostCondition
+        if(condition){
+            noPostIdVisibility.value = false
+            retryButtonVisibility.value = false
+            allFeedsVisibility.value = true
+            isRefreshingLoadState.value = false
+        } else {
+            noPostIdVisibility.value = false
+            allFeedsVisibility.value = false
+            retryButtonVisibility.value = true
+        }
+    }
+
+    fun manageUploadState(state: Int, context: Context){
+        isGoingToUploadState.value = state == EnumFeedSplashScreenState.LOADING.value
+        if (state == EnumFeedSplashScreenState.COMPLETE.value) {
+            isRefreshingLoadState.value = false
+            isGoingToUploadState.value = false
+            viewModelScope.launch(Dispatchers.Main){
+                getAllFeeds()
+            }
+            stopUploadService(context)
+        }
+        FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.UNDEFINED.value
+    }
+
+    fun onHandleRetryButton(){
+        noPostIdVisibility.value = true
+        retryButtonVisibility.value = false
+        viewModelScope.launch(Dispatchers.Main){
+            getAllFeeds(preloadCache = true)
+        }
+    }
+
+    fun onHandleSwipeRefresh(){
+        viewModelScope.launch(Dispatchers.Main) {
+            getAllFeeds()
+            isRefreshingLoadState.value = false
+        }
     }
 }

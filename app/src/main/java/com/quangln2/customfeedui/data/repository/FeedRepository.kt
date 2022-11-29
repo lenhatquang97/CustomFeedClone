@@ -19,62 +19,59 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class FeedRepository(private val localDataSource: LocalDataSource, private val remoteDataSource: RemoteDataSource) {
-     fun getAllFeedsWithModified(onTakeData: GetDataCallback, onNotChangedData: () -> Unit = {}, coroutineScope: CoroutineScope, preloadCache: Boolean){
-         if(preloadCache){
-             loadCache(coroutineScope, onTakeData)
+     fun getAllFeedsWithModified(onTakeData: GetDataCallback, coroutineScope: CoroutineScope, preloadCache: Boolean){
+         coroutineScope.launch(Dispatchers.IO) {
+             if(preloadCache){
+                 loadCache(coroutineScope, onTakeData)
+             }
+             val response = remoteDataSource.getAllFeeds().execute()
+             if(response.isSuccessful){
+                 if (response.code() == 200) {
+                     val ls = mutableListOf<MyPost>()
+                     val body = response.body()
+                     val deletedFeeds = mutableListOf<MyPost>()
+                     val offlinePosts = localDataSource.getAll()
+                     if(body != null){
+                         body.forEach {
+                             val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
+                             ls.add(itemConverted)
+                         }
+                         //find in offline feeds if there are no online posts in online database
+                         offlinePosts.forEach {
+                             val filterId = body.find { item -> item.feedId == it.feedId }
+                             if (filterId == null) {
+                                 deletedFeeds.add(it)
+                             }
+                         }
+
+                         //Deleted first
+                         deletedFeeds.forEach {
+                             localDataSource.delete(it.feedId)
+                         }
+
+                         val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+                         availableItems.forEach {
+                             localDataSource.insert(it)
+                         }
+                     }
+
+                     //get available items but not in deleted feeds
+                     val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+                     if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems))
+                         onTakeData.onGetUploadList(availableItems)
+                 } else{
+                     onTakeData.onGetFeedLoadingCode(EnumFeedLoadingCode.OFFLINE.value)
+                     val offlinePosts = localDataSource.getAll()
+                     if(offlinePosts.isNotEmpty()) {
+                         onTakeData.onGetUploadList(offlinePosts.toMutableList())
+                     }
+                 }
+                 onTakeData.onGetFeedLoadingCode(response.code())
+             } else {
+                 loadCache(coroutineScope, onTakeData)
+             }
          }
-         remoteDataSource.getAllFeeds().enqueue(object : Callback<MutableList<UploadPost>> {
-            override fun onResponse(call: Call<MutableList<UploadPost>>, response: Response<MutableList<UploadPost>>) {
-                if (response.code() == 200) {
-                    val ls = mutableListOf<MyPost>()
-                    val body = response.body()
-                    val deletedFeeds = mutableListOf<MyPost>()
-                    coroutineScope.launch(Dispatchers.IO){
-                        val offlinePosts = localDataSource.getAll()
-                        if(body != null){
-                            body.forEach {
-                                val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
-                                ls.add(itemConverted)
-                            }
-                            //find in offline feeds if there are no online posts in online database
-                            offlinePosts.forEach {
-                                val filterId = body.find { item -> item.feedId == it.feedId }
-                                if (filterId == null) {
-                                    deletedFeeds.add(it)
-                                }
-                            }
 
-                            //Deleted first
-                            deletedFeeds.forEach {
-                                localDataSource.delete(it.feedId)
-                            }
-
-                            val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
-                            availableItems.forEach {
-                                localDataSource.insert(it)
-                            }
-                        }
-
-                        //get available items but not in deleted feeds
-                        val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
-                        if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems))
-                            onTakeData.onGetUploadList(availableItems)
-                         else onNotChangedData()
-                    }
-                } else{
-                    loadCache(coroutineScope, onTakeData)
-                    onNotChangedData()
-                }
-
-                onTakeData.onGetFeedLoadingCode(response.code())
-
-            }
-
-            override fun onFailure(call: Call<MutableList<UploadPost>>, t: Throwable) {
-                loadCache(coroutineScope, onTakeData)
-            }
-
-        })
     }
 
     fun deleteFeed(id: String, onTakeData: GetDataCallback, oldLists: List<MyPost>, coroutineScope: CoroutineScope, context: Context) {

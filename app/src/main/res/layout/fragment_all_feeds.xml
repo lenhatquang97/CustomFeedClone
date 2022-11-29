@@ -1,49 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.screens.allfeeds.AllFeedsFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="viewmodel"
+            type="com.quangln2.customfeedui.ui.viewmodel.FeedViewModel" />
+        <import type="android.view.View" />
+    </data>
 
-    <include
-        android:id="@+id/no_post_id"
-        layout="@layout/no_post_screen"
-        android:visibility="gone" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/retry_button"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="RETRY"
-        android:layout_gravity="center"
-        />
-
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_refresh_layout"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:context=".ui.screens.allfeeds.AllFeedsFragment">
 
-        <LinearLayout
+        <include
+            android:id="@+id/no_post_id"
+            layout="@layout/no_post_screen"
+            android:visibility="@{viewmodel.noPostIdVisibility ? View.VISIBLE: View.GONE}"
+            />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/retry_button"
+            android:visibility="@{viewmodel.retryButtonVisibility ? View.VISIBLE : View.GONE}"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RETRY"
+            android:layout_gravity="center"
+            />
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            app:isRefreshing="@{viewmodel.isRefreshingLoadState}"
+            android:id="@+id/swipe_refresh_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:descendantFocusability="blocksDescendants"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <include
-                android:id="@+id/loading_card"
-                layout="@layout/loading_card"
-                android:visibility="gone" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/allFeeds"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="match_parent"
+                android:descendantFocusability="blocksDescendants"
+                android:orientation="vertical">
 
+                <include
+                    android:id="@+id/loading_card"
+                    layout="@layout/loading_card"
+                    android:visibility="@{viewmodel.isGoingToUploadState ? View.VISIBLE: View.GONE}" />
 
-        </LinearLayout>
-
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-
-</FrameLayout>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:visibility="@{viewmodel.allFeedsVisibility ? View.VISIBLE : View.GONE}"
+                    android:id="@+id/allFeeds"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </FrameLayout>
+</layout>
