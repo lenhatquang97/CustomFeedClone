@@ -38,9 +38,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         super.onStart()
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
         val position = arguments?.getInt("position")
-
         currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
-
         if (listOfUrls != null && position != null) {
             urlTmp = DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
             loadImageThumbnail()
