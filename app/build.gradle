@@ -51,71 +51,51 @@ dependencies {
     def room_version = "2.4.3"
     def exo_player_version = "2.18.1"
 
-
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.5.0'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
-
+    //Unit test and mock test
     testImplementation "org.mockito:mockito-core:4.8.1"
     testImplementation "org.mockito.kotlin:mockito-kotlin:4.0.0"
     testImplementation "io.mockk:mockk:1.4.1"
     testImplementation 'junit:junit:4.13.2'
-
-
+    //Android test
     androidTestImplementation "androidx.arch.core:core-testing:2.1.0"
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.0'
     androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4"
-
-
     //Coroutine
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
-
     //Navigation
     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.3'
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.3'
-
     //DataStore
     implementation "androidx.datastore:datastore-preferences:1.0.0"
-
-    //WorkManager
-    implementation "androidx.work:work-runtime-ktx:2.7.1"
-
-    //Glide
-    implementation 'com.github.bumptech.glide:glide:4.13.2'
-    kapt 'com.github.bumptech.glide:compiler:4.13.2'
-
     //LiveData extension
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.5.1"
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    //Room
+    implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    //Cloudinary
+    implementation 'com.cloudinary:cloudinary-android:2.3.0'
+    //ExoPlayer
+    implementation "com.google.android.exoplayer:exoplayer:$exo_player_version"
+    implementation "com.google.android.exoplayer:exoplayer-core:$exo_player_version"
+    implementation "com.google.android.exoplayer:exoplayer-ui:$exo_player_version"
+
+    //Need to replace these libraries below
+    //Glide
+    implementation 'com.github.bumptech.glide:glide:4.13.2'
+    kapt 'com.github.bumptech.glide:compiler:4.13.2'
 
     // define a BOM and its version
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
     implementation "com.squareup.okhttp3:logging-interceptor"
-
-    implementation "com.google.android.exoplayer:exoplayer:$exo_player_version"
-    implementation "com.google.android.exoplayer:exoplayer-core:$exo_player_version"
-    implementation "com.google.android.exoplayer:exoplayer-dash:$exo_player_version"
-    implementation "com.google.android.exoplayer:exoplayer-hls:$exo_player_version"
-    implementation "com.google.android.exoplayer:exoplayer-smoothstreaming:$exo_player_version"
-    implementation "com.google.android.exoplayer:exoplayer-ui:$exo_player_version"
-
-    implementation "androidx.room:room-runtime:$room_version"
-    implementation "androidx.room:room-ktx:$room_version"
-    kapt "androidx.room:room-compiler:$room_version"
-
-    //Cloudinary
-    implementation 'com.cloudinary:cloudinary-android:2.3.0'
-
-    implementation 'androidx.work:work-runtime-ktx:2.7.1'
-
-    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
-
-
-
 }

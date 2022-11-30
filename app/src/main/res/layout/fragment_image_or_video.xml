@@ -1,38 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.screens.viewimageorvideo.ImageOrVideoFragment">
-
-    <com.google.android.exoplayer2.ui.PlayerView
-        android:id="@+id/fullVideoView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        app:shutter_background_color="@android:color/transparent"
-        app:controller_layout_id="@layout/exo_playback_control_view"
-        />
-
-    <ImageView
-        android:id="@+id/fullImageView"
+<layout>
+    <data>
+        <variable
+            name="viewmodel"
+            type="com.quangln2.customfeedui.ui.viewmodel.ViewFullViewModel" />
+        <import type="android.view.View" />
+    </data>
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
-        />
+        tools:context=".ui.screens.viewimageorvideo.ImageOrVideoFragment">
 
-    <ProgressBar
-        android:id="@+id/fullVideoProgressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:indeterminate="true"
-        android:indeterminateTint="@color/blue"
-        android:visibility="invisible"
-        android:layout_gravity="center"
-        />
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:visibility="@{viewmodel.fullVideoViewVisibility ? View.VISIBLE: View.GONE}"
+            android:id="@+id/fullVideoView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:shutter_background_color="@android:color/transparent"
+            app:controller_layout_id="@layout/exo_playback_control_view"
+            />
 
+        <ImageView
+            android:visibility="@{viewmodel.fullImageViewVisibility ? View.VISIBLE: View.GONE}"
+            android:id="@+id/fullImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            />
 
-
-</FrameLayout>
+        <ProgressBar
+            android:visibility="@{viewmodel.fullVideoProgressBarVisibility ? View.VISIBLE: View.GONE}"
+            android:id="@+id/fullVideoProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/blue"
+            android:layout_gravity="center"
+            />
+    </FrameLayout>
+</layout>

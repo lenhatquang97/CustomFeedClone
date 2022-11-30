@@ -15,6 +15,7 @@ fun convertFromUploadPostToMyPost(uploadPost: UploadPost, oldPost: List<MyPost>)
     myPost.firstWidth = uploadPost.firstWidth
     myPost.firstHeight = uploadPost.firstHeight
 
+    //This is because in MongoDB, no items will return null :)
     if (uploadPost.imagesAndVideos !=null && uploadPost.imagesAndVideos.size > 0) {
         for (i in 0 until uploadPost.imagesAndVideos.size) {
             val value = uploadPost.imagesAndVideos[i]

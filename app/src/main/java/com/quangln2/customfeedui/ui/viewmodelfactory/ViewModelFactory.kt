@@ -6,6 +6,7 @@ import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.domain.usecase.*
 import com.quangln2.customfeedui.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeedui.ui.viewmodel.UploadViewModel
+import com.quangln2.customfeedui.ui.viewmodel.ViewFullViewModel
 import com.quangln2.customfeedui.ui.viewmodel.ViewMoreViewModel
 
 @Suppress("UNCHECKED_CAST")
@@ -23,6 +24,8 @@ class ViewModelFactory constructor(private val feedRepository: FeedRepository) :
                     UploadViewModel()
                 isAssignableFrom(ViewMoreViewModel::class.java) ->
                     ViewMoreViewModel(GetPostItemWithId(feedRepository))
+                isAssignableFrom(ViewFullViewModel::class.java) ->
+                    ViewFullViewModel()
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
