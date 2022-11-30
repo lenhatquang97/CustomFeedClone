@@ -3,7 +3,6 @@ package com.quangln2.customfeedui.data.repository
 import android.content.Context
 import android.widget.Toast
 import com.quangln2.customfeedui.R
-import com.quangln2.customfeedui.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeedui.data.datasource.local.LocalDataSource
 import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSource
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
@@ -26,30 +25,8 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
          }
          val body = remoteDataSource.getAllFeeds()
          if(body.isNotEmpty()){
-             val ls = mutableListOf<MyPost>()
-             val deletedFeeds = mutableListOf<MyPost>()
              val offlinePosts = localDataSource.getAll()
-             body.forEach {
-                 val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
-                 ls.add(itemConverted)
-             }
-             //find in offline feeds if there are no online posts in online database
-             offlinePosts.forEach {
-                 val filterId = body.find { item -> item.feedId == it.feedId }
-                 if (filterId == null) {
-                     deletedFeeds.add(it)
-                 }
-             }
-
-             //Deleted first
-             deletedFeeds.forEach {
-                 localDataSource.delete(it.feedId)
-             }
-
-             val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
-             availableItems.forEach {
-                 localDataSource.insert(it)
-             }
+             val availableItems = localDataSource.handleModifyPostList(body)
              if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems))
                  emit(MyPost.listToJsonString(availableItems))
              emit("onGetFeedLoadingCode 200")

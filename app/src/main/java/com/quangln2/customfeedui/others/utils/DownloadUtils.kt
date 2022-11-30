@@ -6,18 +6,20 @@ import android.webkit.URLUtil
 import android.widget.Toast
 import okhttp3.*
 import java.io.*
-
+import java.net.HttpURLConnection
+import java.net.URL
 
 object DownloadUtils {
     private val downloadClient = OkHttpClient()
     fun fileSizeFromInternet(url: String): Pair<Long, Exception?> {
         var value = 0L
         var exception: Exception? = null
+        val obj = URL(url)
+        val conn = obj.openConnection() as HttpURLConnection
         try {
-            val request = Request.Builder().url(url).build()
-            val response = downloadClient.newCall(request).execute()
-            value = response.body?.contentLength() ?: 0L
-            response.close()
+            conn.connect()
+            value = conn.contentLength.toLong()
+            conn.disconnect()
         } catch (e: Exception) {
             exception = e
         }

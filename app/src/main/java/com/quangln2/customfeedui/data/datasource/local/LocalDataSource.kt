@@ -3,6 +3,7 @@ package com.quangln2.customfeedui.data.datasource.local
 import android.content.Context
 import android.net.Uri
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
+import com.quangln2.customfeedui.data.models.datamodel.UploadPost
 import okhttp3.MultipartBody
 
 interface LocalDataSource {
@@ -17,4 +18,5 @@ interface LocalDataSource {
     suspend fun update(myPost: MyPost)
     suspend fun delete(id: String)
     suspend fun getFeedWithId(feed_id: String): MyPost
+    suspend fun handleModifyPostList(body: MutableList<UploadPost>): List<MyPost>
 }

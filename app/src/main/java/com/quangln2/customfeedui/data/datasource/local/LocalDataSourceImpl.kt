@@ -6,7 +6,9 @@ import androidx.annotation.WorkerThread
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.database.FeedDao
+import com.quangln2.customfeedui.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
+import com.quangln2.customfeedui.data.models.datamodel.UploadPost
 import com.quangln2.customfeedui.others.utils.DownloadUtils.getMimeType
 import com.quangln2.customfeedui.others.utils.FileUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -19,6 +21,34 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
     override suspend fun getFeedWithId(feed_id: String): MyPost = feedDao.getFeedWithId(feed_id)
+    override suspend fun handleModifyPostList(body: MutableList<UploadPost>): List<MyPost> {
+        val ls = mutableListOf<MyPost>()
+        val deletedFeeds = mutableListOf<MyPost>()
+        val offlinePosts = getAll()
+        body.forEach {
+            val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
+            ls.add(itemConverted)
+        }
+
+        //find in offline feeds if there are no online posts in online database
+        offlinePosts.forEach {
+            val filterId = body.find { item -> item.feedId == it.feedId }
+            if (filterId == null) {
+                deletedFeeds.add(it)
+            }
+        }
+
+        //Deleted first
+        deletedFeeds.forEach {
+            delete(it.feedId)
+        }
+
+        val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+        availableItems.forEach {
+            insert(it)
+        }
+        return availableItems
+    }
 
 
     @Suppress("RedundantSuspendModifier")
