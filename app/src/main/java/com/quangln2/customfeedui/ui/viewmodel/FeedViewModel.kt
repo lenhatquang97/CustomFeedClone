@@ -16,11 +16,9 @@ import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
-import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeedui.domain.usecase.DeleteFeedUseCase
 import com.quangln2.customfeedui.domain.usecase.GetAllFeedsModifiedUseCase
 import com.quangln2.customfeedui.domain.workmanager.UploadService
-import com.quangln2.customfeedui.others.callback.GetDataCallback
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import kotlinx.coroutines.Dispatchers
@@ -39,15 +37,6 @@ class FeedViewModel(
     private val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
     private val temporaryVideoSequence by lazy { mutableListOf<Pair<Int, Int>>() }
-    private val onTakeData = object : GetDataCallback{
-        override fun onGetFeedLoadingCode(loadingCode: Int) {
-            _feedLoadingCode.postValue(loadingCode)
-        }
-
-        override fun onGetUploadList(postList: List<MyPost>) {
-            _uploadLists.postValue(postList.toMutableList())
-        }
-    }
 
     val noPostIdVisibility = MutableLiveData<Boolean>()
     val retryButtonVisibility = MutableLiveData<Boolean>()
@@ -65,21 +54,31 @@ class FeedViewModel(
         isGoingToUploadState.apply { value = false }
     }
 
-    fun getAllFeeds(preloadCache: Boolean = false) = getAllFeedsModifiedUseCase(onTakeData, viewModelScope, preloadCache)
-
-    fun getFeedItem(feedId: String): MyPostRender {
-        val ls = _uploadLists.value
-        ls?.apply {
-            val indexOfFirst = ls.indexOfFirst { it.feedId == feedId }
-            return MyPostRender.convertMyPostToMyPostRender(ls[indexOfFirst])
+    fun getAllFeeds(preloadCache: Boolean = false){
+        viewModelScope.launch(Dispatchers.IO) {
+            getAllFeedsModifiedUseCase(preloadCache).collect{
+                if(it.contains("onGetFeedLoadingCode")){
+                    val commandParse = it.split(" ")
+                    _feedLoadingCode.postValue(commandParse[1].toInt())
+                } else {
+                    val jsonParse = MyPost.jsonStringToList(it).toMutableList()
+                    _uploadLists.postValue(jsonParse)
+                    isRefreshingLoadState.postValue(false)
+                }
+            }
         }
-        return MyPostRender.convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
     }
 
     fun deleteFeed(id: String, context: Context) {
         val oldLists = uploadLists.value
         oldLists?.apply {
-            deleteFeedUseCase(id, onTakeData, oldLists, viewModelScope, context)
+            viewModelScope.launch(Dispatchers.IO) {
+                deleteFeedUseCase(id, oldLists, context).collect{
+                    val jsonParse = MyPost.jsonStringToList(it).toMutableList()
+                    _uploadLists.postValue(jsonParse)
+                }
+            }
+
         }
     }
 
@@ -240,7 +239,7 @@ class FeedViewModel(
     fun manageUploadState(state: Int, context: Context){
         isGoingToUploadState.value = state == EnumFeedSplashScreenState.LOADING.value
         if (state == EnumFeedSplashScreenState.COMPLETE.value) {
-            isRefreshingLoadState.value = false
+            isRefreshingLoadState.value = true
             isGoingToUploadState.value = false
             viewModelScope.launch(Dispatchers.Main){
                 getAllFeeds()

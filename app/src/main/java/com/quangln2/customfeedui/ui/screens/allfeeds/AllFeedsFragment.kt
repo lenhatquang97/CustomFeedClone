@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.size
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
@@ -34,7 +34,7 @@ import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.viewmodel.FeedViewModel
-import com.quangln2.customfeedui.ui.viewmodel.ViewModelFactory
+import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
@@ -58,7 +58,7 @@ class AllFeedsFragment : Fragment() {
         }
     }
 
-    private val viewModel: FeedViewModel by activityViewModels {
+    private val viewModel: FeedViewModel by viewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
@@ -75,8 +75,6 @@ class AllFeedsFragment : Fragment() {
             }
         }
     }
-
-
 
     private val eventCallback: EventFeedCallback get() = object : EventFeedCallback {
             override fun onDeleteItem(id: String, position: Int) {

@@ -95,9 +95,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
             seekTo(currentVideoPosition)
             prepare()
             playWhenReady = true
-
         }
-
         binding.fullVideoView.player = player
         binding.fullImageView.visibility = View.INVISIBLE
     }

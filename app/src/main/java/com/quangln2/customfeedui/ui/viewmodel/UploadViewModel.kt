@@ -8,7 +8,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.gson.Gson
 import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
 import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
 import com.quangln2.customfeedui.domain.workmanager.UploadService
@@ -30,7 +29,7 @@ class UploadViewModel: ViewModel() {
     fun uploadFiles(caption: String, uriLists: MutableList<Uri>, context: Context) {
         val uriStringLists = uriLists.map { it.toString() }
         val uploadWorkerModel = UploadWorkerModel(caption, uriStringLists)
-        val jsonString = Gson().toJson(uploadWorkerModel)
+        val jsonString = UploadWorkerModel.uploadWorkerToJson(uploadWorkerModel).toString()
         val intent = Intent(context, UploadService::class.java)
         intent.putExtra("jsonString", jsonString)
         context.startService(intent)

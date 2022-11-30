@@ -15,7 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
@@ -33,7 +33,7 @@ import com.quangln2.customfeedui.ui.customview.CustomImageView
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.viewmodel.UploadViewModel
-import com.quangln2.customfeedui.ui.viewmodel.ViewModelFactory
+import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -50,7 +50,7 @@ class HomeScreenFragment : Fragment() {
     private lateinit var binding: FragmentHomeScreenBinding
 
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
-    private val viewModel: UploadViewModel by activityViewModels {
+    private val viewModel: UploadViewModel by viewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->

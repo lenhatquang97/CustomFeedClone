@@ -1,20 +1,12 @@
 package com.quangln2.customfeedui.data.models.datamodel
 
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
+import org.json.JSONArray
+import org.json.JSONObject
 
 
 data class OfflineResource(
-    @SerializedName("url")
-    @Expose
     var url: String,
-
-    @SerializedName("size")
-    @Expose
     var size: Long,
-
-    @SerializedName("bytesCopied")
-    @Expose
     var bytesCopied: Long
 ) {
     override fun hashCode(): Int {
@@ -30,4 +22,42 @@ data class OfflineResource(
         }
         return false
     }
+    companion object{
+        fun offlineResourceToJsonObject(obj: OfflineResource): JSONObject{
+            val jsonObject = JSONObject()
+            jsonObject.apply {
+                put("url", obj.url)
+                put("size", obj.size)
+                put("bytesCopied", obj.bytesCopied)
+            }
+
+            return jsonObject
+        }
+        fun jsonStringToOfflineResource(json: String): OfflineResource{
+            val jsonObject = JSONObject(json)
+            return OfflineResource(
+                jsonObject.getString("url"),
+                jsonObject.getLong("size"),
+                jsonObject.getLong("bytesCopied")
+            )
+        }
+
+        fun mutableListOfflineResourceToJsonArray(list: MutableList<OfflineResource>): String{
+            val jsonArray = JSONArray()
+            list.forEach {
+                jsonArray.put(offlineResourceToJsonObject(it))
+            }
+            return jsonArray.toString()
+        }
+
+        fun jsonArrayToMutableListOfflineResource(json: String): MutableList<OfflineResource>{
+            val jsonArray = JSONArray(json)
+            val list = mutableListOf<OfflineResource>()
+            for (i in 0 until jsonArray.length()){
+                list.add(jsonStringToOfflineResource(jsonArray.getString(i)))
+            }
+            return list
+        }
+    }
+
 }

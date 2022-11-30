@@ -13,7 +13,6 @@ import androidx.core.net.toUri
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
-import com.google.gson.Gson
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.controllers.FeedCtrl
 import com.quangln2.customfeedui.data.database.FeedDatabase
@@ -25,10 +24,6 @@ import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.domain.usecase.UploadPostV2UseCase
 import com.quangln2.customfeedui.others.utils.FileUtils
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.File
 import java.util.*
 
@@ -60,7 +55,7 @@ class UploadService : Service() {
             if(jsonString != null){
                 FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.LOADING.value)
 
-                val uploadWorkerModel = Gson().fromJson(jsonString, UploadWorkerModel::class.java)
+                val uploadWorkerModel = UploadWorkerModel.jsonStringToUploadWorker(jsonString)
 
                 val uriLists = uploadWorkerModel.uriLists.map { it.toUri() }
                 val uriListsForCompressing = if (uriLists.isEmpty()) emptyList() else FileUtils.compressImagesAndVideos(
@@ -194,18 +189,11 @@ class UploadService : Service() {
 
     private fun uploadToServer(uploadingPost: UploadPost){
         val uploadPostV2UseCase = UploadPostV2UseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
-        uploadPostV2UseCase(uploadingPost).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if(response.code() == 200){
-                    showSuccessfulUI(applicationContext)
-                } else {
-                    showFailedUI(applicationContext, cause = "Response code: ${response.code()}")
-                }
-            }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                showFailedUI(applicationContext, cause = t.cause.toString())
-            }
-        })
+        val responseCode = uploadPostV2UseCase(uploadingPost)
+        if(responseCode == 200){
+            showSuccessfulUI(applicationContext)
+        } else {
+            showFailedUI(applicationContext, cause = "Response code: $responseCode")
+        }
     }
 }

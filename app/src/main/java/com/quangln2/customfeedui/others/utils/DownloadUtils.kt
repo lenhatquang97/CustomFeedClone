@@ -4,15 +4,12 @@ import android.content.Context
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.widget.Toast
-import com.quangln2.customfeedui.others.singleton.RetrofitSetup.downloadClient
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.Request
-import okhttp3.Response
+import okhttp3.*
 import java.io.*
 
 
 object DownloadUtils {
+    private val downloadClient = OkHttpClient()
     fun fileSizeFromInternet(url: String): Pair<Long, Exception?> {
         var value = 0L
         var exception: Exception? = null

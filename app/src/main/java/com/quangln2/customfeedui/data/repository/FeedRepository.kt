@@ -9,108 +9,80 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSource
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.datamodel.UploadPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
-import com.quangln2.customfeedui.others.callback.GetDataCallback
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 
 class FeedRepository(private val localDataSource: LocalDataSource, private val remoteDataSource: RemoteDataSource) {
-     fun getAllFeedsWithModified(onTakeData: GetDataCallback, coroutineScope: CoroutineScope, preloadCache: Boolean){
-         coroutineScope.launch(Dispatchers.IO) {
-             if(preloadCache){
-                 loadCache(coroutineScope, onTakeData)
+    fun getAllFeedsWithModified(preloadCache: Boolean): Flow<String> = flow{
+         if(preloadCache){
+             emit("onGetFeedLoadingCode ${EnumFeedLoadingCode.OFFLINE.value}")
+             val offlinePosts = localDataSource.getAll()
+             if(offlinePosts.isNotEmpty()) {
+                 emit(MyPost.listToJsonString(offlinePosts))
              }
-             val response = remoteDataSource.getAllFeeds().execute()
-             if(response.isSuccessful){
-                 if (response.code() == 200) {
-                     val ls = mutableListOf<MyPost>()
-                     val body = response.body()
-                     val deletedFeeds = mutableListOf<MyPost>()
-                     val offlinePosts = localDataSource.getAll()
-                     if(body != null){
-                         body.forEach {
-                             val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
-                             ls.add(itemConverted)
-                         }
-                         //find in offline feeds if there are no online posts in online database
-                         offlinePosts.forEach {
-                             val filterId = body.find { item -> item.feedId == it.feedId }
-                             if (filterId == null) {
-                                 deletedFeeds.add(it)
-                             }
-                         }
-
-                         //Deleted first
-                         deletedFeeds.forEach {
-                             localDataSource.delete(it.feedId)
-                         }
-
-                         val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
-                         availableItems.forEach {
-                             localDataSource.insert(it)
-                         }
-                     }
-
-                     //get available items but not in deleted feeds
-                     val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
-                     if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems))
-                         onTakeData.onGetUploadList(availableItems)
-                 } else{
-                     onTakeData.onGetFeedLoadingCode(EnumFeedLoadingCode.OFFLINE.value)
-                     val offlinePosts = localDataSource.getAll()
-                     if(offlinePosts.isNotEmpty()) {
-                         onTakeData.onGetUploadList(offlinePosts.toMutableList())
-                     }
+         }
+         val body = remoteDataSource.getAllFeeds()
+         if(body.isNotEmpty()){
+             val ls = mutableListOf<MyPost>()
+             val deletedFeeds = mutableListOf<MyPost>()
+             val offlinePosts = localDataSource.getAll()
+             body.forEach {
+                 val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
+                 ls.add(itemConverted)
+             }
+             //find in offline feeds if there are no online posts in online database
+             offlinePosts.forEach {
+                 val filterId = body.find { item -> item.feedId == it.feedId }
+                 if (filterId == null) {
+                     deletedFeeds.add(it)
                  }
-                 onTakeData.onGetFeedLoadingCode(response.code())
-             } else {
-                 loadCache(coroutineScope, onTakeData)
+             }
+
+             //Deleted first
+             deletedFeeds.forEach {
+                 localDataSource.delete(it.feedId)
+             }
+
+             val availableItems = ls.filter { item -> deletedFeeds.find { it.feedId == item.feedId } == null }
+             availableItems.forEach {
+                 localDataSource.insert(it)
+             }
+             if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems))
+                 emit(MyPost.listToJsonString(availableItems))
+             emit("onGetFeedLoadingCode 200")
+         } else {
+             emit("onGetFeedLoadingCode ${EnumFeedLoadingCode.OFFLINE.value}")
+             val offlinePosts = localDataSource.getAll()
+             if(offlinePosts.isNotEmpty()) {
+                 emit(MyPost.listToJsonString(offlinePosts))
              }
          }
 
-    }
+    }.flowOn(Dispatchers.IO)
 
-    fun deleteFeed(id: String, onTakeData: GetDataCallback, oldLists: List<MyPost>, coroutineScope: CoroutineScope, context: Context) {
-        remoteDataSource.deleteFeed(id).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if (response.errorBody() == null && response.code() == 200) {
-                    coroutineScope.launch(Dispatchers.IO) {
-                        localDataSource.delete(id)
-                    }
-                    val filteredList = oldLists.filter { it.feedId != id }
-                    onTakeData.onGetUploadList(filteredList)
-                    Toast.makeText(context, context.resources.getString(R.string.delete_successfully), Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, context.resources.getString(R.string.delete_failed), Toast.LENGTH_SHORT).show()
-                }
+    fun deleteFeed(id: String, oldLists: List<MyPost>, context: Context): Flow<String> = flow {
+        val response = remoteDataSource.deleteFeed(id)
+        if(response == 200){
+            localDataSource.delete(id)
+            val filteredList = oldLists.filter { it.feedId != id }
+            emit(MyPost.listToJsonString(filteredList))
+            withContext(Dispatchers.Main){
+                Toast.makeText(context, context.resources.getString(R.string.delete_successfully), Toast.LENGTH_SHORT).show()
             }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+        } else {
+            withContext(Dispatchers.Main){
                 Toast.makeText(context, context.resources.getString(R.string.delete_failed), Toast.LENGTH_SHORT).show()
             }
 
-        })
-    }
+        }
+    }.flowOn(Dispatchers.IO)
 
     suspend fun delete(id: String) = localDataSource.delete(id)
-    fun uploadPostV2(requestBody: UploadPost): Call<ResponseBody> = remoteDataSource.uploadPostV2(requestBody)
-
-
-
-    private fun loadCache(coroutineScope: CoroutineScope, onTakeData: GetDataCallback) {
-        onTakeData.onGetFeedLoadingCode(EnumFeedLoadingCode.OFFLINE.value)
-        coroutineScope.launch(Dispatchers.IO) {
-            val offlinePosts = localDataSource.getAll()
-            if(offlinePosts.isNotEmpty()) {
-                onTakeData.onGetUploadList(offlinePosts.toMutableList())
-            }
-        }
-
-    }
+    suspend fun retrieveItemWithId(id: String) = localDataSource.getFeedWithId(id)
+    fun uploadPostV2(requestBody: UploadPost) = remoteDataSource.uploadPostV2(requestBody)
 
     private fun compareDBPostsAndFetchPosts(dbPosts: List<MyPost>, fetchedPost: List<MyPost>): Boolean{
         if(dbPosts.size != fetchedPost.size) return false
@@ -118,7 +90,7 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
             if(a != b) return false
         }
         return true
-
     }
+
 
 }

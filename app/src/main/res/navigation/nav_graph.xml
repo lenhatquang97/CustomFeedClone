@@ -38,7 +38,7 @@
         android:label="ViewFullVideoFragment" />
     <fragment
         android:id="@+id/viewMoreFragment"
-        android:name="com.quangln2.customfeedui.ui.screens.viewimageorvideo.ViewMoreFragment"
+        android:name="com.quangln2.customfeedui.ui.screens.viewmore.ViewMoreFragment"
         android:label="fragment_view_more"
         tools:layout="@layout/fragment_view_more">
         <action
