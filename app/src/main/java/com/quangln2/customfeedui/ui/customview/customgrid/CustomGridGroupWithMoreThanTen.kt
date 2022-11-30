@@ -9,7 +9,7 @@ fun getGridItemsLocationWithMoreThanTen(
     firstItemHeight: Int = 0
 ): List<RectanglePoint> {
     val rectangles = when (childCount) {
-        0 -> emptyList<RectanglePoint>()
+        0 -> emptyList()
         1 -> CustomGridMigration.drawOneChildGrid()
         2, 3, 4 -> {
             if (firstItemWidth >= firstItemHeight)

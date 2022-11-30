@@ -13,18 +13,20 @@ class RemoteDataSourceImpl : RemoteDataSource {
         val conn = obj.openConnection() as HttpURLConnection
         val uploadList = mutableListOf<UploadPost>()
         conn.requestMethod = "GET"
-        conn.connect()
-
-        val responseCode = conn.responseCode
-        if(responseCode == HttpURLConnection.HTTP_OK){
-            val br = BufferedReader(InputStreamReader(conn.inputStream))
-            val result = br.readLine()
-            val uploadPost = UploadPost.jsonStringToUploadPostList(result)
-            uploadList.addAll(uploadPost)
-            br.close()
+        try{
+            conn.connect()
+            val responseCode = conn.responseCode
+            if(responseCode == HttpURLConnection.HTTP_OK){
+                val br = BufferedReader(InputStreamReader(conn.inputStream))
+                val result = br.readLine()
+                val uploadPost = UploadPost.jsonStringToUploadPostList(result)
+                uploadList.addAll(uploadPost)
+                br.close()
+            }
+            conn.disconnect()
+        } catch (e: Exception){
+            e.printStackTrace()
         }
-
-        conn.disconnect()
         return uploadList
     }
 
@@ -32,13 +34,19 @@ class RemoteDataSourceImpl : RemoteDataSource {
         val obj = URL(ConstantSetup.DELETE_FEED + id)
         val conn = obj.openConnection() as HttpURLConnection
         conn.requestMethod = "DELETE"
-        conn.connect()
-        val responseCode = conn.responseCode
-        conn.disconnect()
+        var responseCode = 400
+        try{
+            conn.connect()
+            responseCode = conn.responseCode
+            conn.disconnect()
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
         return responseCode
     }
 
     override fun uploadPostV2(requestBody: UploadPost): Int {
+        var responseCode = 400
         val obj = URL(ConstantSetup.UPLOAD_FEED_VERSION_2)
         val conn = obj.openConnection() as HttpURLConnection
         conn.requestMethod = "POST"
@@ -49,9 +57,15 @@ class RemoteDataSourceImpl : RemoteDataSource {
         val os = conn.outputStream
         val input = jsonInputString.toByteArray(charset("utf-8"))
         os.write(input, 0, input.size)
-        conn.connect()
-        val responseCode = conn.responseCode
-        conn.disconnect()
+        try{
+            conn.connect()
+            responseCode = conn.responseCode
+            conn.disconnect()
+        } catch (e: Exception){
+            e.printStackTrace()
+        } finally {
+            os.close()
+        }
         return responseCode
     }
 }

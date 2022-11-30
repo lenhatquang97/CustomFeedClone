@@ -241,9 +241,7 @@ class FeedViewModel(
         if (state == EnumFeedSplashScreenState.COMPLETE.value) {
             isRefreshingLoadState.value = true
             isGoingToUploadState.value = false
-            viewModelScope.launch(Dispatchers.Main){
-                getAllFeeds()
-            }
+            getAllFeeds()
             stopUploadService(context)
             FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.UNDEFINED.value
         }
@@ -252,15 +250,11 @@ class FeedViewModel(
     fun onHandleRetryButton(){
         noPostIdVisibility.value = true
         retryButtonVisibility.value = false
-        viewModelScope.launch(Dispatchers.Main){
-            getAllFeeds(preloadCache = true)
-        }
+        getAllFeeds(preloadCache = true)
     }
 
     fun onHandleSwipeRefresh(){
-        viewModelScope.launch(Dispatchers.Main) {
-            getAllFeeds()
-            isRefreshingLoadState.value = false
-        }
+        isRefreshingLoadState.value = true
+        getAllFeeds()
     }
 }
