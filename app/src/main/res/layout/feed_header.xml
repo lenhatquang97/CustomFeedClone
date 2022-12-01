@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/feed_item_widget"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
     <TextView
         android:id="@+id/feedId"
         android:layout_width="wrap_content"
@@ -72,52 +72,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/created_time" />
 
-
     <View
         android:id="@+id/white_space"
         android:layout_width="match_parent"
         android:layout_height="8dp"
         android:visibility="invisible"
-        app:layout_constraintTop_toBottomOf="@id/caption"
-        app:layout_constraintBottom_toTopOf="@+id/customGridGroup" />
-
-    <FrameLayout
-        android:id="@+id/customGridGroup"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginHorizontal="8dp"
-        app:layout_constraintBottom_toTopOf="@id/delete_button"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/white_space">
-    </FrameLayout>
-
-    <View
-        android:id="@+id/block_zone"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@+id/customGridGroup" />
-
-    <ImageButton
-        android:id="@+id/delete_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:minHeight="48dp"
-        android:paddingRight="8dp"
-        android:paddingBottom="8dp"
-        android:src="@drawable/ic_baseline_delete_24"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/block_zone"
-        tools:ignore="SpeakableTextPresentCheck" />
-
-    <View
-        android:id="@+id/view"
-        android:layout_width="wrap_content"
-        android:layout_height="10dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/delete_button"
-        style="@style/SeparatorColor"
-        />
+        app:layout_constraintTop_toBottomOf="@id/caption" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
