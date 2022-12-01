@@ -8,6 +8,7 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSource
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.datamodel.UploadPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
+import com.quangln2.customfeedui.data.models.others.FeedWrapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -15,29 +16,16 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 class FeedRepository(private val localDataSource: LocalDataSource, private val remoteDataSource: RemoteDataSource) {
-    fun getAllFeedsWithModified(preloadCache: Boolean): Flow<String> = flow{
+    fun getAllFeedsWithModified(preloadCache: Boolean): Flow<FeedWrapper> = flow{
+         //Step 1: Preload cache if necessary
          if(preloadCache){
-             emit("onGetFeedLoadingCode ${EnumFeedLoadingCode.OFFLINE.value}")
-             val offlinePosts = localDataSource.getAll()
-             if(offlinePosts.isNotEmpty()) {
-                 emit(MyPost.listToJsonString(offlinePosts))
-             }
+             val offlinePosts = localDataSource.getAllFeeds()
+             emit(FeedWrapper(offlinePosts, EnumFeedLoadingCode.OFFLINE.value))
          }
+         //Step 2: Fetch data from server
          val body = remoteDataSource.getAllFeeds()
-         if(body.isNotEmpty()){
-             val offlinePosts = localDataSource.getAll()
-             val availableItems = localDataSource.handleModifyPostList(body)
-             if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems))
-                 emit(MyPost.listToJsonString(availableItems))
-             emit("onGetFeedLoadingCode 200")
-         } else {
-             emit("onGetFeedLoadingCode ${EnumFeedLoadingCode.OFFLINE.value}")
-             val offlinePosts = localDataSource.getAll()
-             if(offlinePosts.isNotEmpty()) {
-                 emit(MyPost.listToJsonString(offlinePosts))
-             }
-         }
-
+         val result = localDataSource.updatePostsBasedOnServer(body)
+         emit(result)
     }.flowOn(Dispatchers.IO)
 
     fun deleteFeed(id: String, oldLists: List<MyPost>, context: Context): Flow<String> = flow {
@@ -60,14 +48,6 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
     suspend fun delete(id: String) = localDataSource.delete(id)
     suspend fun retrieveItemWithId(id: String) = localDataSource.getFeedWithId(id)
     fun uploadPostV2(requestBody: UploadPost) = remoteDataSource.uploadPostV2(requestBody)
-
-    private fun compareDBPostsAndFetchPosts(dbPosts: List<MyPost>, fetchedPost: List<MyPost>): Boolean{
-        if(dbPosts.size != fetchedPost.size) return false
-        for((a,b) in dbPosts.zip(fetchedPost)){
-            if(a != b) return false
-        }
-        return true
-    }
 
 
 }

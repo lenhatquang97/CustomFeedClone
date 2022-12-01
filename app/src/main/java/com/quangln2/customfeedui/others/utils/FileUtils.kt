@@ -84,8 +84,6 @@ object FileUtils {
         return result
     }
 
-
-
     private fun getBitmapItem(uri: Uri, context: Context): Bitmap{
         return when{
             Build.VERSION.SDK_INT < 28 -> MediaStore.Images.Media.getBitmap(

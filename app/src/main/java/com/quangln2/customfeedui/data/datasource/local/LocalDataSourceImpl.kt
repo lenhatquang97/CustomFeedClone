@@ -9,6 +9,8 @@ import com.quangln2.customfeedui.data.database.FeedDao
 import com.quangln2.customfeedui.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.datamodel.UploadPost
+import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
+import com.quangln2.customfeedui.data.models.others.FeedWrapper
 import com.quangln2.customfeedui.others.utils.DownloadUtils.getMimeType
 import com.quangln2.customfeedui.others.utils.FileUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -24,7 +26,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
     override suspend fun handleModifyPostList(body: MutableList<UploadPost>): List<MyPost> {
         val ls = mutableListOf<MyPost>()
         val deletedFeeds = mutableListOf<MyPost>()
-        val offlinePosts = getAll()
+        val offlinePosts = getAllFeeds()
         body.forEach {
             val itemConverted = convertFromUploadPostToMyPost(it, offlinePosts)
             ls.add(itemConverted)
@@ -63,7 +65,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    override suspend fun getAll(): List<MyPost> = feedDao.getAll()
+    override suspend fun getAllFeeds(): List<MyPost> = feedDao.getAll()
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
@@ -97,5 +99,30 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
             }
         }
         return builder.build().parts
+    }
+
+    override fun compareDBPostsAndFetchPosts(dbPosts: List<MyPost>, fetchedPost: List<MyPost>): Boolean{
+        if(dbPosts.size != fetchedPost.size) return false
+        for((a,b) in dbPosts.zip(fetchedPost)){
+            if(a != b) return false
+        }
+        return true
+    }
+
+    override suspend fun updatePostsBasedOnServer(body: MutableList<UploadPost>): FeedWrapper {
+        return if(body.isNotEmpty()){
+            //Step 3: Compare data from server and data from local
+            val offlinePosts = getAllFeeds()
+            val availableItems = handleModifyPostList(body)
+            if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems)){
+                FeedWrapper(availableItems, EnumFeedLoadingCode.SUCCESS.value)
+            } else {
+                FeedWrapper(offlinePosts, EnumFeedLoadingCode.SUCCESS.value)
+            }
+        } else {
+            //Step 4: If there is no data from server, return data from local
+            val offlinePosts = getAllFeeds()
+            FeedWrapper(offlinePosts, EnumFeedLoadingCode.OFFLINE.value)
+        }
     }
 }

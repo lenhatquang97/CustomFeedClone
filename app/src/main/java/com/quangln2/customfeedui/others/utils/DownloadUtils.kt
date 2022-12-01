@@ -1,6 +1,7 @@
 package com.quangln2.customfeedui.others.utils
 
 import android.content.Context
+import android.util.Log
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.widget.Toast
@@ -10,7 +11,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object DownloadUtils {
-    private val downloadClient = OkHttpClient()
     fun fileSizeFromInternet(url: String): Pair<Long, Exception?> {
         var value = 0L
         var exception: Exception? = null
@@ -24,22 +24,6 @@ object DownloadUtils {
             exception = e
         }
         return Pair(value, exception)
-    }
-
-    fun isValidFile(url: String, context: Context, anotherSize: Long): Boolean {
-        val fileName = URLUtil.guessFileName(url, null, null)
-        val file = File(context.cacheDir, fileName)
-        if (!file.exists()) return false
-        try {
-            if (file.length() == anotherSize && anotherSize != 0L) {
-                return true
-            } else {
-                file.delete()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return false
     }
 
     fun getTemporaryFilePath(url: String, context: Context, fileSize: Long): String {
@@ -70,26 +54,6 @@ object DownloadUtils {
         }
     }
 
-    fun downloadVideoSynchronous(videoUrl: String, context: Context){
-        try {
-            val req = Request.Builder().url(videoUrl).build()
-            val fileName = URLUtil.guessFileName(videoUrl, null, null)
-            val file = File(context.cacheDir, fileName)
-            val response = downloadClient.newCall(req).execute()
-            if (response.isSuccessful) {
-                val fileOut = FileOutputStream(file)
-                write(response.body!!.byteStream(), fileOut)
-                fileOut.close()
-                response.close()
-            } else {
-                Toast.makeText(context, "Oh no!!!", Toast.LENGTH_SHORT).show()
-                response.close()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
     fun getMimeType(url: String?): String? {
         var type: String? = null
         val extension = MimeTypeMap.getFileExtensionFromUrl(url)
@@ -111,6 +75,7 @@ object DownloadUtils {
             var readBytes: Int
             var totalBytes: Long = 0
             while (input.read(dataBuffer).also { readBytes = it } != -1) {
+                Log.d("DownloadUtilsTag", "write: $totalBytes")
                 totalBytes += readBytes.toLong()
                 outputStream.write(dataBuffer, 0, readBytes)
             }
@@ -118,12 +83,13 @@ object DownloadUtils {
         }
     }
 
+    //Think for implementing HttpUrlConnection instead of OkHttp
     private fun downloadVideo(videoUrl: String, context: Context) {
         try {
             val req = Request.Builder().url(videoUrl).build()
             val fileName = URLUtil.guessFileName(videoUrl, null, null)
             val file = File(context.cacheDir, fileName)
-            downloadClient.newCall(req).enqueue(object : Callback {
+            OkHttpClient().newCall(req).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     e.printStackTrace()
                 }

@@ -57,14 +57,9 @@ class FeedViewModel(
     fun getAllFeeds(preloadCache: Boolean = false){
         viewModelScope.launch(Dispatchers.IO) {
             getAllFeedsModifiedUseCase(preloadCache).collect{
-                if(it.contains("onGetFeedLoadingCode")){
-                    val commandParse = it.split(" ")
-                    _feedLoadingCode.postValue(commandParse[1].toInt())
-                } else {
-                    val jsonParse = MyPost.jsonStringToList(it).toMutableList()
-                    _uploadLists.postValue(jsonParse)
-                    isRefreshingLoadState.postValue(false)
-                }
+                _feedLoadingCode.postValue(it.loadingCode)
+                _uploadLists.postValue(it.feedList.toMutableList())
+                isRefreshingLoadState.postValue(false)
             }
         }
     }

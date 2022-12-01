@@ -47,14 +47,6 @@ class UtilsUnitTest {
         assert(error != null)
     }
 
-    @Test
-    fun testDownloadVideo(){
-        val validUrl = "https://sample-videos.com/video123/flv/720/big_buck_bunny_720p_10mb.flv"
-        val (result, _) = DownloadUtils.fileSizeFromInternet(validUrl)
-        DownloadUtils.downloadVideoSynchronous(validUrl, context)
-        assert(DownloadUtils.isValidFile(validUrl, context, result))
-    }
-
     @After
     fun deleteFile(){
         val validUrl = "https://sample-videos.com/video123/flv/720/big_buck_bunny_720p_10mb.flv"

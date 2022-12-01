@@ -7,7 +7,7 @@ import com.bumptech.glide.request.RequestOptions
 
 object ConstantSetup {
     //REST API
-    private const val DEFAULT_ENDPOINT = "https://f2a3-171-244-166-188.ap.ngrok.io/"
+    private const val DEFAULT_ENDPOINT = "https://84d3-171-244-166-188.ap.ngrok.io/"
     const val GET_FEEDS = DEFAULT_ENDPOINT + "feeds"
     const val UPLOAD_FEED_VERSION_2 = DEFAULT_ENDPOINT + "feeds/upload_v2"
     //Note: need id: feeds/{id}
