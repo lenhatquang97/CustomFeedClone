@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         viewBinding = ActivityMainBinding.inflate(LayoutInflater.from(this))
         setContentView(viewBinding.root)
         supportActionBar?.hide()
