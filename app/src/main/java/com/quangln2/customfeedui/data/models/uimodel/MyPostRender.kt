@@ -17,10 +17,24 @@ data class MyPostRender(
 ) {
 
     companion object {
-        fun convertMyPostToMyPostRender(myPost: MyPost, typeOfPost: TypeOfPost = TypeOfPost.POST): MyPostRender {
+        fun convertMyPostToMyPostRender(myPost: MyPost, typeOfPost: TypeOfPost): MyPostRender {
             return MyPostRender(
                 feedId = myPost.feedId,
                 typeOfPost = typeOfPost,
+                name = myPost.name,
+                avatar = myPost.avatar,
+                createdTime = myPost.createdTime,
+                caption = myPost.caption,
+                resources = myPost.resources,
+                firstItemHeight = myPost.firstHeight,
+                firstItemWidth = myPost.firstWidth
+            )
+        }
+
+        fun convertMyPostToMyPostRender(myPost: MyPost): MyPostRender {
+            return MyPostRender(
+                feedId = myPost.feedId,
+                typeOfPost = TypeOfPost.POST,
                 name = myPost.name,
                 avatar = myPost.avatar,
                 createdTime = myPost.createdTime,
@@ -37,7 +51,10 @@ data class MyPostRender(
             listsOfPostRender.add(addNewPostItem)
             posts.forEach { itr ->
                 val myPostRender = convertMyPostToMyPostRender(itr)
-                listsOfPostRender.add(myPostRender)
+                for(i in 2..4){
+                    listsOfPostRender.add(myPostRender.copy(typeOfPost = getTypeOfPost(i)))
+                }
+
             }
             return listsOfPostRender
         }

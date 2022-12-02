@@ -4,16 +4,15 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.SimpleTarget
-import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.PlayerView
@@ -30,10 +29,10 @@ class LoadingVideoView @JvmOverloads constructor(
     private lateinit var soundButton: ImageView
     lateinit var playerView: PlayerView
     lateinit var crossButton: ImageView
-    lateinit var thumbnailView: ImageView
+    private lateinit var thumbnailView: ImageView
 
     private var url = ""
-    var currentPosition = 0L
+    private var currentPosition = 0L
 
     constructor(context: Context, url: String) : this(context) {
         this.url = url
@@ -52,12 +51,19 @@ class LoadingVideoView @JvmOverloads constructor(
 
 
     private fun initForShowThumbnail() {
-        Glide.with(context).load(url).apply(ConstantSetup.REQUEST_WITH_RGB_565).placeholder(ColorDrawable(Color.parseColor("#aaaaaa"))).into(object : SimpleTarget<Drawable>() {
-            override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                progressBar.visibility = View.GONE
-                thumbnailView.setImageDrawable(resource)
-            }
-        })
+        Log.d("ShowThumbnail", "initForShowThumbnail")
+        progressBar.visibility = View.GONE
+        if(!URLUtil.isHttpUrl(url) && !URLUtil.isHttpsUrl(url)){
+            Glide.with(context).load(url).apply(ConstantSetup.REQUEST_WITH_RGB_565)
+                .placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
+                .into(thumbnailView)
+        } else{
+            val urlThumbnail = url.substring(0, url.length - 4) + ".jpg"
+            Glide.with(context).load(urlThumbnail).apply(ConstantSetup.REQUEST_WITH_RGB_565)
+                .placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
+                .into(thumbnailView)
+        }
+
     }
 
 

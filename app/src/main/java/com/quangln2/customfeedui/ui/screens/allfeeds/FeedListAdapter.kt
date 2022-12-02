@@ -3,19 +3,20 @@ package com.quangln2.customfeedui.ui.screens.allfeeds
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import androidx.core.view.size
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
+import com.quangln2.customfeedui.databinding.FeedBodyBinding
 import com.quangln2.customfeedui.databinding.FeedCardBinding
-import com.quangln2.customfeedui.databinding.FeedItemBinding
+import com.quangln2.customfeedui.databinding.FeedFooterBinding
+import com.quangln2.customfeedui.databinding.FeedHeaderBinding
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.ui.screens.allfeeds.viewholder.AddNewItemViewHolder
-import com.quangln2.customfeedui.ui.screens.allfeeds.viewholder.FeedItemViewHolder
+import com.quangln2.customfeedui.ui.screens.allfeeds.viewholder.BodyViewHolder
+import com.quangln2.customfeedui.ui.screens.allfeeds.viewholder.FooterViewHolder
+import com.quangln2.customfeedui.ui.screens.allfeeds.viewholder.HeaderViewHolder
 import java.util.concurrent.Executors
 
 class FeedListAdapter(
@@ -44,36 +45,41 @@ class FeedListAdapter(
         viewType: Int
     ): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        return if (viewType == TypeOfPost.ADD_NEW_POST.value) {
-            val binding = FeedCardBinding.inflate(layoutInflater, parent, false)
-            AddNewItemViewHolder(binding, eventFeedCallback)
-        } else {
-            val binding = FeedItemBinding.inflate(layoutInflater, parent, false)
-            FeedItemViewHolder(binding, context, eventFeedCallback)
+        return when(viewType){
+            TypeOfPost.ADD_NEW_POST.value -> {
+                val binding = FeedCardBinding.inflate(layoutInflater, parent, false)
+                AddNewItemViewHolder(binding, eventFeedCallback)
+            }
+            TypeOfPost.HEADER.value -> {
+                val binding = FeedHeaderBinding.inflate(layoutInflater, parent, false)
+                HeaderViewHolder(binding)
+            }
+            TypeOfPost.BODY.value -> {
+                val binding = FeedBodyBinding.inflate(layoutInflater, parent, false)
+                BodyViewHolder(binding, context, eventFeedCallback)
+            }
+            else -> {
+                val binding = FeedFooterBinding.inflate(layoutInflater, parent, false)
+                FooterViewHolder(binding, eventFeedCallback)
+            }
         }
-
     }
 
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         super.onViewRecycled(holder)
-        if (holder is FeedItemViewHolder) {
-            val customGridGroup = holder.itemView.findViewById<FrameLayout>(R.id.customGridGroup)
-            for (i in 0 until customGridGroup.size) {
-                val child = customGridGroup.getChildAt(i)
-                eventFeedCallback.onRecycled(child)
-            }
-            customGridGroup.removeAllViews()
+        if (holder is BodyViewHolder) {
+            holder.onViewRecycled()
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
-        val itemType = getItemViewType(position)
+        when(getItemViewType(position)){
+            TypeOfPost.ADD_NEW_POST.value -> (holder as AddNewItemViewHolder).bind(context)
+            TypeOfPost.HEADER.value -> (holder as HeaderViewHolder).bind(item, context)
+            TypeOfPost.BODY.value -> (holder as BodyViewHolder).bind(item, context)
+            else -> (holder as FooterViewHolder).bind(item)
 
-        if (itemType == TypeOfPost.ADD_NEW_POST.value) {
-            (holder as AddNewItemViewHolder).bind(context)
-        } else {
-            (holder as FeedItemViewHolder).bind(item, context)
         }
     }
 

@@ -114,6 +114,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                     }
                     Glide.with(context).load(value).apply(ConstantSetup.REQUEST_WITH_RGB_565)
                         .placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
+                        .override(rectangles[i].width, rectangles[i].height)
                         .listener(
                             object : RequestListener<Drawable> {
                                 override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean): Boolean {

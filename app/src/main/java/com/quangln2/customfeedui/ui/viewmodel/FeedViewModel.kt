@@ -16,6 +16,7 @@ import com.quangln2.customfeedui.data.models.datamodel.MyPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedLoadingCode
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
+import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeedui.domain.usecase.DeleteFeedUseCase
 import com.quangln2.customfeedui.domain.usecase.GetAllFeedsModifiedUseCase
 import com.quangln2.customfeedui.domain.workmanager.UploadService
@@ -37,6 +38,9 @@ class FeedViewModel(
     private val feedLoadingCode: LiveData<Int> = _feedLoadingCode
 
     private val temporaryVideoSequence by lazy { mutableListOf<Pair<Int, Int>>() }
+
+    private var _uploadListRender = MutableLiveData<MutableList<MyPostRender>>()
+    private val uploadListRender: LiveData<MutableList<MyPostRender>> = _uploadListRender
 
     val noPostIdVisibility = MutableLiveData<Boolean>()
     val retryButtonVisibility = MutableLiveData<Boolean>()
@@ -80,11 +84,15 @@ class FeedViewModel(
     fun onHandlePlayVideoAndDownloadVideo(firstVisibleItemPosition: Int, context: Context): Flow<String> = flow{
         emit("playVideoWrapper")
         if(firstVisibleItemPosition > 0){
-            val item = uploadLists.value?.get(firstVisibleItemPosition - 1)
+
+            val item = uploadListRender.value?.get(firstVisibleItemPosition - 1)
             item?.apply {
                 viewModelScope.launch(Dispatchers.IO) {
                     for (urlObj in resources) {
-                        DownloadUtils.downloadResource(urlObj.url, context)
+                        if(item.typeOfPost == TypeOfPost.BODY){
+                            DownloadUtils.downloadResource(urlObj.url, context)
+                        }
+
                     }
                 }
             }
@@ -96,10 +104,18 @@ class FeedViewModel(
 
         return HashSet<Int>().apply {
             if (firstActualIndex <= lastPartiallyIndex) {
-                for (i in firstActualIndex..lastPartiallyIndex) add(i)
+                for (i in firstActualIndex..lastPartiallyIndex){
+                    if(uploadListRender.value?.get(i)?.typeOfPost == TypeOfPost.BODY){
+                        add(i)
+                    }
+                }
             } else {
-                add(firstActualIndex)
-                add(lastPartiallyIndex)
+                val firstItem = uploadListRender.value?.get(firstActualIndex)
+                val lastItem = uploadListRender.value?.get(lastPartiallyIndex)
+                if(firstItem?.typeOfPost == TypeOfPost.BODY)
+                    add(firstActualIndex)
+                if(lastItem?.typeOfPost == TypeOfPost.BODY)
+                    add(lastPartiallyIndex)
             }
         }.filter { it >= 0 }.toList()
     }
@@ -229,6 +245,7 @@ class FeedViewModel(
             allFeedsVisibility.value = false
             retryButtonVisibility.value = true
         }
+        _uploadListRender.value = listOfPostRender.toMutableList()
     }
 
     fun manageUploadState(state: Int, context: Context){
