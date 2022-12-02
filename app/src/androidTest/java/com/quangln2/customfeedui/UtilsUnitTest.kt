@@ -33,14 +33,6 @@ class UtilsUnitTest {
     }
 
     @Test
-    fun testValidFileSizeFromInternet(){
-        val validUrl = "https://res.cloudinary.com/ds72weirj/image/upload/v1667951132/cld-sample-5.jpg"
-        val contentLength = 379132L
-        val (result, error) = DownloadUtils.fileSizeFromInternet(validUrl)
-        assert(result == contentLength && error == null)
-    }
-
-    @Test
     fun testInvalidFileSizeFromInternetBecauseOfNoContentLength(){
         val invalidUrl = "https://www.google.comee/"
         val (_, error) = DownloadUtils.fileSizeFromInternet(invalidUrl)

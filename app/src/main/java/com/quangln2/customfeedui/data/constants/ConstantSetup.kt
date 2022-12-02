@@ -7,13 +7,15 @@ import com.bumptech.glide.request.RequestOptions
 
 object ConstantSetup {
     //REST API
-    private const val DEFAULT_ENDPOINT = "https://67ad-1-53-255-147.ap.ngrok.io/"
+    private const val DEFAULT_ENDPOINT = "https://feeduiclone.win/"
     const val GET_FEEDS = DEFAULT_ENDPOINT + "feeds"
     const val UPLOAD_FEED_VERSION_2 = DEFAULT_ENDPOINT + "feeds/upload_v2"
     //Note: need id: feeds/{id}
     const val DELETE_FEED = DEFAULT_ENDPOINT + "feeds/"
+    const val UPLOAD_FILE = DEFAULT_ENDPOINT + "upload"
+
     //Hardcoded avatar link
-    const val AVATAR_LINK = "https://res.cloudinary.com/dnirizque/image/upload/v1666060641/samples/sheep.jpg"
+    const val AVATAR_LINK = "https://i.imgur.com/CzXTtJV.jpg"
     //Max items in a grid
     const val MAXIMUM_IMAGE_IN_A_GRID = 9
     //Glide setup

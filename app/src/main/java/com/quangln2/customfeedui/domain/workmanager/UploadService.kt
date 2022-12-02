@@ -5,15 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.IBinder
-import android.util.Log
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toFile
 import androidx.core.net.toUri
-import com.cloudinary.android.MediaManager
-import com.cloudinary.android.callback.ErrorInfo
-import com.cloudinary.android.callback.UploadCallback
 import com.quangln2.customfeedui.R
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.controllers.FeedCtrl
 import com.quangln2.customfeedui.data.database.FeedDatabase
 import com.quangln2.customfeedui.data.datasource.local.LocalDataSourceImpl
@@ -23,7 +22,13 @@ import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.domain.usecase.UploadPostV2UseCase
+import com.quangln2.customfeedui.others.extensions.getImageDimensions
 import com.quangln2.customfeedui.others.utils.FileUtils
+import com.quangln2.customfeedui.utility.UploadPostFile
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 
@@ -70,9 +75,6 @@ class UploadService : Service() {
         }
         return START_NOT_STICKY
     }
-
-
-
     private fun uploadFiles(uriLists: List<Uri>, uploadingPost: UploadPost, context: Context){
         showLoadingUI(applicationContext)
 
@@ -81,61 +83,37 @@ class UploadService : Service() {
             uploadToServer(uploadingPost)
             return
         }
-        for(uri in uriLists){
-            val filePath = "files/${uploadingPost.feedId}/${uri.path?.let { File(it).name }}"
-            val mimeType = context.contentResolver.getType(uri)
 
-            MediaManager.get().upload(uri)
-                .option("public_id", filePath)
-                .option("resource_type", if (mimeType?.contains("video") == true) "video" else "image")
-                .callback(object: UploadCallback {
-                    override fun onStart(requestId: String?) {}
-                    override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
-                    override fun onReschedule(requestId: String?, error: ErrorInfo?) {
-                        Log.d("UploadServicePart", "onReschedule: ${error?.description}")
-                        showWaitingUI(context)
+        CoroutineScope(Dispatchers.IO).launch {
+            for(uri in uriLists){
+                val actualUri = handleCaseUri(uri)
+                println("Sample gg uri: $actualUri")
+                val actualUrl = UploadPostFile.uploadFileWithId(ConstantSetup.UPLOAD_FILE, actualUri, uploadingPost.feedId)
+                if(actualUrl != "error"){
+                    if(listOfUrls.isEmpty()){
+                        val (width, height) = uri.getImageDimensions(context)
+                        uploadingPost.firstWidth = width
+                        uploadingPost.firstHeight = height
                     }
 
-                    override fun onSuccess(requestId: String?, resultData: MutableMap<Any?, Any?>?) {
-                        Log.d("Cloudinary", resultData.toString())
-                        resultData?.let {
-                            Log.d("Cloudinary", "url: ${it["url"]} - width: ${it["width"]} - height: ${it["height"]}")
+                    //Do by adding URL to list
+                    listOfUrls.add(actualUrl)
 
-                            //Check before
-                            if(listOfUrls.isEmpty()){
-                                uploadingPost.firstWidth = it["width"] as Int
-                                uploadingPost.firstHeight = it["height"] as Int
-                            }
+                    //Check have enough data
+                    if(listOfUrls.size == uriLists.size){
+                        //Aggregate data
+                        uploadingPost.imagesAndVideos = listOfUrls.toMutableList()
 
-                            //Do by adding URL to list
-                            listOfUrls.add(it["url"].toString())
-
-                            //Check have enough data
-                            if(listOfUrls.size == uriLists.size){
-                                //Aggregate data
-                                uploadingPost.imagesAndVideos = listOfUrls.toMutableList()
-
-                                //Upload to server
-                                uploadToServer(uploadingPost)
-                            }
-                        }
+                        //Upload to server
+                        uploadToServer(uploadingPost)
                     }
-
-                    override fun onError(requestId: String?, error: ErrorInfo?) {
-                        Log.d("UploadServicePart", "onError: ${error?.description}")
-                        showFailedUI(context, cause = error?.description.toString())
-                        stopSelf()
+                } else {
+                    withContext(Dispatchers.Main){
+                        showFailedUI(context, cause = "Error when uploading files")
                     }
-                })
-                .dispatch()
-
-
-        }
-    }
-    private fun showWaitingUI(context: Context){
-        builder.setContentText("Waiting for uploading...")
-        with(NotificationManagerCompat.from(context)) {
-            notify(id, builder.build())
+                    stopSelf()
+                }
+            }
         }
     }
 
@@ -151,7 +129,7 @@ class UploadService : Service() {
 
 
     private fun showSuccessfulUI(context: Context){
-        FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.COMPLETE.value)
+        FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.COMPLETE.value
         builder.apply {
             setProgress(0, 0, false)
             setContentText(resources.getString(R.string.upload_success))
@@ -169,7 +147,7 @@ class UploadService : Service() {
 
     private fun showFailedUI(context: Context, cause: String = ""){
         //close loading card screen
-        FeedCtrl.isLoadingToUpload.postValue(EnumFeedSplashScreenState.COMPLETE.value)
+        FeedCtrl.isLoadingToUpload.value = EnumFeedSplashScreenState.COMPLETE.value
 
         //create notification
         builder.apply {
@@ -191,9 +169,24 @@ class UploadService : Service() {
         val uploadPostV2UseCase = UploadPostV2UseCase(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
         val responseCode = uploadPostV2UseCase(uploadingPost)
         if(responseCode == 200){
-            showSuccessfulUI(applicationContext)
+            CoroutineScope(Dispatchers.Main).launch {
+                showSuccessfulUI(applicationContext)
+            }
         } else {
-            showFailedUI(applicationContext, cause = "Response code: $responseCode")
+            CoroutineScope(Dispatchers.Main).launch {
+                showFailedUI(applicationContext, cause = "Response code: $responseCode")
+            }
+
         }
+    }
+    private fun handleCaseUri(uri: Uri): File {
+        if(uri.scheme == "content"){
+            val cursor = contentResolver.query(uri, arrayOf(MediaStore.Video.VideoColumns.DATA), null, null, null)
+            cursor?.moveToFirst()
+            val path = cursor?.getString(0)
+            cursor?.close()
+            return File(path)
+        }
+        return uri.toFile()
     }
 }

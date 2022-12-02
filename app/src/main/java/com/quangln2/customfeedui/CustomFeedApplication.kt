@@ -5,14 +5,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import com.cloudinary.android.MediaManager
 
 
 class CustomFeedApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        MediaManager.init(this)
         createNotificationChannel()
     }
 

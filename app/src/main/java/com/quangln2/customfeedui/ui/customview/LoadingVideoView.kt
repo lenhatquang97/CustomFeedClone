@@ -58,7 +58,7 @@ class LoadingVideoView @JvmOverloads constructor(
                 .placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
                 .into(thumbnailView)
         } else{
-            val urlThumbnail = url.substring(0, url.length - 4) + ".jpg"
+            val urlThumbnail = url.substring(0, url.length - 4) + ".png"
             Glide.with(context).load(urlThumbnail).apply(ConstantSetup.REQUEST_WITH_RGB_565)
                 .placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
                 .into(thumbnailView)

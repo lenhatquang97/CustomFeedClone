@@ -82,8 +82,6 @@ dependencies {
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
-    //Cloudinary
-    implementation 'com.cloudinary:cloudinary-android:2.3.0'
     //ExoPlayer
     implementation "com.google.android.exoplayer:exoplayer:$exo_player_version"
     implementation "com.google.android.exoplayer:exoplayer-core:$exo_player_version"
