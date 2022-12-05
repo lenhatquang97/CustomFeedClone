@@ -35,13 +35,13 @@ class CustomImageView {
             return crossButton
         }
 
-        private fun generateImageView(context: Context, url: String): ImageView {
+        private fun generateImageView(context: Context, fileUriOrWebUrl: String): ImageView {
             val imageView = ImageView(context)
             imageView.layoutParams =
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
             val imageLoader = ImageLoader(context, 300, 300, CoroutineScope(Job()))
-            imageLoader.loadImage(url, imageView)
+            imageLoader.loadImage(fileUriOrWebUrl, imageView)
             return imageView
         }
     }

@@ -26,13 +26,13 @@ import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
 
 class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     private lateinit var binding: FragmentImageOrVideoBinding
-    private var currentVideoPosition = -1L
-    private var urlTmp = ""
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
     private val viewModel: ViewFullViewModel by viewModels {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
+    private var currentVideoPosition = -1L
+    private var fileUriOrWebUrl = ""
     private var urlLoadThumbnail = ""
 
     override fun onStart(){
@@ -41,8 +41,8 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         val position = arguments?.getInt("position")
         currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
         if (listOfUrls != null && position != null) {
-            urlTmp = DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
-            urlLoadThumbnail = urlTmp
+            fileUriOrWebUrl = DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
+            urlLoadThumbnail = listOfUrls[position]
             loadImageThumbnail()
         }
     }
@@ -88,7 +88,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        val mimeType = DownloadUtils.getMimeType(urlTmp)
+        val mimeType = DownloadUtils.getMimeType(fileUriOrWebUrl)
         mimeType?.apply {
             if (this.contains("video")) {
                 player.pause()
@@ -102,10 +102,10 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        val mimeType = DownloadUtils.getMimeType(urlTmp)
+        val mimeType = DownloadUtils.getMimeType(fileUriOrWebUrl)
         mimeType?.apply {
             if(this.contains("video")){
-                initializeVideoForLoading(urlTmp)
+                initializeVideoForLoading(fileUriOrWebUrl)
                 viewModel.fullImageViewVisibility.value = false
                 viewModel.fullVideoViewVisibility.value = true
             } else {

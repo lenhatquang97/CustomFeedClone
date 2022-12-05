@@ -19,6 +19,7 @@ import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentViewMoreBinding
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
+import com.quangln2.customfeedui.others.utils.CodeUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.viewmodel.ViewMoreViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
@@ -86,18 +87,16 @@ class ViewMoreFragment : Fragment() {
                 initializeHeaderAndCaption(item)
                 lifecycleScope.launch(Dispatchers.IO) {
                     for (i in 0 until item.resources.size) {
-                        val (value, mimeType) = viewModel.retrieveValueAndMimeType(item, i, requireContext())
-                        mimeType?.apply {
-                            withContext(Dispatchers.Main){
-                                val imageView = ImageView(context)
-                                imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-                                imageView.setOnClickListener {
-                                    onViewDetailImageOrVideo(item, i)
-                                }
-                                val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
-                                imageLoader.loadImage(value, imageView)
-                                binding.extendedCustomGridGroup.addView(imageView)
+                        withContext(Dispatchers.Main){
+                            val imageView = ImageView(context)
+                            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+                            imageView.setOnClickListener {
+                                onViewDetailImageOrVideo(item, i)
                             }
+                            val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
+                            val actualImageUrl = CodeUtils.convertVideoUrlToImageUrl(item.resources[i].url)
+                            imageLoader.loadImage(actualImageUrl, imageView)
+                            binding.extendedCustomGridGroup.addView(imageView)
                         }
                     }
                 }

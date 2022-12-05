@@ -2,6 +2,7 @@ package com.quangln2.customfeedui.imageloader.data.network
 
 import android.content.Context
 import android.net.Uri
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -14,6 +15,18 @@ class HttpFetcher {
             inputStream?.close()
             return byteArray?.inputStream()
         }
+
+        fun downloadImageUsingInputStream(inputStream: InputStream, fileName: String){
+            val fileOutputStream = FileOutputStream(fileName)
+            val buffer = ByteArray(1024)
+            var len: Int
+            while (inputStream.read(buffer).also { len = it } != -1) {
+                fileOutputStream.write(buffer, 0, len)
+            }
+            fileOutputStream.close()
+            inputStream.close()
+        }
+
 
         fun fetchImageByInputStream(url: String) : InputStream?{
             val conn = URL(url).openConnection() as HttpURLConnection

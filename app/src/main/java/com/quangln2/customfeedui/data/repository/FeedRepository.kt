@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class FeedRepository(private val localDataSource: LocalDataSource, private val remoteDataSource: RemoteDataSource) {
     fun getAllFeedsWithModified(preloadCache: Boolean): Flow<FeedWrapper> = flow{
@@ -48,6 +49,7 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
     suspend fun delete(id: String) = localDataSource.delete(id)
     suspend fun retrieveItemWithId(id: String) = localDataSource.getFeedWithId(id)
     fun uploadPostV2(requestBody: UploadPost) = remoteDataSource.uploadPostV2(requestBody)
+    fun uploadFileWithPostId(url: String, file: File, postId: String) = remoteDataSource.uploadFileWithId(url, file, postId)
 
 
 }

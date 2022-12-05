@@ -30,13 +30,14 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var crossButton: ImageView
     private lateinit var thumbnailView: ImageView
 
-    private var url = ""
+    private var fileUriOrWebUrl = ""
+    private var actualUrl = ""
     private var currentPosition = 0L
 
-    private var actualUrl = ""
 
-    constructor(context: Context, url: String, actualUrl: String) : this(context) {
-        this.url = url
+
+    constructor(context: Context, fileUriOrWebUrl: String, actualUrl: String) : this(context) {
+        this.fileUriOrWebUrl = fileUriOrWebUrl
         this.actualUrl = CodeUtils.convertVideoUrlToImageUrl(actualUrl)
         initFindById()
         initForShowThumbnail()
@@ -85,7 +86,7 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     private fun prepare(player: ExoPlayer) {
-        val mediaItem = MediaItem.fromUri(url)
+        val mediaItem = MediaItem.fromUri(fileUriOrWebUrl)
         player.setMediaItem(mediaItem)
         player.prepare()
     }

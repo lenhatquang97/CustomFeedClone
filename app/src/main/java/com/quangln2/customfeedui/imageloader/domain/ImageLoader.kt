@@ -52,6 +52,18 @@ class ImageLoader(
     }
 
     fun loadImage(uri: String, imageView: ImageView){
+        //TODO: Implement this method
+        /**
+         * Step 1: Check if uri is webUrl or fileUri
+         * If fileUri, load image with uri
+         * If webUrl, do:
+         * Step 2: Check if available images
+         * If available, load image in disk
+         * If not, do:
+         * Step 3: Download image
+         * Step 4: Save image to disk
+         * Step 5: Load image from disk
+         */
         if(uri.isEmpty()){
             loadEmptyImage(imageView)
         }

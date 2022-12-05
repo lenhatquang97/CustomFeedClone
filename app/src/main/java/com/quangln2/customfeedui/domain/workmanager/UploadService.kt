@@ -21,12 +21,12 @@ import com.quangln2.customfeedui.data.models.datamodel.UploadPost
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
 import com.quangln2.customfeedui.data.repository.FeedRepository
+import com.quangln2.customfeedui.domain.usecase.UploadFileWithPostIdUseCase
 import com.quangln2.customfeedui.domain.usecase.UploadPostV2UseCase
 import com.quangln2.customfeedui.others.extensions.getImageDimensions
 import com.quangln2.customfeedui.others.extensions.getVideoSize
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
-import com.quangln2.customfeedui.utility.UploadPostFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -85,11 +85,13 @@ class UploadService : Service() {
             uploadToServer(uploadingPost)
             return
         }
+        val feedRepository = FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl())
+        val uploadFileWithPostIdUseCase = UploadFileWithPostIdUseCase(feedRepository)
 
         CoroutineScope(Dispatchers.IO).launch {
             for(uri in uriLists){
                 val actualUri = handleCaseUri(uri)
-                val actualUrl = UploadPostFile.uploadFileWithId(ConstantSetup.UPLOAD_FILE, actualUri, uploadingPost.feedId)
+                val actualUrl = uploadFileWithPostIdUseCase(ConstantSetup.UPLOAD_FILE, actualUri, uploadingPost.feedId)
                 if(actualUrl != "error"){
                     if(listOfUrls.isEmpty()){
                         val mimeType = DownloadUtils.getMimeType(uri.path)
