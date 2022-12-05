@@ -5,10 +5,10 @@ import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.net.toUri
-import com.bumptech.glide.Glide
 import com.quangln2.customfeedui.R
-import com.quangln2.customfeedui.data.constants.ConstantSetup
+import com.quangln2.customfeedui.imageloader.domain.ImageLoader
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 
 class CustomImageView {
     companion object {
@@ -40,7 +40,8 @@ class CustomImageView {
             imageView.layoutParams =
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-            Glide.with(context).load(url.toUri()).apply(ConstantSetup.REQUEST_WITH_RGB_565.override(300)).into(imageView)
+            val imageLoader = ImageLoader(context, 300, 300, CoroutineScope(Job()))
+            imageLoader.loadImage(url, imageView)
             return imageView
         }
     }

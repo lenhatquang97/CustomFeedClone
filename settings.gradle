@@ -14,4 +14,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "CustomFeed"
 include ':app'
-include ':DownloadModule'

@@ -25,7 +25,6 @@ class UploadPostFile{
             return byteArray
         }
 
-        //TODO: Test upload file with data id
         fun uploadFileWithId(url: String, file: File, id: String): String{
             val connection = URL(url).openConnection() as HttpURLConnection
             val boundary = UUID.randomUUID().toString()

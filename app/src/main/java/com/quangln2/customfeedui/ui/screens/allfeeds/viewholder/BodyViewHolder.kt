@@ -3,28 +3,24 @@ package com.quangln2.customfeedui.ui.screens.allfeeds.viewholder
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.view.size
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.target.Target
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedBodyBinding
+import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.customview.customgrid.getGridItemsLocation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 
 class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                                  private var context: Context,
@@ -97,7 +93,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                 }
                 val currentVideo = CurrentVideo(currentVideoPosition = -1L, url = item.resources[i].url, listOfUrls = urlArrayList)
                 if (mimeType != null && mimeType.contains("video")) {
-                    val videoView = LoadingVideoView(context, value)
+                    val videoView = LoadingVideoView(context, value, url)
                     videoView.layoutParams = layoutParamsCustom
                     videoView.setOnClickListener {
                         eventFeedCallback.onClickVideoView(currentVideo)
@@ -112,22 +108,8 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                             eventFeedCallback.onClickVideoView(currentVideo)
                         }
                     }
-                    Glide.with(context).load(value).apply(ConstantSetup.REQUEST_WITH_RGB_565)
-                        .placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
-                        .override(rectangles[i].width, rectangles[i].height)
-                        .listener(
-                            object : RequestListener<Drawable> {
-                                override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean): Boolean {
-                                    val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-                                    imageView.setImageDrawable(drawable)
-                                    return false
-                                }
-
-                                override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: com.bumptech.glide.load.DataSource?, isFirstResource: Boolean): Boolean {
-                                    return false
-                                }
-                            }
-                        ).centerCrop().into(imageView)
+                    val imageLoader = ImageLoader(context, rectangles[i].width, rectangles[i].height, CoroutineScope(Job()))
+                    imageLoader.loadImage(url, imageView)
                     binding.customGridGroup.addView(imageView)
                 }
             }

@@ -19,7 +19,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.quangln2.customfeedui.R
@@ -103,7 +102,7 @@ class AllFeedsFragment : Fragment() {
                 if(child is LoadingVideoView){
                     child.pauseAndReleaseVideo(player)
                 } else if(child is ImageView){
-                    Glide.with(requireContext()).clear(child)
+                    //TODO: Release bitmap
                 }
             }
         }

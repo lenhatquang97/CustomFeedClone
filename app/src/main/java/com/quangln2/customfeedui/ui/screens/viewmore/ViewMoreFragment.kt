@@ -10,7 +10,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
-import com.bumptech.glide.Glide
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.database.FeedDatabase
@@ -19,6 +18,7 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentViewMoreBinding
+import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.viewmodel.ViewMoreViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
@@ -48,7 +48,8 @@ class ViewMoreFragment : Fragment() {
         binding.myName.text = item.name
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
         binding.caption.text = item.caption
-        Glide.with(requireContext()).load(item.avatar).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100).into(binding.myAvatarImage)
+        val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
+        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage)
     }
 
     private fun onViewDetailImageOrVideo(item: MyPostRender, index: Int){
@@ -93,9 +94,8 @@ class ViewMoreFragment : Fragment() {
                                 imageView.setOnClickListener {
                                     onViewDetailImageOrVideo(item, i)
                                 }
-                                Glide.with(requireContext()).load(value)
-                                    .apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
-                                    .into(imageView)
+                                val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
+                                imageLoader.loadImage(value, imageView)
                                 binding.extendedCustomGridGroup.addView(imageView)
                             }
                         }

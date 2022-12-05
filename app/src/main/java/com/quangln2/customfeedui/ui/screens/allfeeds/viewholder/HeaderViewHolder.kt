@@ -4,11 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedHeaderBinding
+import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.utils.FileUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 
 class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
     RecyclerView.ViewHolder(binding.root) {
@@ -16,10 +17,9 @@ class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
         binding.feedId.text = item.feedId
         binding.myName.text = item.name
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
-        Glide.with(context)
-            .load(item.avatar)
-            .apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100)
-            .into(binding.myAvatarImage)
+
+        val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
+        imageLoader.loadImage(item.avatar, binding.myAvatarImage)
     }
 
     @SuppressLint("SetTextI18n")

@@ -19,7 +19,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
-import com.bumptech.glide.Glide
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.controllers.FeedCtrl
@@ -29,6 +28,7 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentHomeScreenBinding
+import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.ui.customview.CustomImageView
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
@@ -143,7 +143,8 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun loadInitialProfile() {
-        Glide.with(requireContext()).load(ConstantSetup.AVATAR_LINK).apply(ConstantSetup.REQUEST_OPTIONS_WITH_SIZE_100).into(binding.myAvatarImage)
+        val imageLoader = ImageLoader(requireContext(),100, 100, lifecycleScope)
+        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage)
     }
 
     private fun buttonHandleSubmitToServer() {
@@ -263,7 +264,8 @@ class HomeScreenFragment : Fragment() {
                         }
                     } else if (mimeType.startsWith(VIDEO_MIMETYPE_PART)) {
                         withContext(Dispatchers.Main) {
-                            val videoView = LoadingVideoView(requireContext(), uri.toString())
+                            //TODO: Get thumbnail of video
+                            val videoView = LoadingVideoView(requireContext(), uri.toString(), "")
                             listOfViews.add(videoView)
                             listOfUris.add(uri)
                         }

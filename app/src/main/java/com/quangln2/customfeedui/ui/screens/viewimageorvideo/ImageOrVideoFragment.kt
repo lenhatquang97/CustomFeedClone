@@ -7,10 +7,7 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DecodeFormat
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
+import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -20,6 +17,8 @@ import com.quangln2.customfeedui.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentImageOrVideoBinding
+import com.quangln2.customfeedui.imageloader.domain.ImageLoader
+import com.quangln2.customfeedui.others.utils.CodeUtils
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.viewmodel.ViewFullViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
@@ -34,6 +33,8 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         ViewModelFactory(FeedRepository(LocalDataSourceImpl(database.feedDao()), RemoteDataSourceImpl()))
     }
 
+    private var urlLoadThumbnail = ""
+
     override fun onStart(){
         super.onStart()
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
@@ -41,6 +42,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
         if (listOfUrls != null && position != null) {
             urlTmp = DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
+            urlLoadThumbnail = urlTmp
             loadImageThumbnail()
         }
     }
@@ -68,10 +70,9 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     }
 
     private fun loadImageThumbnail(){
-        Glide.with(requireContext()).load(urlTmp).apply(RequestOptions()
-            .diskCacheStrategy(DiskCacheStrategy.DATA)
-            .format(DecodeFormat.PREFER_RGB_565))
-            .centerInside().into(binding.fullImageView)
+        val url = if(urlLoadThumbnail.contains("/data/user")) "" else CodeUtils.convertVideoUrlToImageUrl(urlLoadThumbnail)
+        val imageLoader = ImageLoader(requireContext(),0, 0, lifecycleScope)
+        imageLoader.loadImage(url, binding.fullImageView)
     }
 
     private fun initializeVideoForLoading(url: String) {
@@ -112,10 +113,5 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
                 viewModel.fullVideoViewVisibility.value = false
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Glide.with(requireContext()).clear(binding.fullImageView)
     }
 }

@@ -2,23 +2,22 @@ package com.quangln2.customfeedui.ui.customview
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
-import com.bumptech.glide.Glide
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeedui.R
-import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.controllers.FeedCtrl.isMute
+import com.quangln2.customfeedui.imageloader.domain.ImageLoader
+import com.quangln2.customfeedui.others.utils.CodeUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 
 
 class LoadingVideoView @JvmOverloads constructor(
@@ -34,8 +33,11 @@ class LoadingVideoView @JvmOverloads constructor(
     private var url = ""
     private var currentPosition = 0L
 
-    constructor(context: Context, url: String) : this(context) {
+    private var actualUrl = ""
+
+    constructor(context: Context, url: String, actualUrl: String) : this(context) {
         this.url = url
+        this.actualUrl = CodeUtils.convertVideoUrlToImageUrl(actualUrl)
         initFindById()
         initForShowThumbnail()
     }
@@ -49,21 +51,11 @@ class LoadingVideoView @JvmOverloads constructor(
         thumbnailView = view.findViewById(R.id.thumbnail_view)
     }
 
-
     private fun initForShowThumbnail() {
         Log.d("ShowThumbnail", "initForShowThumbnail")
         progressBar.visibility = View.GONE
-        if(!URLUtil.isHttpUrl(url) && !URLUtil.isHttpsUrl(url)){
-            Glide.with(context).load(url).apply(ConstantSetup.REQUEST_WITH_RGB_565)
-                .placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
-                .into(thumbnailView)
-        } else{
-            val urlThumbnail = url.substring(0, url.length - 4) + ".png"
-            Glide.with(context).load(urlThumbnail).apply(ConstantSetup.REQUEST_WITH_RGB_565)
-                .placeholder(ColorDrawable(Color.parseColor("#aaaaaa")))
-                .into(thumbnailView)
-        }
-
+        val imageLoader = ImageLoader(context,0,0, CoroutineScope(Job()))
+        imageLoader.loadImage(actualUrl, thumbnailView)
     }
 
 
