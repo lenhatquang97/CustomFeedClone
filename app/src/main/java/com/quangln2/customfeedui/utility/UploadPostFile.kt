@@ -1,5 +1,6 @@
 package com.quangln2.customfeedui.utility
 
+import android.util.Log
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
@@ -26,7 +27,6 @@ class UploadPostFile{
 
         //TODO: Test upload file with data id
         fun uploadFileWithId(url: String, file: File, id: String): String{
-            println("Actual url: $url")
             val connection = URL(url).openConnection() as HttpURLConnection
             val boundary = UUID.randomUUID().toString()
             connection.requestMethod = "POST"
@@ -59,12 +59,11 @@ class UploadPostFile{
                     connection.disconnect()
                     return result
                 } else if(responseCode == 307){
-                    println("New url: ${connection.url}")
                     connection.disconnect()
                     return uploadFileWithId(connection.url.toString(), file, id)
                 }
                 else {
-                    println("Upload file failed $responseCode")
+                    Log.d("Failed", "Upload file failed $responseCode")
                 }
 
             } catch (e: java.lang.Exception){

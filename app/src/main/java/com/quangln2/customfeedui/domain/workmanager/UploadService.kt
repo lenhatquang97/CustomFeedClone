@@ -23,6 +23,8 @@ import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.domain.usecase.UploadPostV2UseCase
 import com.quangln2.customfeedui.others.extensions.getImageDimensions
+import com.quangln2.customfeedui.others.extensions.getVideoSize
+import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.utility.UploadPostFile
 import kotlinx.coroutines.CoroutineScope
@@ -87,15 +89,21 @@ class UploadService : Service() {
         CoroutineScope(Dispatchers.IO).launch {
             for(uri in uriLists){
                 val actualUri = handleCaseUri(uri)
-                println("Sample gg uri: $actualUri")
                 val actualUrl = UploadPostFile.uploadFileWithId(ConstantSetup.UPLOAD_FILE, actualUri, uploadingPost.feedId)
                 if(actualUrl != "error"){
                     if(listOfUrls.isEmpty()){
-                        val (width, height) = uri.getImageDimensions(context)
-                        uploadingPost.firstWidth = width
-                        uploadingPost.firstHeight = height
+                        val mimeType = DownloadUtils.getMimeType(uri.path)
+                        if(mimeType?.contains("image") == true){
+                            val (width, height) = uri.getImageDimensions(context)
+                            uploadingPost.firstWidth = width
+                            uploadingPost.firstHeight = height
+                        } else {
+                            //That means mimeType is video
+                            val (width, height) = uri.getVideoSize(context)
+                            uploadingPost.firstWidth = width
+                            uploadingPost.firstHeight = height
+                        }
                     }
-
                     //Do by adding URL to list
                     listOfUrls.add(actualUrl)
 
