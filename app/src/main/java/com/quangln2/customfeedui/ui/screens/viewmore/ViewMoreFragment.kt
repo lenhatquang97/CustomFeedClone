@@ -19,7 +19,7 @@ import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentViewMoreBinding
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
-import com.quangln2.customfeedui.others.utils.CodeUtils
+import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.viewmodel.ViewMoreViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory

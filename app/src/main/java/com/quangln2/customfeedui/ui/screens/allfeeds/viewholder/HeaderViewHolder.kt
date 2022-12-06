@@ -7,11 +7,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedHeaderBinding
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
+import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
-class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
+class HeaderViewHolder constructor(
+    private val binding: FeedHeaderBinding,
+    private val eventFeedCallback: EventFeedCallback
+    ):
     RecyclerView.ViewHolder(binding.root) {
     private fun loadBasicInfoAboutFeed(item: MyPostRender, context: Context) {
         binding.feedId.text = item.feedId
@@ -35,5 +39,9 @@ class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
     fun bind(item: MyPostRender, context: Context){
         loadBasicInfoAboutFeed(item, context)
         loadFeedDescription(item)
+    }
+
+    fun onViewRecycled(){
+        eventFeedCallback.onRecycled(binding.myAvatarImage)
     }
 }

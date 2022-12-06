@@ -18,7 +18,6 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentImageOrVideoBinding
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
-import com.quangln2.customfeedui.others.utils.CodeUtils
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.viewmodel.ViewFullViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
@@ -32,8 +31,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     }
 
     private var currentVideoPosition = -1L
-    private var fileUriOrWebUrl = ""
-    private var urlLoadThumbnail = ""
+    private var webUrl = ""
 
     override fun onStart(){
         super.onStart()
@@ -41,8 +39,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         val position = arguments?.getInt("position")
         currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
         if (listOfUrls != null && position != null) {
-            fileUriOrWebUrl = DownloadUtils.getTemporaryFilePath(listOfUrls[position], requireContext())
-            urlLoadThumbnail = listOfUrls[position]
+            webUrl = listOfUrls[position]
             loadImageThumbnail()
         }
     }
@@ -70,9 +67,8 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     }
 
     private fun loadImageThumbnail(){
-        val url = if(urlLoadThumbnail.contains("/data/user")) "" else CodeUtils.convertVideoUrlToImageUrl(urlLoadThumbnail)
         val imageLoader = ImageLoader(requireContext(),0, 0, lifecycleScope)
-        imageLoader.loadImage(url, binding.fullImageView)
+        imageLoader.loadImage(webUrl, binding.fullImageView)
     }
 
     private fun initializeVideoForLoading(url: String) {
@@ -88,7 +84,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        val mimeType = DownloadUtils.getMimeType(fileUriOrWebUrl)
+        val mimeType = DownloadUtils.getMimeType(webUrl)
         mimeType?.apply {
             if (this.contains("video")) {
                 player.pause()
@@ -102,10 +98,10 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        val mimeType = DownloadUtils.getMimeType(fileUriOrWebUrl)
+        val mimeType = DownloadUtils.getMimeType(webUrl)
         mimeType?.apply {
             if(this.contains("video")){
-                initializeVideoForLoading(fileUriOrWebUrl)
+                initializeVideoForLoading(webUrl)
                 viewModel.fullImageViewVisibility.value = false
                 viewModel.fullVideoViewVisibility.value = true
             } else {

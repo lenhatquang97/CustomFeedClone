@@ -2,8 +2,8 @@ package com.quangln2.customfeedui.ui.customview
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.Uri
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
@@ -15,7 +15,6 @@ import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.controllers.FeedCtrl.isMute
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
-import com.quangln2.customfeedui.others.utils.CodeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
@@ -29,16 +28,21 @@ class LoadingVideoView @JvmOverloads constructor(
     lateinit var playerView: PlayerView
     lateinit var crossButton: ImageView
     private lateinit var thumbnailView: ImageView
-
-    private var fileUriOrWebUrl = ""
-    private var actualUrl = ""
     private var currentPosition = 0L
 
+    private var webUrl = ""
+    private var fileUri: Uri? = null
 
+    //Use for load thumbnail
+    constructor(context: Context, uri: Uri): this(context){
+        this.fileUri = uri
+        initFindById()
+        initForShowThumbnail()
+    }
 
-    constructor(context: Context, fileUriOrWebUrl: String, actualUrl: String) : this(context) {
-        this.fileUriOrWebUrl = fileUriOrWebUrl
-        this.actualUrl = CodeUtils.convertVideoUrlToImageUrl(actualUrl)
+    //Use for load video
+    constructor(context: Context, webUrl: String) : this(context) {
+        this.webUrl = webUrl
         initFindById()
         initForShowThumbnail()
     }
@@ -53,10 +57,13 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     private fun initForShowThumbnail() {
-        Log.d("ShowThumbnail", "initForShowThumbnail")
         progressBar.visibility = View.GONE
         val imageLoader = ImageLoader(context,0,0, CoroutineScope(Job()))
-        imageLoader.loadImage(actualUrl, thumbnailView)
+        if(fileUri == null){
+            imageLoader.loadImage(webUrl,thumbnailView)
+        } else {
+            imageLoader.loadImage(fileUri.toString(),thumbnailView)
+        }
     }
 
 
@@ -86,7 +93,7 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
     private fun prepare(player: ExoPlayer) {
-        val mediaItem = MediaItem.fromUri(fileUriOrWebUrl)
+        val mediaItem = MediaItem.fromUri(if(fileUri == null) webUrl else fileUri.toString())
         player.setMediaItem(mediaItem)
         player.prepare()
     }

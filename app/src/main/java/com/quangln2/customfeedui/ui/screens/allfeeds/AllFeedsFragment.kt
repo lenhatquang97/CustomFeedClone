@@ -31,6 +31,7 @@ import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentAllFeedsBinding
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapPool
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
@@ -102,7 +103,7 @@ class AllFeedsFragment : Fragment() {
                 if(child is LoadingVideoView){
                     child.pauseAndReleaseVideo(player)
                 } else if(child is ImageView){
-                    //TODO: Release bitmap
+                    BitmapPool.recycle(child)
                 }
             }
         }

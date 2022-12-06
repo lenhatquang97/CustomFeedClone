@@ -98,8 +98,7 @@ class ViewDetailFragment : Fragment() {
                         }
                     } else if (mimeType.contains("video")) {
                         withContext(Dispatchers.Main) {
-                            //TODO: Get thumbnail of video
-                            val videoView = LoadingVideoView(requireContext(), it, "")
+                            val videoView = LoadingVideoView(requireContext(), it.toUri())
                             videoView.apply {
                                 progressBar.visibility = View.GONE
                                 crossButton.visibility = View.VISIBLE

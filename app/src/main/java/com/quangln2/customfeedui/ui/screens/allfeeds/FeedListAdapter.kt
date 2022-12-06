@@ -52,7 +52,7 @@ class FeedListAdapter(
             }
             TypeOfPost.HEADER.value -> {
                 val binding = FeedHeaderBinding.inflate(layoutInflater, parent, false)
-                HeaderViewHolder(binding)
+                HeaderViewHolder(binding, eventFeedCallback)
             }
             TypeOfPost.BODY.value -> {
                 val binding = FeedBodyBinding.inflate(layoutInflater, parent, false)
@@ -67,8 +67,16 @@ class FeedListAdapter(
 
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         super.onViewRecycled(holder)
-        if (holder is BodyViewHolder) {
-            holder.onViewRecycled()
+        when (holder) {
+            is BodyViewHolder -> {
+                holder.onViewRecycled()
+            }
+            is HeaderViewHolder -> {
+                holder.onViewRecycled()
+            }
+            is AddNewItemViewHolder -> {
+                holder.onViewRecycled()
+            }
         }
     }
 

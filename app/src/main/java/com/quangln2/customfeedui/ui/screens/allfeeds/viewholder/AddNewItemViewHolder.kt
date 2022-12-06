@@ -20,4 +20,7 @@ class AddNewItemViewHolder constructor(private val binding: FeedCardBinding,
             eventFeedCallback.onClickAddPost()
         }
     }
+    fun onViewRecycled(){
+        eventFeedCallback.onRecycled(binding.circleAvatar)
+    }
 }

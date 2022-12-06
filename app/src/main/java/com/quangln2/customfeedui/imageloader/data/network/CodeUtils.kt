@@ -1,4 +1,4 @@
-package com.quangln2.customfeedui.others.utils
+package com.quangln2.customfeedui.imageloader.data.network
 
 object CodeUtils {
     fun convertVideoUrlToImageUrl(videoUrl: String) : String{

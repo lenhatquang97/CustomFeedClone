@@ -264,8 +264,7 @@ class HomeScreenFragment : Fragment() {
                         }
                     } else if (mimeType.startsWith(VIDEO_MIMETYPE_PART)) {
                         withContext(Dispatchers.Main) {
-                            //TODO: Get thumbnail of video
-                            val videoView = LoadingVideoView(requireContext(), uri.toString(), "")
+                            val videoView = LoadingVideoView(requireContext(), uri)
                             listOfViews.add(videoView)
                             listOfUris.add(uri)
                         }

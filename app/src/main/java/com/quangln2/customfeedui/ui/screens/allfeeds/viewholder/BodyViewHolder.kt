@@ -79,8 +79,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
             for (i in rectangles.indices) {
                 if (addMoreImageOrVideoLayer(i, item, rectangles)) return
                 val url = item.resources[i].url
-                val value = DownloadUtils.getTemporaryFilePath(url, context, item.resources[i].size)
-                val mimeType = DownloadUtils.getMimeType(value)
+                val mimeType = DownloadUtils.getMimeType(url)
 
                 val layoutParamsCustom = ViewGroup.MarginLayoutParams(rectangles[i].width, rectangles[i].height).apply {
                     leftMargin = rectangles[i].left
@@ -93,7 +92,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                 }
                 val currentVideo = CurrentVideo(currentVideoPosition = -1L, url = item.resources[i].url, listOfUrls = urlArrayList)
                 if (mimeType != null && mimeType.contains("video")) {
-                    val videoView = LoadingVideoView(context, value, url)
+                    val videoView = LoadingVideoView(context, url)
                     videoView.layoutParams = layoutParamsCustom
                     videoView.setOnClickListener {
                         eventFeedCallback.onClickVideoView(currentVideo)

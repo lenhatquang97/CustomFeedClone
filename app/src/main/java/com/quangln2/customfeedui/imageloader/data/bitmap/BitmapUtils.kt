@@ -12,29 +12,38 @@ import kotlin.math.min
 class BitmapUtils {
     fun emptyBitmap(): Bitmap {
         val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-        return drawable.toBitmap(100, 100)
+        return drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
     }
-
-
     fun decodeBitmapFromInputStream(inputStream: InputStream, reqWidth: Int, reqHeight: Int): Bitmap {
-        val options = BitmapFactory.Options().apply {
-            inPreferredConfig = Bitmap.Config.RGB_565
-        }
+        val options = BitmapFactory.Options()
 
         inputStream.mark(inputStream.available())
         BitmapFactory.decodeStream(inputStream, null, options)
-        inputStream.reset()
-        val imageHeight = options.outHeight
-        val imageWidth = options.outWidth
-        //Calculate ratio
-        options.inSampleSize = calculateRatio(reqWidth, reqHeight, imageWidth, imageHeight, true)
+        val (imageHeight, imageWidth) = Pair(options.outHeight, options.outWidth)
+        val ratio = calculateRatio(reqWidth, reqHeight, imageWidth, imageHeight, true)
+        val maxWidth = max(reqWidth, imageWidth / ratio)
+        val maxHeight = max(reqHeight, imageHeight / ratio)
 
-        //Decode bitmap with inSampleSize
+        options.inSampleSize = ratio
         options.inJustDecodeBounds = false
-        val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-        val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
-        inputStream.close()
-        return bitmap ?: drawable.toBitmap()
+        options.inPreferredConfig = Bitmap.Config.RGB_565
+        options.outWidth = maxWidth
+        options.outHeight = maxHeight
+        options.inBitmap = BitmapPool.getBitmap(maxWidth, maxHeight).getBitmap()
+        return try{
+            inputStream.reset()
+            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+            val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
+            inputStream.close()
+            return bitmap?: drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
+        } catch (e: java.lang.Exception){
+            inputStream.reset()
+            options.inBitmap = BitmapPool.createBitmapARGB8888(maxWidth, maxHeight).getBitmap()
+            val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
+            inputStream.close()
+            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+            return bitmap?: drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
+        }
     }
 
     private fun calculateRatio(reqWidth: Int, reqHeight: Int, width: Int, height: Int, centerInside: Boolean): Int =
