@@ -65,8 +65,8 @@ class FeedListAdapter(
         }
     }
 
-    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
-        super.onViewRecycled(holder)
+    override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
+        super.onViewDetachedFromWindow(holder)
         when (holder) {
             is BodyViewHolder -> {
                 holder.onViewRecycled()
@@ -79,6 +79,7 @@ class FeedListAdapter(
             }
         }
     }
+
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)

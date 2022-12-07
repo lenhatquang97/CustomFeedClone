@@ -14,34 +14,63 @@ class BitmapUtils {
         val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
         return drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
     }
+    private fun bitmapOptionsWithDensity(reqWidth: Int, reqHeight: Int, width: Int, height: Int): BitmapFactory.Options {
+        val options = BitmapFactory.Options()
+        val ratio = calculateRatio(reqWidth, reqHeight, width, height, true)
+        options.apply {
+            inPreferredConfig = Bitmap.Config.RGB_565
+            inSampleSize = ratio
+            inJustDecodeBounds = false
+        }
+
+        val maxWidth = max(reqWidth, width / options.inSampleSize)
+        val maxHeight = max(reqHeight, height / options.inSampleSize)
+        if(reqWidth != 0){
+            options.inBitmap = BitmapPool.getBitmap(maxWidth, maxHeight).getBitmap()
+            options.inDensity = width
+            options.inTargetDensity = maxWidth * options.inSampleSize
+        }
+        return options
+    }
+
+    private fun optionWithException(reqWidth: Int, reqHeight: Int, width: Int, height: Int): BitmapFactory.Options {
+        val options = BitmapFactory.Options()
+        val ratio = calculateRatio(reqWidth, reqHeight, width, height, true)
+        options.apply {
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+            inSampleSize = ratio
+            inJustDecodeBounds = false
+        }
+
+        val maxWidth = max(reqWidth, width / options.inSampleSize)
+        val maxHeight = max(reqHeight, height / options.inSampleSize)
+        if(reqWidth != 0){
+            options.inBitmap = BitmapPool.createBitmapARGB8888(maxWidth, maxHeight).getBitmap()
+            options.inTargetDensity = maxWidth * options.inSampleSize
+        }
+        return options
+    }
+
+
     fun decodeBitmapFromInputStream(inputStream: InputStream, reqWidth: Int, reqHeight: Int): Bitmap {
         val options = BitmapFactory.Options()
-
+        options.inJustDecodeBounds = true
         inputStream.mark(inputStream.available())
         BitmapFactory.decodeStream(inputStream, null, options)
         val (imageHeight, imageWidth) = Pair(options.outHeight, options.outWidth)
-        val ratio = calculateRatio(reqWidth, reqHeight, imageWidth, imageHeight, true)
-        val maxWidth = max(reqWidth, imageWidth / ratio)
-        val maxHeight = max(reqHeight, imageHeight / ratio)
-
-        options.inSampleSize = ratio
-        options.inJustDecodeBounds = false
-        options.inPreferredConfig = Bitmap.Config.RGB_565
-        options.outWidth = maxWidth
-        options.outHeight = maxHeight
-        options.inBitmap = BitmapPool.getBitmap(maxWidth, maxHeight).getBitmap()
+        val anotherOptions = bitmapOptionsWithDensity(reqWidth, reqHeight, imageWidth, imageHeight)
         return try{
             inputStream.reset()
             val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-            val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
+            val bitmap = BitmapFactory.decodeStream(inputStream, null, anotherOptions)
             inputStream.close()
             return bitmap?: drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
         } catch (e: java.lang.Exception){
             inputStream.reset()
-            options.inBitmap = BitmapPool.createBitmapARGB8888(maxWidth, maxHeight).getBitmap()
-            val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
-            inputStream.close()
+            val exceptionOptions = optionWithException(reqWidth, reqHeight, imageWidth, imageHeight)
             val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+            val bitmap = BitmapFactory.decodeStream(inputStream, null, exceptionOptions)
+            inputStream.close()
             return bitmap?: drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
         }
     }
