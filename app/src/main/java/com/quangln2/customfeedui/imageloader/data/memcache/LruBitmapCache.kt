@@ -9,13 +9,6 @@ object LruBitmapCache: CachePolicy {
         override fun sizeOf(key: String, value: ManagedBitmap): Int {
             return value.getBitmap().byteCount.div(1024)
         }
-
-        override fun entryRemoved(evicted: Boolean, key: String?, oldValue: ManagedBitmap?, newValue: ManagedBitmap?) {
-            if(oldValue != null && !oldValue.getBitmap().isRecycled){
-                oldValue.getBitmap().recycle()
-            }
-
-        }
     }
 
     override fun putIntoLruCache(key: String, managedBitmap: ManagedBitmap){

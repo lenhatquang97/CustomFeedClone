@@ -32,10 +32,7 @@ class ImageLoader(
             if(inputStream != null){
                 val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height)
                 withContext(Dispatchers.Main){
-                    if(!bitmap.isRecycled){
-                        imageView.setImageBitmap(bitmap)
-                    }
-
+                    imageView.setImageBitmap(bitmap)
                 }
             }
         }

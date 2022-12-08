@@ -15,6 +15,7 @@ import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedBodyBinding
+import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
@@ -121,6 +122,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                     val imageLoader = ImageLoader(context, rectangles[i].width, rectangles[i].height, CoroutineScope(Job()))
                     imageLoader.loadImage(url, imageView)
                     binding.customGridGroup.addView(imageView)
+
                 }
             }
         }
@@ -133,6 +135,10 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
             eventFeedCallback.onRecycled(child)
         }
         binding.customGridGroup.removeAllViews()
+
+        for(i in 0 until listOfImageUrl.size){
+            LruBitmapCache.removeCache(listOfImageUrl[i])
+        }
     }
 
     private fun extractUrlOrUri(webUrlOfFileUri: String): String{
