@@ -5,14 +5,25 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.core.graphics.drawable.toBitmap
+import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import java.io.InputStream
 import kotlin.math.max
 import kotlin.math.min
 
 class BitmapUtils {
     fun emptyBitmap(): Bitmap {
-        val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-        return drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
+        return if(LruBitmapCache.getLruCache("emptyBmp") == null){
+            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
+            val bmp = drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
+            if(!bmp.isRecycled){
+                LruBitmapCache.putIntoLruCache("emptyBmp", ManagedBitmap(bmp, width = 50, height = 50))
+            }
+            LruBitmapCache.getLruCache("emptyBmp")?.getBitmap()!!
+        } else {
+            LruBitmapCache.getLruCache("emptyBmp")?.getBitmap()!!
+        }
+
+
     }
     private fun bitmapOptionsWithDensity(reqWidth: Int, reqHeight: Int, width: Int, height: Int): BitmapFactory.Options {
         val options = BitmapFactory.Options()
@@ -24,55 +35,37 @@ class BitmapUtils {
         }
 
         val maxWidth = max(reqWidth, width / options.inSampleSize)
-        val maxHeight = max(reqHeight, height / options.inSampleSize)
         if(reqWidth != 0){
-            options.inBitmap = BitmapPool.getBitmap(maxWidth, maxHeight).getBitmap()
             options.inDensity = width
             options.inTargetDensity = maxWidth * options.inSampleSize
         }
         return options
     }
 
-    private fun optionWithException(reqWidth: Int, reqHeight: Int, width: Int, height: Int): BitmapFactory.Options {
-        val options = BitmapFactory.Options()
-        val ratio = calculateRatio(reqWidth, reqHeight, width, height, true)
-        options.apply {
-            inPreferredConfig = Bitmap.Config.ARGB_8888
-            inSampleSize = ratio
-            inJustDecodeBounds = false
-        }
-
-        val maxWidth = max(reqWidth, width / options.inSampleSize)
-        val maxHeight = max(reqHeight, height / options.inSampleSize)
-        if(reqWidth != 0){
-            options.inBitmap = BitmapPool.createBitmapARGB8888(maxWidth, maxHeight).getBitmap()
-            options.inTargetDensity = maxWidth * options.inSampleSize
-        }
-        return options
-    }
 
 
-    fun decodeBitmapFromInputStream(inputStream: InputStream, reqWidth: Int, reqHeight: Int): Bitmap {
+    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int): Bitmap {
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
         inputStream.mark(inputStream.available())
         BitmapFactory.decodeStream(inputStream, null, options)
+
         val (imageHeight, imageWidth) = Pair(options.outHeight, options.outWidth)
         val anotherOptions = bitmapOptionsWithDensity(reqWidth, reqHeight, imageWidth, imageHeight)
-        return try{
+        val reusedBitmap = LruBitmapCache.getLruCache(key)
+        if(reusedBitmap != null && !reusedBitmap.getBitmap().isRecycled){
+            return reusedBitmap.getBitmap()
+        } else {
             inputStream.reset()
-            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
             val bitmap = BitmapFactory.decodeStream(inputStream, null, anotherOptions)
+            if(bitmap != null && !bitmap.isRecycled) {
+                LruBitmapCache.putIntoLruCache(key, ManagedBitmap(bitmap, width = bitmap.width, height = bitmap.height))
+                inputStream.close()
+                return bitmap
+            }
             inputStream.close()
-            return bitmap?: drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
-        } catch (e: java.lang.Exception){
-            inputStream.reset()
-            val exceptionOptions = optionWithException(reqWidth, reqHeight, imageWidth, imageHeight)
-            val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
-            val bitmap = BitmapFactory.decodeStream(inputStream, null, exceptionOptions)
-            inputStream.close()
-            return bitmap?: drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
         }
+        return emptyBitmap()
     }
 
     private fun calculateRatio(reqWidth: Int, reqHeight: Int, width: Int, height: Int, centerInside: Boolean): Int =

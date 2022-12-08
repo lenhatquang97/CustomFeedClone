@@ -8,6 +8,8 @@ import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapUtils
+import com.quangln2.customfeedui.imageloader.data.bitmap.ManagedBitmap
+import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
 import com.quangln2.customfeedui.others.utils.DownloadUtils
@@ -28,9 +30,12 @@ class ImageLoader(
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if(inputStream != null){
-                val bitmap = BitmapUtils().decodeBitmapFromInputStream(inputStream, width, height)
+                val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height)
                 withContext(Dispatchers.Main){
-                    imageView.setImageBitmap(bitmap)
+                    if(!bitmap.isRecycled){
+                        imageView.setImageBitmap(bitmap)
+                    }
+
                 }
             }
         }
@@ -45,9 +50,19 @@ class ImageLoader(
                 val columnIndex = getColumnIndex(filePathColumn[0])
                 val picturePath = getString(columnIndex)
                 close()
-                val bitmap = ThumbnailUtils.createVideoThumbnail(picturePath, MediaStore.Video.Thumbnails.FULL_SCREEN_KIND)
+                val oldBmp = LruBitmapCache.getLruCache(uri.toString())
+                if(oldBmp == null){
+                    val bitmap = ThumbnailUtils.createVideoThumbnail(picturePath, MediaStore.Video.Thumbnails.FULL_SCREEN_KIND)
+                    if(bitmap != null && !bitmap.isRecycled){
+                        LruBitmapCache.putIntoLruCache(uri.toString(), ManagedBitmap(bitmap, bitmap.width, bitmap.height))
+                    }
+                }
                 withContext(Dispatchers.Main){
-                    imageView.setImageBitmap(bitmap)
+                    val bmpLru = LruBitmapCache.getLruCache(uri.toString())
+                    if(bmpLru != null && !bmpLru.getBitmap().isRecycled){
+                        imageView.setImageBitmap(bmpLru.getBitmap())
+                    }
+
                 }
             }
         }
@@ -57,7 +72,9 @@ class ImageLoader(
         scope.launch(Dispatchers.IO) {
             val bitmap = BitmapUtils().emptyBitmap()
             withContext(Dispatchers.Main){
-                imageView.setImageBitmap(bitmap)
+                if(!bitmap.isRecycled){
+                    imageView.setImageBitmap(bitmap)
+                }
             }
         }
     }
@@ -75,17 +92,6 @@ class ImageLoader(
     }
 
     fun loadImage(webUrlOfFileUri: String, imageView: ImageView){
-        /**
-         * Step 1: Check if uri is webUrl or fileUri
-         * If fileUri, load image with uri
-         * If webUrl, do:
-         * Step 2: Check if available images
-         * If available, load image in disk
-         * If not, do:
-         * Step 3: Download image
-         * Step 4: Save image to disk
-         * Step 5: Load image from disk
-         */
         loadEmptyImage(imageView)
         if(webUrlOfFileUri.isEmpty()){
             return

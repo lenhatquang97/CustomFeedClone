@@ -40,12 +40,12 @@ class LoadingVideoView @JvmOverloads constructor(
         initForShowThumbnail()
     }
 
-    //Use for load video
-    constructor(context: Context, webUrl: String) : this(context) {
+    constructor(context: Context, webUrl: String, width: Int, height: Int) : this(context) {
         this.webUrl = webUrl
         initFindById()
-        initForShowThumbnail()
+        initForShowThumbnail(width, height)
     }
+
     private fun initFindById(){
         val view = LayoutInflater.from(context).inflate(R.layout.loading_video_view, this, true)
         progressBar = view.findViewById(R.id.my_spinner)
@@ -59,6 +59,16 @@ class LoadingVideoView @JvmOverloads constructor(
     private fun initForShowThumbnail() {
         progressBar.visibility = View.GONE
         val imageLoader = ImageLoader(context,0,0, CoroutineScope(Job()))
+        if(fileUri == null){
+            imageLoader.loadImage(webUrl,thumbnailView)
+        } else {
+            imageLoader.loadImage(fileUri.toString(),thumbnailView)
+        }
+    }
+
+    private fun initForShowThumbnail(width: Int, height: Int) {
+        progressBar.visibility = View.GONE
+        val imageLoader = ImageLoader(context,width,height, CoroutineScope(Job()))
         if(fileUri == null){
             imageLoader.loadImage(webUrl,thumbnailView)
         } else {

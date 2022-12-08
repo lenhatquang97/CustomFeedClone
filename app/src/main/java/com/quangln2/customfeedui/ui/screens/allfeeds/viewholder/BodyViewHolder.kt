@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.res.Resources
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.URLUtil
 import android.widget.ImageView
+import androidx.core.net.toUri
 import androidx.core.view.size
 import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeedui.data.constants.ConstantSetup
@@ -13,6 +15,7 @@ import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedBodyBinding
+import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.DownloadUtils
@@ -21,11 +24,13 @@ import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.customview.customgrid.getGridItemsLocation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import java.io.File
 
 class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                                  private var context: Context,
                                  private val eventFeedCallback: EventFeedCallback):
     RecyclerView.ViewHolder(binding.root) {
+    private val listOfImageUrl = mutableListOf<String>()
     private fun initializeDataForShowingGrid(item: MyPostRender): List<ItemLocation>{
         val rectangles = getGridItemsLocation(item.resources.size, item.firstItemWidth, item.firstItemHeight)
         val contentPadding = 16
@@ -90,9 +95,15 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                         add(it.url)
                     }
                 }
+
+                //Usage: Use for recycling
+                item.resources.forEach {
+                    listOfImageUrl.add(it.url)
+                }
+
                 val currentVideo = CurrentVideo(currentVideoPosition = -1L, url = item.resources[i].url, listOfUrls = urlArrayList)
                 if (mimeType != null && mimeType.contains("video")) {
-                    val videoView = LoadingVideoView(context, url)
+                    val videoView = LoadingVideoView(context, url, rectangles[i].width, rectangles[i].height)
                     videoView.layoutParams = layoutParamsCustom
                     videoView.setOnClickListener {
                         eventFeedCallback.onClickVideoView(currentVideo)
@@ -122,5 +133,29 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
             eventFeedCallback.onRecycled(child)
         }
         binding.customGridGroup.removeAllViews()
+    }
+
+    private fun extractUrlOrUri(webUrlOfFileUri: String): String{
+        if(webUrlOfFileUri.isEmpty()){
+            return ""
+        }
+        else if(URLUtil.isHttpUrl(webUrlOfFileUri) || URLUtil.isHttpsUrl(webUrlOfFileUri)){
+            val imageThumbnailUrl = CodeUtils.convertVideoUrlToImageUrl(webUrlOfFileUri)
+            val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
+            val cacheFile = File(context.cacheDir, fileName)
+            return if(cacheFile.exists()){
+                cacheFile.toUri().toString()
+            } else{
+                imageThumbnailUrl
+            }
+        }
+        else{
+            val mimeType = DownloadUtils.getMimeType(webUrlOfFileUri)
+            return if(mimeType?.contains("image") == true){
+                webUrlOfFileUri.toUri().toString()
+            } else{
+                webUrlOfFileUri.toUri().toString()
+            }
+        }
     }
 }
