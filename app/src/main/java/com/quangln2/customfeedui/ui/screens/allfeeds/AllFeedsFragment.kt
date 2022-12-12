@@ -31,6 +31,7 @@ import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentAllFeedsBinding
+import com.quangln2.customfeedui.imageloader.data.extension.recycle
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
@@ -94,15 +95,17 @@ class AllFeedsFragment : Fragment() {
                     ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
                 }
             }
-            override fun onClickVideoView(currentVideo: CurrentVideo) =
+            override fun onClickVideoView(currentVideo: CurrentVideo){
                 findNavController().navigate(R.id.action_allFeedsFragment_to_viewFullVideoFragment, currentVideo.encapsulateToBundle(), navTransition)
+            }
             override fun onClickViewMore(id: String) = findNavController().
                 navigate(R.id.action_allFeedsFragment_to_viewMoreFragment, Bundle().apply { putString("id", id) }, navTransition)
             override fun onRecycled(child: View) {
                 if(child is LoadingVideoView){
                     child.pauseAndReleaseVideo(player)
                 } else if(child is ImageView){
-
+                    child.setImageBitmap(null)
+                    child.recycle()
                 }
             }
         }

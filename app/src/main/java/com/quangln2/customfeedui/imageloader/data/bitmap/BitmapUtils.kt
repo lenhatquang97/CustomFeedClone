@@ -12,16 +12,14 @@ import kotlin.math.min
 
 class BitmapUtils {
     fun emptyBitmap(): Bitmap {
-        return if(LruBitmapCache.getLruCache("emptyBmp") == null){
+        if(!LruBitmapCache.containsKey("emptyBmp")){
             val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
             val bmp = drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
             if(!bmp.isRecycled){
                 LruBitmapCache.putIntoLruCache("emptyBmp", ManagedBitmap(bmp, width = 50, height = 50))
             }
-            LruBitmapCache.getLruCache("emptyBmp")?.getBitmap()!!
-        } else {
-            LruBitmapCache.getLruCache("emptyBmp")?.getBitmap()!!
         }
+        return LruBitmapCache.getLruCache("emptyBmp")?.getBitmap()!!
 
 
     }
@@ -59,7 +57,9 @@ class BitmapUtils {
             inputStream.reset()
             val bitmap = BitmapFactory.decodeStream(inputStream, null, anotherOptions)
             if(bitmap != null && !bitmap.isRecycled) {
-                LruBitmapCache.putIntoLruCache(key, ManagedBitmap(bitmap, width = bitmap.width, height = bitmap.height))
+                val managedBitmap = ManagedBitmap(bitmap, width = bitmap.width, height = bitmap.height)
+                LruBitmapCache.putIntoLruCache(key, managedBitmap)
+
                 inputStream.close()
                 return bitmap
             }

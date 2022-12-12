@@ -6,5 +6,6 @@ interface CachePolicy {
     fun putIntoLruCache(key: String, managedBitmap: ManagedBitmap)
     fun getLruCache(key: String): ManagedBitmap?
     fun removeCache(key: String)
+    fun removeAll()
 
 }
