@@ -41,7 +41,6 @@ object LruBitmapCache: CachePolicy {
                 managedBitmap.getBitmap().recycle()
             }
         }
-
     }
 
     override fun removeAll() = memoryCache.evictAll()

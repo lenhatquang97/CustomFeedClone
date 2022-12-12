@@ -1,17 +1,19 @@
 package com.quangln2.customfeedui.imageloader.data.bitmap
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.core.graphics.drawable.toBitmap
+import com.quangln2.customfeedui.imageloader.data.diskcache.DiskCache
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import java.io.InputStream
 import kotlin.math.max
 import kotlin.math.min
 
 class BitmapUtils {
-    fun emptyBitmap(): Bitmap {
+    fun emptyBitmap(context: Context): Bitmap {
         if(!LruBitmapCache.containsKey("emptyBmp")){
             val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
             val bmp = drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
@@ -27,7 +29,6 @@ class BitmapUtils {
         val options = BitmapFactory.Options()
         val ratio = calculateRatio(reqWidth, reqHeight, width, height, true)
         options.apply {
-            inPreferredConfig = Bitmap.Config.RGB_565
             inSampleSize = ratio
             inJustDecodeBounds = false
         }
@@ -42,7 +43,7 @@ class BitmapUtils {
 
 
 
-    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int): Bitmap {
+    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int, context: Context): Bitmap {
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
         inputStream.mark(inputStream.available())
@@ -59,13 +60,14 @@ class BitmapUtils {
             if(bitmap != null && !bitmap.isRecycled) {
                 val managedBitmap = ManagedBitmap(bitmap, width = bitmap.width, height = bitmap.height)
                 LruBitmapCache.putIntoLruCache(key, managedBitmap)
+                DiskCache.writeBitmapToDiskCache(key, bitmap, context)
 
                 inputStream.close()
                 return bitmap
             }
             inputStream.close()
         }
-        return emptyBitmap()
+        return emptyBitmap(context)
     }
 
     private fun calculateRatio(reqWidth: Int, reqHeight: Int, width: Int, height: Int, centerInside: Boolean): Int =

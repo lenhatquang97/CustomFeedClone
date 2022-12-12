@@ -2,67 +2,47 @@ package com.quangln2.customfeedui.imageloader.data.diskcache
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import java.io.*
+import android.util.Log
+import java.io.File
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
 /*
 * Main purpose of managedTmpMap is to check whether file is valid. If file not valid (means different MD5 codes), updates again
 * */
-class DiskCache : Closeable{
-    private val MANAGED = "managed"
-    private val MANAGED_TMP = "managed.tmp"
-    private val fileManagedMap = mutableMapOf<String, String>()
 
-    //Load all into maps first
-    fun initManagedFile(context: Context){
-        val managedFile = File(context.cacheDir, MANAGED_TMP)
-        if(!managedFile.exists()){
-           managedFile.createNewFile()
-        } else {
-            val fileInputStream = FileInputStream(managedFile)
-            val inputStreamReader = InputStreamReader(fileInputStream)
-            val bufferedReader = BufferedReader(inputStreamReader)
-            var line = bufferedReader.readLine()
-            while (line != null){
-                //Handle logic
-
-
-                line = bufferedReader.readLine()
-            }
-        }
+object DiskCache {
+    fun containsWith(key: String, context: Context): Boolean{
+        val md5Key = md5Hash(key)
+        return File(context.cacheDir, md5Key).exists()
     }
-
-    //key is the same as in Bitmap, but value is MD5
-    fun writeToManagedTmp(key: String, value: String){
-        fileManagedMap[key] = value
-    }
-
-
-    fun readInManagedTmp(key: String): String? = fileManagedMap[key]
 
     //Key in DiskCache is MD5(webUrlOrFileUri)
     fun writeBitmapToDiskCache(key: String, bitmap: Bitmap, context: Context){
         val md5Key = md5Hash(key)
         val cacheFile = File(context.cacheDir, md5Key)
         if(cacheFile.exists()){
-            //Calculate hash of new bitmap
-
-            //Compare hash of new bitmap and disk bitmap
-
-
-            //If yes, delete
-            cacheFile.delete()
-            val newFile = File(context.cacheDir, md5Key)
-            val objOut = ObjectOutputStream(newFile.outputStream())
-            writeObject(objOut, bitmap)
+            val newBitmapHash = hashBitmap(bitmap)
+            val objIn = ObjectInputStream(cacheFile.inputStream())
+            val oldBitmapHash = readHashBitmapFromFile(objIn)
+            Log.d("DiskCache", "${newBitmapHash == oldBitmapHash} with $oldBitmapHash $newBitmapHash")
+            if(newBitmapHash == oldBitmapHash){
+                return
+            } else {
+                cacheFile.delete()
+                val objOut = ObjectOutputStream(cacheFile.outputStream())
+                writeObject(objOut, bitmap)
+            }
+            return
         } else {
             val objOut = ObjectOutputStream(cacheFile.outputStream())
             writeObject(objOut, bitmap)
         }
 
     }
-
 
     fun getBitmapFromDiskCache(key: String, context: Context): Bitmap?{
         val md5Key = md5Hash(key)
@@ -74,50 +54,39 @@ class DiskCache : Closeable{
         return null
     }
 
-    //true if remove successfully, false if fail to remove
-    fun removeBitmapFromDiskCache(key: String, context: Context): Boolean{
-        val md5Key = md5Hash(key)
-        val cacheFile = File(context.cacheDir, md5Key)
-        if(cacheFile.exists()){
-            return cacheFile.delete()
-        }
-        return true
-    }
-
-    override fun close() {
-
-    }
-
-    fun serializeBitmap(){
-
-    }
-
-    fun deserializeBitmap(){
-
-    }
-
     private fun writeObject(objOut: ObjectOutputStream, bitmap: Bitmap){
-        val byteStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 0, byteStream)
-        val bitmapBytes = byteStream.toByteArray()
-        objOut.write(bitmapBytes, 0, bitmapBytes.size)
-    }
+        val size = bitmap.byteCount
+        val byteBuffer = ByteBuffer.allocate(size)
+        bitmap.copyPixelsToBuffer(byteBuffer)
 
+        objOut.writeInt(size)
+        objOut.writeLong(hashBitmap(bitmap))
+
+        val imageInByte = byteBuffer.array()
+        objOut.writeObject(imageInByte)
+    }
     private fun readObject(objIn: ObjectInputStream): Bitmap?{
-        val byteStream = ByteArrayOutputStream()
-        var byteNum: Int
-        while (objIn.read().also { byteNum = it } != -1){
-            byteStream.write(byteNum)
+        val bufferLength: Int = objIn.readInt()
+        val hash = objIn.readLong()
+        val imageByteArray = objIn.readObject() as ByteArray
+        val bitmap = BitmapFactory.decodeByteArray(imageByteArray, 0, bufferLength)
+        if(bitmap != null){
+            Log.i("DiskCacheInfo", "${bitmap.width} ${bitmap.height} ${bitmap.byteCount}")
+        } else {
+            Log.i("DiskCacheInfo", "bitmap is null $bufferLength $hash")
         }
-        val bitmapBytes = byteStream.toByteArray()
-        return BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.size)
+        return bitmap
     }
 
+    private fun readHashBitmapFromFile(objIn: ObjectInputStream): Long {
+        objIn.readInt()
+        return objIn.readLong()
+    }
     private fun md5Hash(str: String): String {
         try {
             // Create MD5 Hash
             val digest = MessageDigest.getInstance("MD5")
-            digest.update(str.toByte())
+            digest.update(str.toByteArray())
             val messageDigest = digest.digest()
 
             // Create Hex String
@@ -133,5 +102,16 @@ class DiskCache : Closeable{
         }
         return ""
     }
+    private fun hashBitmap(bmp: Bitmap): Long{
+        var hash = 31
+        for(x in 0 until bmp.width){
+            for(y in 0 until bmp.height){
+                hash = bmp.getPixel(x, y) + 31
+            }
+        }
+        return hash.toLong()
+    }
+
+
 
 }

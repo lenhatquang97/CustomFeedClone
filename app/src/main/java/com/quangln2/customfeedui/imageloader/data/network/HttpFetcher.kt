@@ -2,6 +2,7 @@ package com.quangln2.customfeedui.imageloader.data.network
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.webkit.URLUtil
 import java.io.File
 import java.io.FileOutputStream
@@ -45,7 +46,7 @@ class HttpFetcher {
             }
             conn.disconnect()
         } catch(e: java.lang.Exception){
-            e.printStackTrace()
+            Log.e("HttpFetcher", e.stackTraceToString())
         }
     }
 

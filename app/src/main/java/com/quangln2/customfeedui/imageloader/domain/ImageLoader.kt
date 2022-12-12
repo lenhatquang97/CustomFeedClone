@@ -9,6 +9,7 @@ import android.widget.ImageView
 import androidx.core.net.toUri
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapUtils
 import com.quangln2.customfeedui.imageloader.data.bitmap.ManagedBitmap
+import com.quangln2.customfeedui.imageloader.data.diskcache.DiskCache
 import com.quangln2.customfeedui.imageloader.data.extension.addToManagedAddress
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
@@ -31,7 +32,7 @@ class ImageLoader(
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if(inputStream != null){
-                val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height)
+                val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, context)
                 withContext(Dispatchers.Main){
                     if(!bitmap.isRecycled){
                         imageView.addToManagedAddress(uri.toString())
@@ -58,6 +59,7 @@ class ImageLoader(
                     if(bitmap != null && !bitmap.isRecycled){
                         val managedBitmap = ManagedBitmap(bitmap, bitmap.width, bitmap.height)
                         LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
+                        DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
                     }
                 }
                 withContext(Dispatchers.Main){
@@ -65,7 +67,6 @@ class ImageLoader(
                         imageView.addToManagedAddress(uri.toString())
                         imageView.setImageBitmap(oldBmp.getBitmap())
                     }
-
                 }
             }
         }
@@ -73,7 +74,7 @@ class ImageLoader(
 
     private fun loadEmptyImage(imageView: ImageView){
         scope.launch(Dispatchers.IO) {
-            val bitmap = BitmapUtils().emptyBitmap()
+            val bitmap = BitmapUtils().emptyBitmap(context)
             withContext(Dispatchers.Main){
                 if(!bitmap.isRecycled){
                     imageView.addToManagedAddress("emptyBmp")
@@ -95,18 +96,33 @@ class ImageLoader(
         }
     }
 
-    private fun isInMemoryCache(context: Context, fileName: String): Boolean{
+    private fun isInMemoryCache(fileName: String): Boolean{
         val memoryCacheFile = File(context.cacheDir, fileName)
-        return memoryCacheFile.exists()
+        return LruBitmapCache.containsKey(memoryCacheFile.toUri().toString())
+    }
+    private fun isInDiskCache(context: Context, fileName: String): Boolean{
+        return DiskCache.containsWith(fileName, context)
+    }
+    private fun doesFileExist(fileName: String): Boolean{
+        val file = File(context.cacheDir, fileName)
+        return file.exists()
     }
 
     private fun handleMemoryCache(fileName: String, imageView: ImageView){
         val memoryCacheFile = File(context.cacheDir, fileName)
         loadImageWithUri(memoryCacheFile.toUri(), imageView)
     }
-    private fun isInDiskCache(context: Context, fileName: String): Boolean{
-        return false
+
+    private fun handleDiskCache(fileName: String, imageView: ImageView){
+        val convertToUri = File(context.cacheDir, fileName)
+        scope.launch(Dispatchers.IO) {
+            val bitmap = DiskCache.getBitmapFromDiskCache(convertToUri.toUri().toString(), context)
+            withContext(Dispatchers.Main) {
+                imageView.setImageBitmap(bitmap)
+            }
+        }
     }
+
 
     fun loadImage(webUrlOfFileUri: String, imageView: ImageView){
         loadEmptyImage(imageView)
@@ -116,12 +132,15 @@ class ImageLoader(
         else if(URLUtil.isHttpUrl(webUrlOfFileUri) || URLUtil.isHttpsUrl(webUrlOfFileUri)){
             val imageThumbnailUrl = CodeUtils.convertVideoUrlToImageUrl(webUrlOfFileUri)
             val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
+            val convertToUri = File(context.cacheDir, fileName)
 
-            if(isInMemoryCache(context, fileName)){
+            if(isInMemoryCache(fileName)) {
                 handleMemoryCache(fileName, imageView)
+            } else if(isInDiskCache(context, convertToUri.toUri().toString())) {
+                handleDiskCache(fileName, imageView)
             }
-            else if(isInDiskCache(context, fileName)){
-                //Handle Disk Cache
+            else if(doesFileExist(fileName)) {
+                handleMemoryCache(fileName, imageView)
             } else {
                 downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView)
             }
