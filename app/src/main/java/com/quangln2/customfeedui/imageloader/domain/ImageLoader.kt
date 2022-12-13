@@ -32,7 +32,7 @@ class ImageLoader(
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if(inputStream != null){
-                val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, context)
+                val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height)
                 if(DiskCache.isExperimental){
                     DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
                 }
@@ -41,7 +41,6 @@ class ImageLoader(
                         imageView.addToManagedAddress(uri.toString())
                         imageView.setImageBitmap(bitmap)
                     }
-
                 }
             }
         }
@@ -79,7 +78,7 @@ class ImageLoader(
 
     private fun loadEmptyImage(imageView: ImageView){
         scope.launch(Dispatchers.IO) {
-            val bitmap = BitmapUtils().emptyBitmap(context)
+            val bitmap = BitmapUtils().emptyBitmap()
             withContext(Dispatchers.Main){
                 if(!bitmap.isRecycled){
                     imageView.addToManagedAddress("emptyBmp")

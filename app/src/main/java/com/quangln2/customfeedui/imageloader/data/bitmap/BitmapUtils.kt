@@ -1,6 +1,5 @@
 package com.quangln2.customfeedui.imageloader.data.bitmap
 
-import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.ColorDrawable
 import androidx.core.graphics.drawable.toBitmap
@@ -9,7 +8,7 @@ import java.io.InputStream
 import kotlin.math.max
 
 class BitmapUtils {
-    fun emptyBitmap(context: Context): Bitmap {
+    fun emptyBitmap(): Bitmap {
         if(!LruBitmapCache.containsKey("emptyBmp")){
             val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
             val bmp = drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
@@ -18,27 +17,15 @@ class BitmapUtils {
             }
         }
         return LruBitmapCache.getLruCache("emptyBmp")?.getBitmap()!!
-
-
-    }
-    private fun bitmapOptionsWithDensity(reqWidth: Int, reqHeight: Int, width: Int, height: Int): BitmapFactory.Options {
-        val options = BitmapFactory.Options()
-        options.apply {
-            inJustDecodeBounds = false
-        }
-        return options
     }
 
-
-
-    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int, context: Context): Bitmap {
+    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int): Bitmap {
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
         inputStream.mark(inputStream.available())
         BitmapFactory.decodeStream(inputStream, null, options)
 
-        val (imageHeight, imageWidth) = Pair(options.outHeight, options.outWidth)
-        val anotherOptions = bitmapOptionsWithDensity(reqWidth, reqHeight, imageWidth, imageHeight)
+        val anotherOptions = BitmapFactory.Options().apply { inJustDecodeBounds = false }
         val reusedBitmap = LruBitmapCache.getLruCache(key)
         if(reusedBitmap != null && !reusedBitmap.getBitmap().isRecycled){
             return reusedBitmap.getBitmap()
@@ -54,7 +41,7 @@ class BitmapUtils {
             }
             inputStream.close()
         }
-        return emptyBitmap(context)
+        return emptyBitmap()
     }
 
     private fun resizeBitmap(bitmap: Bitmap, reqWidth: Int, reqHeight: Int): Bitmap {

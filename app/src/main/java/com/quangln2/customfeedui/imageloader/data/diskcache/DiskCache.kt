@@ -2,7 +2,6 @@ package com.quangln2.customfeedui.imageloader.data.diskcache
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Base64
 import android.util.Log
 import org.apache.commons.codec.binary.Hex
 import java.io.File
@@ -17,6 +16,7 @@ import java.security.NoSuchAlgorithmException
 * */
 
 object DiskCache {
+    //This is a boolean used to open and close experimental part to avoid error prone.
     const val isExperimental = false
 
     fun containsWith(key: String, context: Context): Boolean{
@@ -34,7 +34,6 @@ object DiskCache {
             writeObject(objOut, bitmap, key)
             objOut.close()
         }
-
     }
 
     fun getBitmapFromDiskCache(key: String, context: Context): Bitmap?{
@@ -47,8 +46,7 @@ object DiskCache {
         }
         return null
     }
-    private fun base64ToBitmap(b64: String): Bitmap? {
-        val imageAsBytes = Base64.decode(b64.toByteArray(), Base64.DEFAULT)
+    private fun byteArrayToBitmap(imageAsBytes: ByteArray): Bitmap? {
         val opts = BitmapFactory.Options()
         opts.inJustDecodeBounds = false
         return BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.size, opts)
@@ -59,15 +57,14 @@ object DiskCache {
         val byteBuffer = ByteBuffer.allocate(size)
         bitmap.copyPixelsToBuffer(byteBuffer)
         bitmap.recycle()
-        val b64Encode = Base64.encode(byteBuffer.array(), Base64.DEFAULT)
-        val hexString = base64ToHex(b64Encode)
+        val hexString = Hex.encodeHexString(byteBuffer.array())
         objOut.writeChars(hexString)
         Log.i("DiskCacheInfo","Bitmap is null not $hexString")
     }
     private fun readObject(objIn: ObjectInputStream): Bitmap?{
         val hexString = objIn.readLine()
-        val b64Decode = hexToBase64(hexString)
-        val bitmap = base64ToBitmap(b64Decode)
+        val byteArray = Hex.decodeHex(hexString)
+        val bitmap = byteArrayToBitmap(byteArray)
         if(bitmap != null){
             Log.i("DiskCacheInfo", "${bitmap.width} ${bitmap.height} ${bitmap.byteCount}")
         } else {
@@ -97,23 +94,5 @@ object DiskCache {
         }
         return ""
     }
-    private fun hashBitmap(bmp: Bitmap): Long{
-        var hash = 31
-        for(x in 0 until bmp.width){
-            for(y in 0 until bmp.height){
-                hash = bmp.getPixel(x, y) + 31
-            }
-        }
-        return hash.toLong()
-    }
 
-    private fun base64ToHex(base64: ByteArray): String {
-        return Hex.encodeHexString(base64)
-    }
-
-    //Convert hex string to base64
-    private fun hexToBase64(hex: String): String {
-        val bytes = Hex.decodeHex(hex)
-        return Base64.encodeToString(bytes, Base64.DEFAULT)
-    }
 }

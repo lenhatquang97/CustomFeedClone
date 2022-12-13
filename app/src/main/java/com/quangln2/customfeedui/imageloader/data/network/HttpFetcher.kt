@@ -12,7 +12,7 @@ import java.net.URL
 
 class HttpFetcher {
     private var webUrl = ""
-    private var fileUri: Uri? = null
+    private var fileUri:  Uri? = null
     constructor(webUrl: String){
         this.webUrl = webUrl
     }
