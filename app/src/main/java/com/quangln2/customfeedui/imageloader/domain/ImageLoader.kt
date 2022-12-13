@@ -92,16 +92,13 @@ class ImageLoader(
     private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView){
         val httpFetcher = HttpFetcher(url)
         scope.launch(Dispatchers.IO) {
-            val onDone = fun(){
-                val fileName = URLUtil.guessFileName(url, null, null)
+            val onDone = fun(fileName: String){
                 val file = File(context.filesDir, fileName)
                 if(file.exists()){
                     loadImageWithUri(file.toUri(), imageView)
                 }
             }
             httpFetcher.downloadImage(context, onDone)
-
-
         }
     }
 
