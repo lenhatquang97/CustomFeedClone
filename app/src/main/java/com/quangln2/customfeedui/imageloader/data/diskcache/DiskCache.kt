@@ -17,6 +17,8 @@ import java.security.NoSuchAlgorithmException
 * */
 
 object DiskCache {
+    const val isExperimental = false
+
     fun containsWith(key: String, context: Context): Boolean{
         val md5Key = md5Hash(key)
         return File(context.cacheDir, md5Key).exists()
@@ -56,6 +58,7 @@ object DiskCache {
         val size = bitmap.byteCount
         val byteBuffer = ByteBuffer.allocate(size)
         bitmap.copyPixelsToBuffer(byteBuffer)
+        bitmap.recycle()
         val b64Encode = Base64.encode(byteBuffer.array(), Base64.DEFAULT)
         val hexString = base64ToHex(b64Encode)
         objOut.writeChars(hexString)

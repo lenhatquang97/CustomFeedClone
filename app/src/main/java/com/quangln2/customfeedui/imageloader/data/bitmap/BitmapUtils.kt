@@ -1,15 +1,12 @@
 package com.quangln2.customfeedui.imageloader.data.bitmap
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Color
+import android.graphics.*
 import android.graphics.drawable.ColorDrawable
 import androidx.core.graphics.drawable.toBitmap
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import java.io.InputStream
 import kotlin.math.max
-import kotlin.math.min
 
 class BitmapUtils {
     fun emptyBitmap(context: Context): Bitmap {
@@ -26,16 +23,8 @@ class BitmapUtils {
     }
     private fun bitmapOptionsWithDensity(reqWidth: Int, reqHeight: Int, width: Int, height: Int): BitmapFactory.Options {
         val options = BitmapFactory.Options()
-        val ratio = calculateRatio(reqWidth, reqHeight, width, height, true)
         options.apply {
-            inSampleSize = ratio
             inJustDecodeBounds = false
-        }
-
-        val maxWidth = max(reqWidth, width / options.inSampleSize)
-        if(reqWidth != 0){
-            options.inDensity = width
-            options.inTargetDensity = maxWidth * options.inSampleSize
         }
         return options
     }
@@ -57,34 +46,39 @@ class BitmapUtils {
             inputStream.reset()
             val bitmap = BitmapFactory.decodeStream(inputStream, null, anotherOptions)
             if(bitmap != null && !bitmap.isRecycled) {
-                val managedBitmap = ManagedBitmap(bitmap, width = bitmap.width, height = bitmap.height)
+                val resizedBitmap = resizeBitmap(bitmap, reqWidth, reqHeight)
+                val managedBitmap = ManagedBitmap(resizedBitmap, width = resizedBitmap.width, height = resizedBitmap.height)
                 LruBitmapCache.putIntoLruCache(key, managedBitmap)
                 inputStream.close()
-                return bitmap
+                return resizedBitmap
             }
             inputStream.close()
         }
         return emptyBitmap(context)
     }
 
-    private fun calculateRatio(reqWidth: Int, reqHeight: Int, width: Int, height: Int, centerInside: Boolean): Int =
-        if(height > reqHeight || width > reqWidth){
-            val ratio: Int = if(reqHeight == 0 && reqWidth == 0){
-                0
-            }
-            else if(reqHeight == 0){
-                width / reqWidth
-            } else if(reqWidth == 0) {
-                height / reqHeight
-            } else {
-                val heightRatio = height / reqHeight
-                val widthRatio = width / reqWidth
-                if(centerInside){
-                    max(heightRatio, widthRatio)
-                } else {
-                    min(heightRatio, widthRatio)
-                }
-            }
-            if(ratio != 0) ratio else 1
-        } else 1
+    private fun resizeBitmap(bitmap: Bitmap, reqWidth: Int, reqHeight: Int): Bitmap {
+        var (dx, dy) = Pair(0f, 0f)
+        val matrix = Matrix()
+
+        val scale = max(reqWidth.toFloat() / bitmap.width, reqHeight.toFloat() / bitmap.height)
+        if(bitmap.width * reqHeight > reqWidth * bitmap.height){
+            dx = (reqWidth - bitmap.width * scale) * 0.5f
+        } else {
+            dy = (reqHeight - bitmap.height * scale) * 0.5f
+        }
+
+        matrix.setScale(scale, scale)
+        matrix.postTranslate(dx + 0.5f, dy + 0.5f)
+        val result = Bitmap.createBitmap(reqWidth, reqHeight, bitmap.config)
+        val canvas = Canvas(result)
+        val paint = Paint()
+        if(bitmap.width <= reqWidth && bitmap.height <= reqHeight){
+            paint.isFilterBitmap = true
+            paint.isAntiAlias = true
+        }
+        canvas.drawBitmap(bitmap, matrix, paint)
+        bitmap.recycle()
+        return result
+    }
 }

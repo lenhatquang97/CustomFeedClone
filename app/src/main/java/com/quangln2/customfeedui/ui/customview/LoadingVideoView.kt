@@ -27,7 +27,7 @@ class LoadingVideoView @JvmOverloads constructor(
     private lateinit var soundButton: ImageView
     lateinit var playerView: PlayerView
     lateinit var crossButton: ImageView
-    private lateinit var thumbnailView: ImageView
+    lateinit var thumbnailView: ImageView
     private var currentPosition = 0L
 
     private var webUrl = ""

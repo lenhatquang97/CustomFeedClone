@@ -139,6 +139,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     }
 
     fun onViewAttached(){
+        binding.customGridGroup.removeAllViews()
         itemUseForAttached?.let { bind(it, context) }
     }
 

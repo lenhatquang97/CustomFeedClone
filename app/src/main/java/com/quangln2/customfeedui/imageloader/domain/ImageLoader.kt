@@ -33,7 +33,9 @@ class ImageLoader(
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if(inputStream != null){
                 val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, context)
-                //DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
+                if(DiskCache.isExperimental){
+                    DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
+                }
                 withContext(Dispatchers.Main){
                     if(!bitmap.isRecycled){
                         imageView.addToManagedAddress(uri.toString())
@@ -60,7 +62,9 @@ class ImageLoader(
                     if(bitmap != null && !bitmap.isRecycled){
                         val managedBitmap = ManagedBitmap(bitmap, bitmap.width, bitmap.height)
                         LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
-                        //DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
+                        if(DiskCache.isExperimental){
+                            DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
+                        }
                     }
                 }
                 withContext(Dispatchers.Main){
@@ -145,9 +149,9 @@ class ImageLoader(
             if(isInMemoryCache(fileName)) {
                 handleMemoryCache(fileName, imageView)
             }
-//            else if(isInDiskCache(context, convertToUri.toUri().toString())) {
-//                handleDiskCache(fileName, imageView)
-//            }
+            else if(isInDiskCache(context, convertToUri.toUri().toString()) && DiskCache.isExperimental) {
+                handleDiskCache(fileName, imageView)
+            }
             else if(doesFileExist(fileName)) {
                 handleMemoryCache(fileName, imageView)
             }
