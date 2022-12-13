@@ -65,6 +65,21 @@ class FeedListAdapter(
         }
     }
 
+    override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        when(holder){
+            is HeaderViewHolder -> {
+                holder.onViewAttached(context)
+            }
+            is BodyViewHolder -> {
+                holder.onViewAttached()
+            }
+            is AddNewItemViewHolder -> {
+                holder.onViewAttached(context)
+            }
+        }
+    }
+
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         super.onViewDetachedFromWindow(holder)
         when (holder) {

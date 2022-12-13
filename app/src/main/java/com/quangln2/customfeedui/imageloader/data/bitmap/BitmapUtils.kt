@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.core.graphics.drawable.toBitmap
-import com.quangln2.customfeedui.imageloader.data.diskcache.DiskCache
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import java.io.InputStream
 import kotlin.math.max
@@ -60,9 +59,6 @@ class BitmapUtils {
             if(bitmap != null && !bitmap.isRecycled) {
                 val managedBitmap = ManagedBitmap(bitmap, width = bitmap.width, height = bitmap.height)
                 LruBitmapCache.putIntoLruCache(key, managedBitmap)
-                DiskCache.writeBitmapToDiskCache(key, bitmap, context)
-
-
                 inputStream.close()
                 return bitmap
             }

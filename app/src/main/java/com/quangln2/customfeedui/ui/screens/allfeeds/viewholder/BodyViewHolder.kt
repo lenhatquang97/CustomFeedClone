@@ -30,6 +30,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                                  private var context: Context,
                                  private val eventFeedCallback: EventFeedCallback):
     RecyclerView.ViewHolder(binding.root) {
+    private var itemUseForAttached: MyPostRender? = null
     private val listOfImageUrl = mutableListOf<String>()
     private fun initializeDataForShowingGrid(item: MyPostRender): List<ItemLocation>{
         val rectangles = getGridItemsLocation(item.resources.size, item.firstItemWidth, item.firstItemHeight)
@@ -79,6 +80,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     }
 
     fun bind(item: MyPostRender, context: Context){
+        itemUseForAttached = item
         val rectangles = initializeDataForShowingGrid(item)
         if (rectangles.isNotEmpty()) {
             for (i in rectangles.indices) {
@@ -134,6 +136,10 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
             eventFeedCallback.onRecycled(child)
         }
         binding.customGridGroup.removeAllViews()
+    }
+
+    fun onViewAttached(){
+        itemUseForAttached?.let { bind(it, context) }
     }
 
     private fun extractUrlOrUri(webUrlOfFileUri: String): String{

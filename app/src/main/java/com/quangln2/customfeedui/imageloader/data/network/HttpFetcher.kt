@@ -23,7 +23,7 @@ class HttpFetcher {
     private fun writeFromInputStream(inputStream: InputStream, fileName: String, context: Context){
         val cacheFile = File(context.cacheDir, fileName)
         val fileOutputStream = FileOutputStream(cacheFile)
-        val buffer = ByteArray(1024)
+        val buffer = ByteArray(8*1024)
         var len: Int
         while (inputStream.read(buffer).also { len = it } != -1) {
             fileOutputStream.write(buffer, 0, len)
@@ -32,7 +32,7 @@ class HttpFetcher {
         inputStream.close()
     }
 
-    fun downloadImage(context: Context){
+    fun downloadImage(context: Context, onDone: () -> Unit){
         val conn = URL(webUrl).openConnection() as HttpURLConnection
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         conn.requestMethod = "GET"
@@ -43,6 +43,7 @@ class HttpFetcher {
                 //fetch input stream
                 val inputStream = conn.inputStream
                 writeFromInputStream(inputStream, fileName, context)
+                onDone()
             }
             conn.disconnect()
         } catch(e: java.lang.Exception){

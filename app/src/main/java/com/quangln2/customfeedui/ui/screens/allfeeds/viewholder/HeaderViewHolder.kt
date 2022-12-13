@@ -17,10 +17,12 @@ class HeaderViewHolder constructor(
     private val eventFeedCallback: EventFeedCallback
     ):
     RecyclerView.ViewHolder(binding.root) {
+    var imgUrl = ""
     private fun loadBasicInfoAboutFeed(item: MyPostRender, context: Context) {
         binding.feedId.text = item.feedId
         binding.myName.text = item.name
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
+        imgUrl = item.avatar
 
         val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
         imageLoader.loadImage(item.avatar, binding.myAvatarImage)
@@ -43,5 +45,9 @@ class HeaderViewHolder constructor(
 
     fun onViewRecycled(){
         eventFeedCallback.onRecycled(binding.myAvatarImage)
+    }
+    fun onViewAttached(context: Context){
+        val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
+        imageLoader.loadImage(imgUrl, binding.myAvatarImage)
     }
 }

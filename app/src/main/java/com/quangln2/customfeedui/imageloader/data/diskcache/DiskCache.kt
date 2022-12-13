@@ -4,10 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Log
-import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import org.apache.commons.codec.binary.Hex
 import java.io.File
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
@@ -29,24 +26,7 @@ object DiskCache {
     fun writeBitmapToDiskCache(key: String, bitmap: Bitmap, context: Context){
         val md5Key = md5Hash(key)
         val cacheFile = File(context.cacheDir, md5Key)
-        if(cacheFile.exists()){
-            CoroutineScope(Dispatchers.IO).launch {
-                val newBitmapHash = hashBitmap(bitmap)
-                val anotherCacheFile = File(context.cacheDir, md5Key)
-                val objIn = ObjectInputStream(anotherCacheFile.inputStream())
-                val oldBitmapHash = readHashBitmapFromFile(objIn)
-                Log.d("DiskCache", "${newBitmapHash == oldBitmapHash} with $oldBitmapHash $newBitmapHash")
-                if(newBitmapHash == oldBitmapHash || LruBitmapCache.containsKey(key)){
-                    return@launch
-                } else {
-                    cacheFile.delete()
-                    val anotherCacheFile = File(context.cacheDir, md5Key)
-                    val objOut = ObjectOutputStream(anotherCacheFile.outputStream())
-                    writeObject(objOut, bitmap, key)
-                    objOut.close()
-                }
-            }
-        } else {
+        if(!cacheFile.exists()){
             val anotherCacheFile = File(context.cacheDir, md5Key)
             val objOut = ObjectOutputStream(anotherCacheFile.outputStream())
             writeObject(objOut, bitmap, key)
@@ -76,34 +56,24 @@ object DiskCache {
         val size = bitmap.byteCount
         val byteBuffer = ByteBuffer.allocate(size)
         bitmap.copyPixelsToBuffer(byteBuffer)
-
-        objOut.writeInt(size)
-        objOut.writeLong(hashBitmap(bitmap))
-
-        val b64Encode = Base64.encodeToString(byteBuffer.array(), Base64.DEFAULT)
+        val b64Encode = Base64.encode(byteBuffer.array(), Base64.DEFAULT)
         val hexString = base64ToHex(b64Encode)
         objOut.writeChars(hexString)
         Log.i("DiskCacheInfo","Bitmap is null not $hexString")
     }
     private fun readObject(objIn: ObjectInputStream): Bitmap?{
-        val bufferLength: Int = objIn.readInt()
-        val hash = objIn.readLong()
         val hexString = objIn.readLine()
         val b64Decode = hexToBase64(hexString)
         val bitmap = base64ToBitmap(b64Decode)
         if(bitmap != null){
             Log.i("DiskCacheInfo", "${bitmap.width} ${bitmap.height} ${bitmap.byteCount}")
         } else {
-            Log.i("DiskCacheInfo", "bitmap is null $hexString $bufferLength $hash")
+            Log.i("DiskCacheInfo", "bitmap is null $hexString")
         }
         objIn.close()
         return bitmap
     }
 
-    private fun readHashBitmapFromFile(objIn: ObjectInputStream): Long {
-        objIn.readInt()
-        return objIn.readLong()
-    }
     private fun md5Hash(str: String): String {
         try {
             // Create MD5 Hash
@@ -134,18 +104,13 @@ object DiskCache {
         return hash.toLong()
     }
 
-    //Convert base64 string to hex
-    private fun base64ToHex(base64: String): String {
-        val bytes = Base64.decode(base64, Base64.DEFAULT)
-        val sb = StringBuilder()
-        for (b in bytes) {
-            sb.append(String.format("%02X", b))
-        }
-        return sb.toString()
+    private fun base64ToHex(base64: ByteArray): String {
+        return Hex.encodeHexString(base64)
     }
+
     //Convert hex string to base64
     private fun hexToBase64(hex: String): String {
-        val bytes = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        val bytes = Hex.decodeHex(hex)
         return Base64.encodeToString(bytes, Base64.DEFAULT)
     }
 }
