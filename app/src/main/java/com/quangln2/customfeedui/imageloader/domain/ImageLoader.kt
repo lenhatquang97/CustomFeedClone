@@ -136,9 +136,10 @@ class ImageLoader(
 
             if(isInMemoryCache(fileName)) {
                 handleMemoryCache(fileName, imageView)
-            } else if(isInDiskCache(context, convertToUri.toUri().toString())) {
-                handleDiskCache(fileName, imageView)
             }
+//            } else if(isInDiskCache(context, convertToUri.toUri().toString())) {
+//                handleDiskCache(fileName, imageView)
+//            }
             else if(doesFileExist(fileName)) {
                 handleMemoryCache(fileName, imageView)
             } else {

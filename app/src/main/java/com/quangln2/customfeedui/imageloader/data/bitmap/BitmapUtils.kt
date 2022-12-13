@@ -62,6 +62,7 @@ class BitmapUtils {
                 LruBitmapCache.putIntoLruCache(key, managedBitmap)
                 DiskCache.writeBitmapToDiskCache(key, bitmap, context)
 
+
                 inputStream.close()
                 return bitmap
             }
