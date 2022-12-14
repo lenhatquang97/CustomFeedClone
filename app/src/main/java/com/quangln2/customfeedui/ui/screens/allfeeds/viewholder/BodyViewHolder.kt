@@ -22,6 +22,7 @@ import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.customview.customgrid.getGridItemsLocation
+import com.quangln2.customfeedui.uitracking.ui.UiTracking
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import java.io.File
@@ -72,10 +73,22 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     }
 
     private fun afterLoad(item: MyPostRender) {
+        fun getFileUri(url: String): String{
+            val actualUrl = CodeUtils.convertVideoUrlToImageUrl(url)
+            val fileName = URLUtil.guessFileName(actualUrl, null, null)
+            val file = File(context.cacheDir, fileName)
+            return file.toUri().toString()
+        }
+
         if (item.resources.size == 0) {
             binding.customGridGroup.visibility = View.GONE
         } else {
             binding.customGridGroup.visibility = View.VISIBLE
+        }
+
+        if(item.resources.size > 0){
+            val keyList = item.resources.map {getFileUri(it.url) }.toList()
+            binding.trackingInfo.text = UiTracking.getAllImageReferences(keyList)
         }
     }
 
@@ -123,7 +136,6 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                     val imageLoader = ImageLoader(context, rectangles[i].width, rectangles[i].height, CoroutineScope(Job()))
                     imageLoader.loadImage(url, imageView)
                     binding.customGridGroup.addView(imageView)
-
                 }
             }
         }

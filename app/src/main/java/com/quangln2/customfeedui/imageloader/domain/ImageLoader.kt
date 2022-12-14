@@ -31,11 +31,15 @@ class ImageLoader(
             if(inputStream != null){
                 val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height)
                 val managedBitmap = ManagedBitmap(bitmap, width, height)
-                LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
-                withContext(Dispatchers.Main){
-                    if(!bitmap.isRecycled){
-                        imageView.addToManagedAddress(uri.toString())
-                        imageView.setImageBitmap(bitmap)
+                async{
+                    LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
+                }
+                async{
+                    withContext(Dispatchers.Main){
+                        if(!bitmap.isRecycled){
+                            imageView.addToManagedAddress(uri.toString())
+                            imageView.setImageBitmap(bitmap)
+                        }
                     }
                 }
                 async {
@@ -91,15 +95,13 @@ class ImageLoader(
 
     private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView){
         val httpFetcher = HttpFetcher(url)
-        scope.launch(Dispatchers.IO) {
-            val onDone = fun(fileName: String){
-                val file = File(context.filesDir, fileName)
-                if(file.exists()){
-                    loadImageWithUri(file.toUri(), imageView)
-                }
+        val onDone = fun(fileName: String){
+            val file = File(context.cacheDir, fileName)
+            if(file.exists()){
+                loadImageWithUri(file.toUri(), imageView)
             }
-            httpFetcher.downloadImage(context, onDone)
         }
+        httpFetcher.downloadImage(context, onDone)
     }
 
     private fun isInMemoryCache(fileName: String): Boolean{
@@ -116,7 +118,10 @@ class ImageLoader(
 
     private fun handleMemoryCache(fileName: String, imageView: ImageView){
         val memoryCacheFile = File(context.cacheDir, fileName)
-        loadImageWithUri(memoryCacheFile.toUri(), imageView)
+        if(memoryCacheFile.exists()){
+            loadImageWithUri(memoryCacheFile.toUri(), imageView)
+        }
+
     }
 
     private fun handleDiskCache(fileName: String, imageView: ImageView){
@@ -143,15 +148,11 @@ class ImageLoader(
             val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
             val convertToUri = File(context.cacheDir, fileName)
 
-            if(isInMemoryCache(fileName)) {
+            if(doesFileExist(fileName) && !isInMemoryCache(fileName) || isInMemoryCache(fileName)) {
                 handleMemoryCache(fileName, imageView)
             }
-
             else if(isInDiskCache(context, convertToUri.toUri().toString()) && DiskCache.isExperimental) {
                 handleDiskCache(fileName, imageView)
-            }
-            else if(doesFileExist(fileName)) {
-                handleMemoryCache(fileName, imageView)
             }
             else {
                 downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView)

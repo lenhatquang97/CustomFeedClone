@@ -1,5 +1,10 @@
 package com.quangln2.customfeedui.imageloader.data.network
 
+import android.content.Context
+import android.webkit.URLUtil
+import androidx.core.net.toUri
+import java.io.File
+
 object CodeUtils {
     fun convertVideoUrlToImageUrl(videoUrl: String) : String{
         val index = videoUrl.lastIndexOf(".mp4")
@@ -7,5 +12,11 @@ object CodeUtils {
             return videoUrl.substring(0, index) + ".png"
         }
         return videoUrl
+    }
+    fun convertImageUrlToFileUriString(webUrl: String, context: Context): String {
+        val imageThumbnailUrl = convertVideoUrlToImageUrl(webUrl)
+        val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
+        val convertToUri = File(context.cacheDir, fileName)
+        return convertToUri.toUri().toString()
     }
 }

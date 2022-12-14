@@ -72,6 +72,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/created_time" />
 
+    <TextView
+        android:id="@+id/tracking_info"
+        style="@style/TextColor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginVertical="16dp"
+        android:paddingRight="32dp"
+        android:text="Tracking Info"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/caption" />
+
     <View
         android:id="@+id/white_space"
         android:layout_width="match_parent"

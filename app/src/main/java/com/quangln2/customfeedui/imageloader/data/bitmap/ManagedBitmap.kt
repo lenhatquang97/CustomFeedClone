@@ -8,6 +8,6 @@ class ManagedBitmap(private var bitmap: Bitmap, val width: Int = 0, val height: 
     }
     fun addReferenceCount() = ++referenceCount
     fun subtractReferenceCount() = --referenceCount
-    fun hasNoReference(): Boolean = referenceCount < 0
+    fun hasNoReference(): Boolean = referenceCount <= 0
 
 }
