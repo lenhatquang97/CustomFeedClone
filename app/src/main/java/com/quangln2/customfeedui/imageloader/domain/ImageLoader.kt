@@ -84,8 +84,11 @@ class ImageLoader(
             val bitmap = BitmapUtils().emptyBitmap()
             withContext(Dispatchers.Main) {
                 if (!bitmap.isRecycled) {
-                    imageView.addToManagedAddress("emptyBmp")
-                    imageView.setImageBitmap(bitmap)
+                    async {
+                        imageView.addToManagedAddress("emptyBmp")
+                        imageView.setImageBitmap(bitmap)
+                    }
+
                 }
             }
         }
@@ -148,6 +151,7 @@ class ImageLoader(
             val imageThumbnailUrl = CodeUtils.convertVideoUrlToImageUrl(webUrlOfFileUri)
             val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
             val convertToUri = File(context.cacheDir, fileName)
+            //TODO: Modify again image loading flow. Current flow: 1. Check memory cache and check file -> 2. Check disk cache -> 3. Download image
             if (doesFileExist(fileName) && !isInMemoryCache(fileName) || isInMemoryCache(fileName)) {
                 handleMemoryCache(fileName, imageView, countRef)
             } else if (isInDiskCache(context, convertToUri.toUri().toString()) && DiskCache.isExperimental) {
