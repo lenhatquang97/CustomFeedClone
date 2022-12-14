@@ -26,9 +26,11 @@ object LruBitmapCache: CachePolicy {
 
     fun containsKey(key: String): Boolean = memoryCache.get(key) != null
 
-    override fun getLruCache(key: String): ManagedBitmap? {
+    fun getLruCache(key: String, countRef: Boolean = true): ManagedBitmap? {
         val managedBitmap = memoryCache.get(key)
-        managedBitmap?.addReferenceCount()
+        if(countRef){
+            managedBitmap?.addReferenceCount()
+        }
         return managedBitmap
     }
 

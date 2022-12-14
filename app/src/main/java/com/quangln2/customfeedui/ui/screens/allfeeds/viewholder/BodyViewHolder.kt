@@ -154,28 +154,4 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
         binding.customGridGroup.removeAllViews()
         itemUseForAttached?.let { bind(it, context) }
     }
-
-    private fun extractUrlOrUri(webUrlOfFileUri: String): String{
-        if(webUrlOfFileUri.isEmpty()){
-            return ""
-        }
-        else if(URLUtil.isHttpUrl(webUrlOfFileUri) || URLUtil.isHttpsUrl(webUrlOfFileUri)){
-            val imageThumbnailUrl = CodeUtils.convertVideoUrlToImageUrl(webUrlOfFileUri)
-            val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
-            val cacheFile = File(context.cacheDir, fileName)
-            return if(cacheFile.exists()){
-                cacheFile.toUri().toString()
-            } else{
-                imageThumbnailUrl
-            }
-        }
-        else{
-            val mimeType = DownloadUtils.getMimeType(webUrlOfFileUri)
-            return if(mimeType?.contains("image") == true){
-                webUrlOfFileUri.toUri().toString()
-            } else{
-                webUrlOfFileUri.toUri().toString()
-            }
-        }
-    }
 }

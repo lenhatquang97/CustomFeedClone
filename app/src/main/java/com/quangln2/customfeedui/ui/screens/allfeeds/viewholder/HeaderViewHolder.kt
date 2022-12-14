@@ -50,6 +50,6 @@ class HeaderViewHolder constructor(
     }
     fun onViewAttached(context: Context){
         val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
-        imageLoader.loadImage(imgUrl, binding.myAvatarImage)
+        imageLoader.loadImage(imgUrl, binding.myAvatarImage, false)
     }
 }

@@ -7,6 +7,7 @@ import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 
 object UiTracking {
     private fun getMaxMemory(): Long = Runtime.getRuntime().maxMemory() / 1048576L
+    private fun getTotalMemory(): Long = Runtime.getRuntime().totalMemory() / 1048576L
     private fun getUsedMemory(): Long {
         val runtime = Runtime.getRuntime()
         return (runtime.totalMemory() - runtime.freeMemory()) / 1048576L
@@ -16,6 +17,7 @@ object UiTracking {
         val refCount = LruBitmapCache.getLruCacheWithoutIncreaseCount(fileUri)?.referenceCount
         return """
             Max Heap Size: ${getMaxMemory()} MB
+            Total Heap Size: ${getTotalMemory()} MB
             Used Heap Size: ${getUsedMemory()} MB
             Avatar Image RefCount: $refCount
         """.trimIndent()

@@ -19,14 +19,14 @@ class BitmapUtils {
         return LruBitmapCache.getLruCache("emptyBmp")?.getBitmap()!!
     }
 
-    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int): Bitmap {
+    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int, countRef: Boolean): Bitmap {
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
         inputStream.mark(inputStream.available())
         BitmapFactory.decodeStream(inputStream, null, options)
 
         val anotherOptions = BitmapFactory.Options().apply { inJustDecodeBounds = false }
-        val reusedBitmap = LruBitmapCache.getLruCache(key)
+        val reusedBitmap = LruBitmapCache.getLruCache(key, countRef)
         if(reusedBitmap != null && !reusedBitmap.getBitmap().isRecycled){
             return reusedBitmap.getBitmap()
         } else {

@@ -87,6 +87,7 @@ class FeedListAdapter(
                 holder.onViewRecycled()
             }
             is HeaderViewHolder -> {
+                println("Header detached")
                 holder.onViewRecycled()
             }
             is AddNewItemViewHolder -> {
