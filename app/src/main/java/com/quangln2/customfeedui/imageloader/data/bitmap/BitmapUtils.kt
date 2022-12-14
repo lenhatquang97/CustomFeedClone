@@ -34,8 +34,6 @@ class BitmapUtils {
             val bitmap = BitmapFactory.decodeStream(inputStream, null, anotherOptions)
             if(bitmap != null && !bitmap.isRecycled) {
                 val resizedBitmap = resizeBitmap(bitmap, reqWidth, reqHeight)
-                val managedBitmap = ManagedBitmap(resizedBitmap, width = resizedBitmap.width, height = resizedBitmap.height)
-                LruBitmapCache.putIntoLruCache(key, managedBitmap)
                 inputStream.close()
                 return resizedBitmap
             }
@@ -45,22 +43,26 @@ class BitmapUtils {
     }
 
     private fun resizeBitmap(bitmap: Bitmap, reqWidth: Int, reqHeight: Int): Bitmap {
+        val actualWidth = if(reqWidth > 0) reqWidth else bitmap.width
+        val actualHeight = if(reqHeight > 0) reqHeight else bitmap.height
         var (dx, dy) = Pair(0f, 0f)
         val matrix = Matrix()
 
-        val scale = max(reqWidth.toFloat() / bitmap.width, reqHeight.toFloat() / bitmap.height)
-        if(bitmap.width * reqHeight > reqWidth * bitmap.height){
-            dx = (reqWidth - bitmap.width * scale) * 0.5f
+        val scale = max(actualWidth.toFloat() / bitmap.width, actualHeight.toFloat() / bitmap.height)
+        if(bitmap.width * actualHeight > actualWidth * bitmap.height){
+            dx = (actualWidth - bitmap.width * scale) * 0.5f
         } else {
-            dy = (reqHeight - bitmap.height * scale) * 0.5f
+            dy = (actualHeight - bitmap.height * scale) * 0.5f
         }
 
         matrix.setScale(scale, scale)
         matrix.postTranslate(dx + 0.5f, dy + 0.5f)
-        val result = Bitmap.createBitmap(reqWidth, reqHeight, bitmap.config)
+
+
+        val result = Bitmap.createBitmap(actualWidth, actualHeight, bitmap.config)
         val canvas = Canvas(result)
         val paint = Paint()
-        if(bitmap.width <= reqWidth && bitmap.height <= reqHeight){
+        if(bitmap.width <= actualWidth && bitmap.height <= actualHeight){
             paint.isFilterBitmap = true
             paint.isAntiAlias = true
         }

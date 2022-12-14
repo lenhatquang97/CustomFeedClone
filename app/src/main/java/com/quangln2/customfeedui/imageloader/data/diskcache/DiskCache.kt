@@ -3,11 +3,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import org.apache.commons.codec.binary.Hex
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
@@ -17,7 +16,9 @@ import java.security.NoSuchAlgorithmException
 
 object DiskCache {
     //This is a boolean used to open and close experimental part to avoid error prone.
-    const val isExperimental = false
+    const val isExperimental = true
+    private val managedWrite = mutableSetOf<String>()
+
 
     fun containsWith(key: String, context: Context): Boolean{
         val md5Key = md5Hash(key)
@@ -30,9 +31,24 @@ object DiskCache {
         val cacheFile = File(context.cacheDir, md5Key)
         if(!cacheFile.exists()){
             val anotherCacheFile = File(context.cacheDir, md5Key)
+            anotherCacheFile.createNewFile()
+            managedWrite.add(md5Key)
             val objOut = ObjectOutputStream(anotherCacheFile.outputStream())
             writeObject(objOut, bitmap, key)
             objOut.close()
+            managedWrite.remove(md5Key)
+        } else {
+            val anotherCacheFile = File(context.cacheDir, md5Key)
+            val oldSize = anotherCacheFile.length()
+            val newSize = bitmap.byteCount
+            if(oldSize < newSize && !managedWrite.contains(md5Key)){
+                anotherCacheFile.delete()
+                val objOut = ObjectOutputStream(anotherCacheFile.outputStream())
+                writeObject(objOut, bitmap, key)
+                objOut.close()
+
+            }
+
         }
     }
 
@@ -53,22 +69,21 @@ object DiskCache {
     }
 
     private fun writeObject(objOut: ObjectOutputStream, bitmap: Bitmap, key: String){
-        val size = bitmap.byteCount
-        val byteBuffer = ByteBuffer.allocate(size)
-        bitmap.copyPixelsToBuffer(byteBuffer)
-        bitmap.recycle()
-        val hexString = Hex.encodeHexString(byteBuffer.array())
-        objOut.writeChars(hexString)
-        Log.i("DiskCacheInfo","Bitmap is null not $hexString")
+        val byteStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream)
+        objOut.write(byteStream.toByteArray(), 0, byteStream.size())
     }
     private fun readObject(objIn: ObjectInputStream): Bitmap?{
-        val hexString = objIn.readLine()
-        val byteArray = Hex.decodeHex(hexString)
+        val byteStream = ByteArrayOutputStream()
+        var b: Int
+        while (objIn.read().also { b = it } != -1)
+            byteStream.write(b)
+        val byteArray = byteStream.toByteArray()
         val bitmap = byteArrayToBitmap(byteArray)
         if(bitmap != null){
             Log.i("DiskCacheInfo", "${bitmap.width} ${bitmap.height} ${bitmap.byteCount}")
         } else {
-            Log.i("DiskCacheInfo", "bitmap is null $hexString")
+            Log.i("DiskCacheInfo", "bitmap is null")
         }
         objIn.close()
         return bitmap

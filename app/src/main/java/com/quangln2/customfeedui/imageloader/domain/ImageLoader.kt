@@ -15,10 +15,7 @@ import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
 import com.quangln2.customfeedui.others.utils.DownloadUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.File
 
 class ImageLoader(
@@ -33,14 +30,16 @@ class ImageLoader(
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if(inputStream != null){
                 val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height)
-                if(DiskCache.isExperimental){
-                    DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
-                }
+                val managedBitmap = ManagedBitmap(bitmap, width, height)
+                LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                 withContext(Dispatchers.Main){
                     if(!bitmap.isRecycled){
                         imageView.addToManagedAddress(uri.toString())
                         imageView.setImageBitmap(bitmap)
                     }
+                }
+                async {
+                    DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
                 }
             }
         }
@@ -60,8 +59,10 @@ class ImageLoader(
                     val bitmap = ThumbnailUtils.createVideoThumbnail(picturePath, MediaStore.Video.Thumbnails.FULL_SCREEN_KIND)
                     if(bitmap != null && !bitmap.isRecycled){
                         val managedBitmap = ManagedBitmap(bitmap, bitmap.width, bitmap.height)
-                        LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
-                        if(DiskCache.isExperimental){
+                        async{
+                            LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
+                        }
+                        async{
                             DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
                         }
                     }
@@ -145,6 +146,7 @@ class ImageLoader(
             if(isInMemoryCache(fileName)) {
                 handleMemoryCache(fileName, imageView)
             }
+
             else if(isInDiskCache(context, convertToUri.toUri().toString()) && DiskCache.isExperimental) {
                 handleDiskCache(fileName, imageView)
             }
