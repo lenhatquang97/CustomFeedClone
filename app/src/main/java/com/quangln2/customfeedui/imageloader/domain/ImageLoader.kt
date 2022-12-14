@@ -31,9 +31,7 @@ class ImageLoader(
             if (inputStream != null) {
                 val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, countRef)
                 val managedBitmap = ManagedBitmap(bitmap, width, height)
-                async {
-                    LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
-                }
+                LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                 withContext(Dispatchers.Main) {
                     if (!bitmap.isRecycled) {
                         imageView.addToManagedAddress(uri.toString())
@@ -63,18 +61,16 @@ class ImageLoader(
                     val bitmap = ThumbnailUtils.createVideoThumbnail(picturePath, MediaStore.Video.Thumbnails.FULL_SCREEN_KIND)
                     if (bitmap != null && !bitmap.isRecycled) {
                         val managedBitmap = ManagedBitmap(bitmap, bitmap.width, bitmap.height)
-                        async {
-                            LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
-                        }
+                        LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                         async {
                             DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
                         }
                     }
                 }
                 withContext(Dispatchers.Main) {
-                    async {
-                        if (oldBmp != null && !oldBmp.getBitmap().isRecycled) {
-                            imageView.addToManagedAddress(uri.toString())
+                    if (oldBmp != null && !oldBmp.getBitmap().isRecycled) {
+                        imageView.addToManagedAddress(uri.toString())
+                        async {
                             imageView.setImageBitmap(oldBmp.getBitmap())
                         }
                     }
@@ -89,9 +85,7 @@ class ImageLoader(
             withContext(Dispatchers.Main) {
                 if (!bitmap.isRecycled) {
                     imageView.addToManagedAddress("emptyBmp")
-                    async {
-                        imageView.setImageBitmap(bitmap)
-                    }
+                    imageView.setImageBitmap(bitmap)
                 }
             }
         }
