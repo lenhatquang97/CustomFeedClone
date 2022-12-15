@@ -31,10 +31,10 @@ class ImageLoader(
             if (inputStream != null) {
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, countRef)
                 val managedBitmap = ManagedBitmap(bitmap, width, height)
-                LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                 withContext(Dispatchers.Main) {
+                    LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                     if (!bitmap.isRecycled) {
-                        async {
+                        async{
                             imageView.addToManagedAddress(uri.toString())
                             imageView.setImageBitmap(bitmap)
                         }

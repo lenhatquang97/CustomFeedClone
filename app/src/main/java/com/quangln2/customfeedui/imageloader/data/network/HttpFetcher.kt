@@ -6,6 +6,7 @@ import android.util.Log
 import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
+import com.quangln2.customfeedui.threadpool.TaskExecutor
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -35,7 +36,7 @@ class HttpFetcher {
     }
 
     fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, Boolean) -> Unit) {
-        DoAsync{
+        TaskExecutor.forBackgroundTasks()?.execute {
             val conn = URL(webUrl).openConnection() as HttpURLConnection
             val fileName = URLUtil.guessFileName(webUrl, null, null)
             conn.requestMethod = "GET"
@@ -58,7 +59,6 @@ class HttpFetcher {
                 Log.e("HttpFetcher", e.stackTraceToString())
             }
         }
-
     }
 
     fun fetchImageByInputStream(context: Context): InputStream?{
