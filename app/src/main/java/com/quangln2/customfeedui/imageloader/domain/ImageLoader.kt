@@ -29,13 +29,13 @@ class ImageLoader(
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
-                val bitmap = BitmapUtils().decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, countRef)
+                val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, countRef)
                 val managedBitmap = ManagedBitmap(bitmap, width, height)
                 LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                 withContext(Dispatchers.Main) {
                     if (!bitmap.isRecycled) {
-                        imageView.addToManagedAddress(uri.toString())
                         async {
+                            imageView.addToManagedAddress(uri.toString())
                             imageView.setImageBitmap(bitmap)
                         }
                     }
@@ -81,7 +81,7 @@ class ImageLoader(
 
     private fun loadEmptyImage(imageView: ImageView) {
         scope.launch(Dispatchers.IO) {
-            val bitmap = BitmapUtils().emptyBitmap()
+            val bitmap = BitmapUtils.emptyBitmap()
             withContext(Dispatchers.Main) {
                 if (!bitmap.isRecycled) {
                     async {
@@ -94,15 +94,13 @@ class ImageLoader(
         }
     }
 
-    private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView, countRef: Boolean) {
+    private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView) {
         val httpFetcher = HttpFetcher(url)
-        val onDone = fun(fileName: String) {
-            val file = File(context.cacheDir, fileName)
-            if (file.exists()) {
-                loadImageWithUri(file.toUri(), imageView, countRef)
-            }
+        val loadImage = fun(a: Uri, b: ImageView, c: Boolean){
+            loadImageWithUri(a, b, c)
         }
-        httpFetcher.downloadImage(context, onDone)
+        httpFetcher.downloadImage(context, imageView, loadImage)
+
     }
 
     private fun isInMemoryCache(fileName: String): Boolean {
@@ -157,8 +155,10 @@ class ImageLoader(
             } else if (isInDiskCache(context, convertToUri.toUri().toString()) && DiskCache.isExperimental) {
                 handleDiskCache(fileName, imageView)
             } else {
-                downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, countRef)
+                downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView)
             }
+
+
         } else {
             val mimeType = DownloadUtils.getMimeType(webUrlOfFileUri)
             if (mimeType?.contains("image") == true) {

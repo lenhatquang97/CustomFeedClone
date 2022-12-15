@@ -17,20 +17,6 @@ data class MyPostRender(
 ) {
 
     companion object {
-        fun convertMyPostToMyPostRender(myPost: MyPost, typeOfPost: TypeOfPost): MyPostRender {
-            return MyPostRender(
-                feedId = myPost.feedId,
-                typeOfPost = typeOfPost,
-                name = myPost.name,
-                avatar = myPost.avatar,
-                createdTime = myPost.createdTime,
-                caption = myPost.caption,
-                resources = myPost.resources,
-                firstItemHeight = myPost.firstHeight,
-                firstItemWidth = myPost.firstWidth
-            )
-        }
-
         fun convertMyPostToMyPostRender(myPost: MyPost): MyPostRender {
             return MyPostRender(
                 feedId = myPost.feedId,
@@ -47,14 +33,13 @@ data class MyPostRender(
 
         fun convertToListWithRenderedPost(posts: List<MyPost>): List<MyPostRender>{
             val listsOfPostRender = mutableListOf<MyPostRender>()
-            val addNewPostItem = convertMyPostToMyPostRender(MyPost(), TypeOfPost.ADD_NEW_POST)
+            val addNewPostItem = convertMyPostToMyPostRender(MyPost()).copy(typeOfPost = TypeOfPost.ADD_NEW_POST)
             listsOfPostRender.add(addNewPostItem)
             posts.forEach { itr ->
                 val myPostRender = convertMyPostToMyPostRender(itr)
                 for(i in 2..4){
                     listsOfPostRender.add(myPostRender.copy(typeOfPost = getTypeOfPost(i)))
                 }
-
             }
             return listsOfPostRender
         }

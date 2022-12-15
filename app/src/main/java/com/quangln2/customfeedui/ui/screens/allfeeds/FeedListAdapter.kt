@@ -69,13 +69,13 @@ class FeedListAdapter(
         super.onViewAttachedToWindow(holder)
         when(holder){
             is HeaderViewHolder -> {
-                holder.onViewAttached(context)
+                holder.onViewAttached(context, false)
             }
             is BodyViewHolder -> {
                 holder.onViewAttached()
             }
             is AddNewItemViewHolder -> {
-                holder.onViewAttached(context)
+                holder.onViewAttached(context, false)
             }
         }
     }
@@ -87,7 +87,6 @@ class FeedListAdapter(
                 holder.onViewRecycled()
             }
             is HeaderViewHolder -> {
-                println("Header detached")
                 holder.onViewRecycled()
             }
             is AddNewItemViewHolder -> {

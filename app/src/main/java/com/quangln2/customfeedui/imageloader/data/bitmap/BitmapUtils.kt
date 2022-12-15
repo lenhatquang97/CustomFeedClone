@@ -7,8 +7,8 @@ import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import java.io.InputStream
 import kotlin.math.max
 
-class BitmapUtils {
-    fun emptyBitmap(): Bitmap {
+object BitmapUtils {
+     fun emptyBitmap(): Bitmap {
         if(!LruBitmapCache.containsKey("emptyBmp")){
             val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
             val bmp = drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
@@ -25,7 +25,10 @@ class BitmapUtils {
         inputStream.mark(inputStream.available())
         BitmapFactory.decodeStream(inputStream, null, options)
 
-        val anotherOptions = BitmapFactory.Options().apply { inJustDecodeBounds = false }
+        val anotherOptions = BitmapFactory.Options().apply {
+            inJustDecodeBounds = false
+            inPreferredConfig = Bitmap.Config.RGB_565
+        }
         val reusedBitmap = LruBitmapCache.getLruCache(key, countRef)
         if(reusedBitmap != null && !reusedBitmap.getBitmap().isRecycled){
             return reusedBitmap.getBitmap()

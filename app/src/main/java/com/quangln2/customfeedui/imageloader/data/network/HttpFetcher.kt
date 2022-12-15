@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.webkit.URLUtil
+import android.widget.ImageView
+import androidx.core.net.toUri
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -32,25 +34,32 @@ class HttpFetcher {
         inputStream.close()
     }
 
-    fun downloadImage(context: Context, onDone: (String) -> Unit){
-        val conn = URL(webUrl).openConnection() as HttpURLConnection
-        val fileName = URLUtil.guessFileName(webUrl, null, null)
-        conn.requestMethod = "GET"
-        try{
-            conn.connect()
-            val responseCode = conn.responseCode
-            if(responseCode == HttpURLConnection.HTTP_OK) {
-                //fetch input stream
-                val inputStream = conn.inputStream
-                writeFromInputStream(inputStream, fileName, context)
-                onDone(fileName)
+    fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, Boolean) -> Unit) {
+        DoAsync{
+            val conn = URL(webUrl).openConnection() as HttpURLConnection
+            val fileName = URLUtil.guessFileName(webUrl, null, null)
+            conn.requestMethod = "GET"
+            try {
+                conn.connect()
+                val responseCode = conn.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    //fetch input stream
+                    val inputStream = conn.inputStream
+                    writeFromInputStream(inputStream, fileName, context)
+                    imageView.post {
+                        val file = File(context.cacheDir, fileName)
+                        if (file.exists()) {
+                            loadImage(file.toUri(), imageView, true)
+                        }
+                    }
+                }
+                conn.disconnect()
+            } catch (e: java.lang.Exception) {
+                Log.e("HttpFetcher", e.stackTraceToString())
             }
-            conn.disconnect()
-        } catch(e: java.lang.Exception){
-            Log.e("HttpFetcher", e.stackTraceToString())
         }
-    }
 
+    }
 
     fun fetchImageByInputStream(context: Context): InputStream?{
         if(fileUri != null){

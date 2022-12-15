@@ -48,8 +48,8 @@ class HeaderViewHolder constructor(
     fun onViewRecycled(){
         eventFeedCallback.onRecycled(binding.myAvatarImage)
     }
-    fun onViewAttached(context: Context){
+    fun onViewAttached(context: Context, countRef: Boolean = true){
         val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
-        imageLoader.loadImage(imgUrl, binding.myAvatarImage, true)
+        imageLoader.loadImage(imgUrl, binding.myAvatarImage, countRef)
     }
 }

@@ -3,7 +3,6 @@ package com.quangln2.customfeedui.ui.screens.allfeeds.viewholder
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
-import android.view.View
 import android.view.ViewGroup
 import android.webkit.URLUtil
 import android.widget.ImageView
@@ -80,19 +79,12 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
             return file.toUri().toString()
         }
 
-        if (item.resources.size == 0) {
-            binding.customGridGroup.visibility = View.GONE
-        } else {
-            binding.customGridGroup.visibility = View.VISIBLE
-        }
-
-        if(item.resources.size > 0){
-            val keyList = item.resources.map {getFileUri(it.url) }.toList()
-            binding.trackingInfo.text = UiTracking.getAllImageReferences(keyList)
-        }
+        val keyList = item.resources.map {getFileUri(it.url) }.toList()
+        binding.trackingInfo.text = UiTracking.getAllImageReferences(keyList)
     }
 
     fun bind(item: MyPostRender, context: Context){
+        listOfImageUrl.clear()
         itemUseForAttached = item
         val rectangles = initializeDataForShowingGrid(item)
         if (rectangles.isNotEmpty()) {
