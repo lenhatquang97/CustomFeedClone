@@ -10,7 +10,6 @@ object TaskExecutor{
     private val numberOfCores = Runtime.getRuntime().availableProcessors()
     private var forBackgroundTasks: ThreadPoolExecutor? = null
     private var mainThreadExecutor: Executor? = null
-
     init {
         val threadPriorityBackground = PriorityThreadFactory(android.os.Process.THREAD_PRIORITY_BACKGROUND)
 
