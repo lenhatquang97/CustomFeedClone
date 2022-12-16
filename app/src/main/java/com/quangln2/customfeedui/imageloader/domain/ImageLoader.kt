@@ -15,6 +15,7 @@ import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
 import com.quangln2.customfeedui.others.utils.DownloadUtils
+import com.quangln2.customfeedui.threadpool.TaskExecutor
 import kotlinx.coroutines.*
 import java.io.File
 
@@ -25,23 +26,18 @@ class ImageLoader(
     private var scope: CoroutineScope
 ) {
     private fun loadImageWithUri(uri: Uri, imageView: ImageView, countRef: Boolean) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.Default) {
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, countRef)
-                val managedBitmap = ManagedBitmap(bitmap, width, height)
                 withContext(Dispatchers.Main) {
-                    LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                     if (!bitmap.isRecycled) {
-                        async{
+                        async(Dispatchers.Main){
                             imageView.addToManagedAddress(uri.toString())
                             imageView.setImageBitmap(bitmap)
                         }
                     }
-                }
-                async {
-                    DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
                 }
             }
         }
@@ -59,22 +55,20 @@ class ImageLoader(
                 val oldBmp = LruBitmapCache.getLruCache(uri.toString(), countRef)
                 if (oldBmp == null) {
                     val bitmap = ThumbnailUtils.createVideoThumbnail(picturePath, MediaStore.Video.Thumbnails.FULL_SCREEN_KIND)
-                    if (bitmap != null && !bitmap.isRecycled) {
-                        val managedBitmap = ManagedBitmap(bitmap, bitmap.width, bitmap.height)
-                        LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
-                        async {
-                            DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
+                    if (bitmap != null) {
+                        async(Dispatchers.Main){
+                            imageView.setImageBitmap(bitmap)
+                            val managedBitmap = ManagedBitmap(bitmap, bitmap.width, bitmap.height)
+                            LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                         }
                     }
-                }
-                withContext(Dispatchers.Main) {
-                    if (oldBmp != null && !oldBmp.getBitmap().isRecycled) {
+                } else {
+                    async(Dispatchers.Main) {
                         imageView.addToManagedAddress(uri.toString())
-                        async {
-                            imageView.setImageBitmap(oldBmp.getBitmap())
-                        }
+                        imageView.setImageBitmap(oldBmp.getBitmap())
                     }
                 }
+
             }
         }
     }
@@ -148,17 +142,12 @@ class ImageLoader(
         } else if (URLUtil.isHttpUrl(webUrlOfFileUri) || URLUtil.isHttpsUrl(webUrlOfFileUri)) {
             val imageThumbnailUrl = CodeUtils.convertVideoUrlToImageUrl(webUrlOfFileUri)
             val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
-            val convertToUri = File(context.cacheDir, fileName)
-            //TODO: Modify again image loading flow. Current flow: 1. Check memory cache and check file -> 2. Check disk cache -> 3. Download image
-            if (doesFileExist(fileName) && !isInMemoryCache(fileName) || isInMemoryCache(fileName)) {
+            if (isInMemoryCache(fileName) || doesFileExist(fileName) && !TaskExecutor.writingFiles.contains(fileName)) {
                 handleMemoryCache(fileName, imageView, countRef)
-            } else if (isInDiskCache(context, convertToUri.toUri().toString()) && DiskCache.isExperimental) {
-                handleDiskCache(fileName, imageView)
-            } else {
+            }
+            else {
                 downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView)
             }
-
-
         } else {
             val mimeType = DownloadUtils.getMimeType(webUrlOfFileUri)
             if (mimeType?.contains("image") == true) {

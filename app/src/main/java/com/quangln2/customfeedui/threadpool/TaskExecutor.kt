@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit
 
 
 object TaskExecutor{
+    val writingFiles = mutableSetOf<String>()
     private val numberOfCores = Runtime.getRuntime().availableProcessors()
     private var forBackgroundTasks: ThreadPoolExecutor? = null
     private var mainThreadExecutor: Executor? = null
@@ -26,6 +27,9 @@ object TaskExecutor{
 
     fun forBackgroundTasks(): ThreadPoolExecutor? {
         return forBackgroundTasks
+    }
+    fun forMainThreadTasks(): Executor? {
+        return mainThreadExecutor
     }
 
 }

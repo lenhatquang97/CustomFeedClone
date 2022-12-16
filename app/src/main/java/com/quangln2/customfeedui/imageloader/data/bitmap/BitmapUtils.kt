@@ -20,11 +20,6 @@ object BitmapUtils {
     }
 
     fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int, countRef: Boolean): Bitmap {
-        val options = BitmapFactory.Options()
-        options.inJustDecodeBounds = true
-        inputStream.mark(inputStream.available())
-        BitmapFactory.decodeStream(inputStream, null, options)
-
         val anotherOptions = BitmapFactory.Options().apply {
             inJustDecodeBounds = false
             inPreferredConfig = Bitmap.Config.RGB_565
@@ -33,10 +28,11 @@ object BitmapUtils {
         if(reusedBitmap != null && !reusedBitmap.getBitmap().isRecycled){
             return reusedBitmap.getBitmap()
         } else {
-            inputStream.reset()
             val bitmap = BitmapFactory.decodeStream(inputStream, null, anotherOptions)
             if(bitmap != null && !bitmap.isRecycled) {
                 val resizedBitmap = resizeBitmap(bitmap, reqWidth, reqHeight)
+                val managedBitmap = ManagedBitmap(resizedBitmap, resizedBitmap.width, resizedBitmap.height)
+                LruBitmapCache.putIntoLruCache(key, managedBitmap)
                 inputStream.close()
                 return resizedBitmap
             }

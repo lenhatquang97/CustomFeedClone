@@ -4,21 +4,17 @@ import android.content.Context
 import android.webkit.URLUtil
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
+import com.quangln2.customfeedui.uitracking.data.MemoryStats
 
 object UiTracking {
-    private fun getMaxMemory(): Long = Runtime.getRuntime().maxMemory() / 1048576L
-    private fun getTotalMemory(): Long = Runtime.getRuntime().totalMemory() / 1048576L
-    private fun getUsedMemory(): Long {
-        val runtime = Runtime.getRuntime()
-        return (runtime.totalMemory() - runtime.freeMemory()) / 1048576L
-    }
+    private val memStats = MemoryStats()
     fun formatString(avatarUrl: String, context: Context): String{
         val fileUri = CodeUtils.convertImageUrlToFileUriString(avatarUrl, context)
         val refCount = LruBitmapCache.getLruCacheWithoutIncreaseCount(fileUri)?.referenceCount
         return """
-            Max Heap Size: ${getMaxMemory()} MB
-            Total Heap Size: ${getTotalMemory()} MB
-            Used Heap Size: ${getUsedMemory()} MB
+            Max Heap Size: ${memStats.getMaxMemory()} MB
+            Total Heap Size: ${memStats.getTotalMemory()} MB
+            Used Heap Size: ${memStats.getUsedMemory()} MB
             Avatar Image RefCount: $refCount
         """.trimIndent()
     }

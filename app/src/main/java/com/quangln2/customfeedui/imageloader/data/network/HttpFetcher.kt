@@ -25,40 +25,56 @@ class HttpFetcher {
 
     private fun writeFromInputStream(inputStream: InputStream, fileName: String, context: Context){
         val cacheFile = File(context.cacheDir, fileName)
-        val fileOutputStream = FileOutputStream(cacheFile)
         val buffer = ByteArray(8*1024)
         var len: Int
-        while (inputStream.read(buffer).also { len = it } != -1) {
-            fileOutputStream.write(buffer, 0, len)
+        FileOutputStream(cacheFile).use {fos ->
+            while (inputStream.read(buffer).also { len = it } != -1) {
+                fos.write(buffer, 0, len)
+            }
         }
-        fileOutputStream.close()
-        inputStream.close()
     }
 
     fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, Boolean) -> Unit) {
+        val fileName = URLUtil.guessFileName(webUrl, null, null)
         TaskExecutor.forBackgroundTasks()?.execute {
             val conn = URL(webUrl).openConnection() as HttpURLConnection
-            val fileName = URLUtil.guessFileName(webUrl, null, null)
             conn.requestMethod = "GET"
             try {
                 conn.connect()
                 val responseCode = conn.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    //fetch input stream
-                    val inputStream = conn.inputStream
-                    writeFromInputStream(inputStream, fileName, context)
-                    imageView.post {
-                        val file = File(context.cacheDir, fileName)
-                        if (file.exists()) {
-                            loadImage(file.toUri(), imageView, true)
+                    if(!TaskExecutor.writingFiles.contains(fileName)){
+                        TaskExecutor.writingFiles.add(fileName)
+                        conn.inputStream.use {inputStream ->
+                            val cacheFile = File(context.cacheDir, fileName)
+                            val buffer = ByteArray(8*1024)
+                            var len: Int
+                            FileOutputStream(cacheFile).use {fos ->
+                                Log.i("HttpFetcher", "$fileName writes")
+                                while (inputStream.read(buffer).also { len = it } != -1) {
+                                    fos.write(buffer, 0, len)
+                                }
+                                TaskExecutor.writingFiles.remove(fileName)
+                            }
+                            imageView.post {
+                                val file = File(context.cacheDir, fileName)
+                                if (file.exists()) {
+                                    Log.i("HttpFetcher", "$fileName read ${file.length()} ${conn.contentLength}")
+                                    loadImage(file.toUri(), imageView, true)
+                                }
+
+                            }
                         }
                     }
+
                 }
                 conn.disconnect()
             } catch (e: java.lang.Exception) {
                 Log.e("HttpFetcher", e.stackTraceToString())
             }
         }
+
+
     }
 
     fun fetchImageByInputStream(context: Context): InputStream?{

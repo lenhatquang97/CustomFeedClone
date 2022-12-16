@@ -3,10 +3,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import java.io.*
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
@@ -15,17 +12,13 @@ import java.security.NoSuchAlgorithmException
 * */
 
 object DiskCache {
-    //This is a boolean used to open and close experimental part to avoid error prone.
-    const val isExperimental = true
     private val managedWrite = mutableSetOf<String>()
-
 
     fun containsWith(key: String, context: Context): Boolean{
         val md5Key = md5Hash(key)
         return File(context.cacheDir, md5Key).exists()
     }
 
-    //Key in DiskCache is MD5(webUrlOrFileUri)
     fun writeBitmapToDiskCache(key: String, bitmap: Bitmap, context: Context){
         val md5Key = md5Hash(key)
         val cacheFile = File(context.cacheDir, md5Key)
@@ -33,9 +26,11 @@ object DiskCache {
             val anotherCacheFile = File(context.cacheDir, md5Key)
             anotherCacheFile.createNewFile()
             managedWrite.add(md5Key)
-            val objOut = ObjectOutputStream(anotherCacheFile.outputStream())
-            writeObject(objOut, bitmap, key)
-            objOut.close()
+            BufferedOutputStream(anotherCacheFile.outputStream(), 8192).use {
+                ObjectOutputStream(it).use {objOut ->
+                    writeObject(objOut, bitmap)
+                }
+            }
             managedWrite.remove(md5Key)
         } else {
             val anotherCacheFile = File(context.cacheDir, md5Key)
@@ -43,12 +38,12 @@ object DiskCache {
             val newSize = bitmap.byteCount
             if(oldSize < newSize && !managedWrite.contains(md5Key)){
                 anotherCacheFile.delete()
-                val objOut = ObjectOutputStream(anotherCacheFile.outputStream())
-                writeObject(objOut, bitmap, key)
-                objOut.close()
-
+                BufferedOutputStream(anotherCacheFile.outputStream(), 8192).use {
+                    ObjectOutputStream(it).use {objOut ->
+                        writeObject(objOut, bitmap)
+                    }
+                }
             }
-
         }
     }
 
@@ -57,8 +52,12 @@ object DiskCache {
         val cacheFile = File(context.cacheDir, md5Key)
         if(cacheFile.exists()){
             val anotherCacheFile = File(context.cacheDir, md5Key)
-            val objIn = ObjectInputStream(anotherCacheFile.inputStream())
-            return readObject(objIn)
+            BufferedInputStream(anotherCacheFile.inputStream(), 8192).use {
+                ObjectInputStream(it).use {objIn ->
+                    println("DiskCacheInfoCode  ${anotherCacheFile.length()}")
+                    return readObject(objIn)
+                }
+            }
         }
         return null
     }
@@ -68,7 +67,7 @@ object DiskCache {
         return BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.size, opts)
     }
 
-    private fun writeObject(objOut: ObjectOutputStream, bitmap: Bitmap, key: String){
+    private fun writeObject(objOut: ObjectOutputStream, bitmap: Bitmap){
         val byteStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream)
         objOut.write(byteStream.toByteArray(), 0, byteStream.size())
@@ -78,14 +77,12 @@ object DiskCache {
         var b: Int
         while (objIn.read().also { b = it } != -1)
             byteStream.write(b)
-        val byteArray = byteStream.toByteArray()
-        val bitmap = byteArrayToBitmap(byteArray)
+        val bitmap = byteArrayToBitmap(byteStream.toByteArray())
         if(bitmap != null){
             Log.i("DiskCacheInfo", "${bitmap.width} ${bitmap.height} ${bitmap.byteCount}")
         } else {
             Log.i("DiskCacheInfo", "bitmap is null")
         }
-        objIn.close()
         return bitmap
     }
 
@@ -95,7 +92,6 @@ object DiskCache {
             val digest = MessageDigest.getInstance("MD5")
             digest.update(str.toByteArray())
             val messageDigest = digest.digest()
-
             // Create Hex String
             val hexString = StringBuilder()
             for (aMessageDigest in messageDigest) {
