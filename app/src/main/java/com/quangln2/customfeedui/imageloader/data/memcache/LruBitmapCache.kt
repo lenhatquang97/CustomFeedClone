@@ -2,6 +2,7 @@ package com.quangln2.customfeedui.imageloader.data.memcache
 
 import android.util.Log
 import android.util.LruCache
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.data.bitmap.ManagedBitmap
 
 object LruBitmapCache: CachePolicy {
@@ -26,9 +27,9 @@ object LruBitmapCache: CachePolicy {
 
     fun containsKey(key: String): Boolean = memoryCache.get(key) != null
 
-    fun getLruCache(key: String, countRef: Boolean = true): ManagedBitmap? {
+    fun getLruCache(key: String, bmpParams: BitmapCustomParams): ManagedBitmap? {
         val managedBitmap = memoryCache.get(key)
-        if(countRef){
+        if(bmpParams.countRef){
             managedBitmap?.addReferenceCount()
         }
         return managedBitmap
@@ -55,6 +56,16 @@ object LruBitmapCache: CachePolicy {
     }
 
     override fun removeAll() = memoryCache.evictAll()
+
+    fun removeCacheForce(key: String){
+        synchronized(memoryCache){
+            val managedBitmap = memoryCache.get(key)
+            if(managedBitmap != null && managedBitmap.hasNoReference()){
+                memoryCache.remove(key)
+                managedBitmap.getBitmap().recycle()
+            }
+        }
+    }
 
 
 

@@ -3,13 +3,13 @@ package com.quangln2.customfeedui.uitracking.ui
 import android.content.Context
 import android.webkit.URLUtil
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
-import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
+import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.uitracking.data.MemoryStats
 
 object UiTracking {
     private val memStats = MemoryStats()
     fun formatString(avatarUrl: String, context: Context): String{
-        val fileUri = CodeUtils.convertImageUrlToFileUriString(avatarUrl, context)
+        val fileUri = NetworkHelper.convertImageUrlToFileUriString(avatarUrl, context)
         val refCount = LruBitmapCache.getLruCacheWithoutIncreaseCount(fileUri)?.referenceCount
         return """
             Max Heap Size: ${memStats.getMaxMemory()} MB

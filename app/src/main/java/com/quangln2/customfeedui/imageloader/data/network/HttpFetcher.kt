@@ -6,6 +6,7 @@ import android.util.Log
 import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.threadpool.TaskExecutor
 import java.io.File
 import java.io.FileOutputStream
@@ -23,18 +24,7 @@ class HttpFetcher {
         this.fileUri = fileUri
     }
 
-    private fun writeFromInputStream(inputStream: InputStream, fileName: String, context: Context){
-        val cacheFile = File(context.cacheDir, fileName)
-        val buffer = ByteArray(8*1024)
-        var len: Int
-        FileOutputStream(cacheFile).use {fos ->
-            while (inputStream.read(buffer).also { len = it } != -1) {
-                fos.write(buffer, 0, len)
-            }
-        }
-    }
-
-    fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, Boolean) -> Unit) {
+    fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, BitmapCustomParams) -> Unit) {
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         TaskExecutor.forBackgroundTasks()?.execute {
             val conn = URL(webUrl).openConnection() as HttpURLConnection
@@ -60,7 +50,7 @@ class HttpFetcher {
                                 val file = File(context.cacheDir, fileName)
                                 if (file.exists()) {
                                     Log.i("HttpFetcher", "$fileName read ${file.length()} ${conn.contentLength}")
-                                    loadImage(file.toUri(), imageView, true)
+                                    loadImage(file.toUri(), imageView, BitmapCustomParams())
                                 }
 
                             }

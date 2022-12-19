@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.databinding.FeedCardBinding
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +16,7 @@ class AddNewItemViewHolder constructor(private val binding: FeedCardBinding,
     RecyclerView.ViewHolder(binding.root) {
     fun bind(context: Context) {
         val imageLoader = ImageLoader(context,100,100, CoroutineScope(Job()))
-        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.circleAvatar)
+        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.circleAvatar, BitmapCustomParams())
         binding.root.setOnClickListener {
             eventFeedCallback.onClickAddPost()
         }
@@ -25,6 +26,7 @@ class AddNewItemViewHolder constructor(private val binding: FeedCardBinding,
     }
     fun onViewAttached(context: Context, countRef: Boolean = true){
         val imageLoader = ImageLoader(context,100,100, CoroutineScope(Job()))
-        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.circleAvatar, countRef)
+        val bmpParams = BitmapCustomParams().apply { this.countRef = countRef }
+        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.circleAvatar, bmpParams)
     }
 }

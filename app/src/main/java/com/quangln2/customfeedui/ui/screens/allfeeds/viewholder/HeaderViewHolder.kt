@@ -6,6 +6,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedHeaderBinding
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
@@ -26,7 +27,7 @@ class HeaderViewHolder constructor(
         imgUrl = item.avatar
 
         val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
-        imageLoader.loadImage(item.avatar, binding.myAvatarImage)
+        imageLoader.loadImage(item.avatar, binding.myAvatarImage, BitmapCustomParams())
     }
 
     @SuppressLint("SetTextI18n")
@@ -50,6 +51,7 @@ class HeaderViewHolder constructor(
     }
     fun onViewAttached(context: Context, countRef: Boolean = true){
         val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
-        imageLoader.loadImage(imgUrl, binding.myAvatarImage, countRef)
+        val bmpParams = BitmapCustomParams().apply { this.countRef = countRef }
+        imageLoader.loadImage(imgUrl, binding.myAvatarImage, bmpParams)
     }
 }

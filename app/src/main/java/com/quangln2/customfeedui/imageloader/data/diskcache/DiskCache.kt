@@ -54,7 +54,6 @@ object DiskCache {
             val anotherCacheFile = File(context.cacheDir, md5Key)
             BufferedInputStream(anotherCacheFile.inputStream(), 8192).use {
                 ObjectInputStream(it).use {objIn ->
-                    println("DiskCacheInfoCode  ${anotherCacheFile.length()}")
                     return readObject(objIn)
                 }
             }

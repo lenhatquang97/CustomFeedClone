@@ -14,6 +14,7 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.controllers.FeedCtrl.isMute
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -60,9 +61,9 @@ class LoadingVideoView @JvmOverloads constructor(
         progressBar.visibility = View.GONE
         val imageLoader = ImageLoader(context,0,0, CoroutineScope(Job()))
         if(fileUri == null){
-            imageLoader.loadImage(webUrl,thumbnailView)
+            imageLoader.loadImage(webUrl,thumbnailView, BitmapCustomParams())
         } else {
-            imageLoader.loadImage(fileUri.toString(),thumbnailView)
+            imageLoader.loadImage(fileUri.toString(),thumbnailView, BitmapCustomParams())
         }
     }
 
@@ -70,9 +71,9 @@ class LoadingVideoView @JvmOverloads constructor(
         progressBar.visibility = View.GONE
         val imageLoader = ImageLoader(context,width,height, CoroutineScope(Job()))
         if(fileUri == null){
-            imageLoader.loadImage(webUrl,thumbnailView)
+            imageLoader.loadImage(webUrl,thumbnailView, BitmapCustomParams())
         } else {
-            imageLoader.loadImage(fileUri.toString(),thumbnailView)
+            imageLoader.loadImage(fileUri.toString(),thumbnailView, BitmapCustomParams())
         }
     }
 

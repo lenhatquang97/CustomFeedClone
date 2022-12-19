@@ -7,13 +7,14 @@ import android.provider.MediaStore
 import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapUtils
 import com.quangln2.customfeedui.imageloader.data.bitmap.ManagedBitmap
 import com.quangln2.customfeedui.imageloader.data.diskcache.DiskCache
 import com.quangln2.customfeedui.imageloader.data.extension.addToManagedAddress
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
-import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
+import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.threadpool.TaskExecutor
 import kotlinx.coroutines.*
@@ -25,12 +26,12 @@ class ImageLoader(
     private var height: Int,
     private var scope: CoroutineScope
 ) {
-    private fun loadImageWithUri(uri: Uri, imageView: ImageView, countRef: Boolean) {
+    private fun loadImageWithUri(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
         scope.launch(Dispatchers.Default) {
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
-                val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, countRef)
+                val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, bmpParams)
                 withContext(Dispatchers.Main) {
                     if (!bitmap.isRecycled) {
                         async(Dispatchers.Main){
@@ -43,7 +44,7 @@ class ImageLoader(
         }
     }
 
-    private fun retrieveImageFromLocalVideo(uri: Uri, imageView: ImageView, countRef: Boolean) {
+    private fun retrieveImageFromLocalVideo(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
         scope.launch(Dispatchers.IO) {
             val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
             val cursor = context.contentResolver.query(uri, filePathColumn, null, null, null)
@@ -52,7 +53,7 @@ class ImageLoader(
                 val columnIndex = getColumnIndex(filePathColumn[0])
                 val picturePath = getString(columnIndex)
                 close()
-                val oldBmp = LruBitmapCache.getLruCache(uri.toString(), countRef)
+                val oldBmp = LruBitmapCache.getLruCache(uri.toString(), bmpParams)
                 if (oldBmp == null) {
                     val bitmap = ThumbnailUtils.createVideoThumbnail(picturePath, MediaStore.Video.Thumbnails.FULL_SCREEN_KIND)
                     if (bitmap != null) {
@@ -90,7 +91,7 @@ class ImageLoader(
 
     private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView) {
         val httpFetcher = HttpFetcher(url)
-        val loadImage = fun(a: Uri, b: ImageView, c: Boolean){
+        val loadImage = fun(a: Uri, b: ImageView, c: BitmapCustomParams){
             loadImageWithUri(a, b, c)
         }
         httpFetcher.downloadImage(context, imageView, loadImage)
@@ -111,10 +112,10 @@ class ImageLoader(
         return file.exists()
     }
 
-    private fun handleMemoryCache(fileName: String, imageView: ImageView, countRef: Boolean) {
+    private fun handleMemoryCache(fileName: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val memoryCacheFile = File(context.cacheDir, fileName)
         if (memoryCacheFile.exists()) {
-            loadImageWithUri(memoryCacheFile.toUri(), imageView, countRef)
+            loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
         }
 
     }
@@ -135,15 +136,18 @@ class ImageLoader(
     }
 
 
-    fun loadImage(webUrlOfFileUri: String, imageView: ImageView, countRef: Boolean = true) {
+    fun loadImage(webUrlOfFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         loadEmptyImage(imageView)
         if (webUrlOfFileUri.isEmpty()) {
             return
         } else if (URLUtil.isHttpUrl(webUrlOfFileUri) || URLUtil.isHttpsUrl(webUrlOfFileUri)) {
-            val imageThumbnailUrl = CodeUtils.convertVideoUrlToImageUrl(webUrlOfFileUri)
+            val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlOfFileUri)
             val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
-            if (isInMemoryCache(fileName) || doesFileExist(fileName) && !TaskExecutor.writingFiles.contains(fileName)) {
-                handleMemoryCache(fileName, imageView, countRef)
+            if (isInMemoryCache(fileName) && !TaskExecutor.writingFiles.contains(fileName)) {
+                handleMemoryCache(fileName, imageView, bmpParams)
+            }
+            else if(doesFileExist(fileName) && !TaskExecutor.writingFiles.contains(fileName)) {
+                handleMemoryCache(fileName, imageView, bmpParams)
             }
             else {
                 downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView)
@@ -151,9 +155,9 @@ class ImageLoader(
         } else {
             val mimeType = DownloadUtils.getMimeType(webUrlOfFileUri)
             if (mimeType?.contains("image") == true) {
-                loadImageWithUri(webUrlOfFileUri.toUri(), imageView, countRef)
+                loadImageWithUri(webUrlOfFileUri.toUri(), imageView, bmpParams)
             } else {
-                retrieveImageFromLocalVideo(webUrlOfFileUri.toUri(), imageView, countRef)
+                retrieveImageFromLocalVideo(webUrlOfFileUri.toUri(), imageView, bmpParams)
             }
         }
     }

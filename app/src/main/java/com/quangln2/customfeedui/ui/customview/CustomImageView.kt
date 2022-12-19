@@ -6,6 +6,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.content.res.AppCompatResources
 import com.quangln2.customfeedui.R
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -41,7 +42,7 @@ class CustomImageView {
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
             val imageLoader = ImageLoader(context, 300, 300, CoroutineScope(Job()))
-            imageLoader.loadImage(fileUriOrWebUrl, imageView)
+            imageLoader.loadImage(fileUriOrWebUrl, imageView, BitmapCustomParams())
             return imageView
         }
     }

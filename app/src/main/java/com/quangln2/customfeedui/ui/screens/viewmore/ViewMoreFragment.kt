@@ -18,8 +18,9 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentViewMoreBinding
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
+import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
-import com.quangln2.customfeedui.imageloader.data.network.CodeUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.viewmodel.ViewMoreViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
@@ -50,7 +51,7 @@ class ViewMoreFragment : Fragment() {
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
         binding.caption.text = item.caption
         val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
-        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage)
+        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage, BitmapCustomParams())
     }
 
     private fun onViewDetailImageOrVideo(item: MyPostRender, index: Int){
@@ -94,8 +95,8 @@ class ViewMoreFragment : Fragment() {
                                 onViewDetailImageOrVideo(item, i)
                             }
                             val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
-                            val actualImageUrl = CodeUtils.convertVideoUrlToImageUrl(item.resources[i].url)
-                            imageLoader.loadImage(actualImageUrl, imageView)
+                            val actualImageUrl = NetworkHelper.convertVideoUrlToImageUrl(item.resources[i].url)
+                            imageLoader.loadImage(actualImageUrl, imageView, BitmapCustomParams())
                             binding.extendedCustomGridGroup.addView(imageView)
                         }
                     }

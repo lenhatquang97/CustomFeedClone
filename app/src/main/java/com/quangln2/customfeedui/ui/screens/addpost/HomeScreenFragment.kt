@@ -28,6 +28,7 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentHomeScreenBinding
+import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.ui.customview.CustomImageView
 import com.quangln2.customfeedui.ui.customview.CustomLayer
@@ -144,7 +145,7 @@ class HomeScreenFragment : Fragment() {
 
     private fun loadInitialProfile() {
         val imageLoader = ImageLoader(requireContext(),100, 100, lifecycleScope)
-        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage)
+        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage, BitmapCustomParams())
     }
 
     private fun buttonHandleSubmitToServer() {
