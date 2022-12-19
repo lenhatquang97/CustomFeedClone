@@ -9,7 +9,8 @@ class FullImageVideoAdapter(
     fragment: Fragment,
     private val listOfUrls: ArrayList<String>,
     private val currentVideoPosition: Long,
-    private val player: ExoPlayer
+    private val player: ExoPlayer,
+    private val id: String
 ) : FragmentStateAdapter(fragment) {
     override fun getItemCount(): Int {
         return listOfUrls.size
@@ -21,6 +22,7 @@ class FullImageVideoAdapter(
             putLong("currentVideoPosition", currentVideoPosition)
             putInt("position", position)
             putStringArrayList("listOfUrls", listOfUrls)
+            putString("id", id)
         }
         return fragment
     }

@@ -11,11 +11,13 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.controllers.FeedCtrl.isMute
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
+import com.quangln2.customfeedui.videocache.VideoCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
@@ -105,7 +107,8 @@ class LoadingVideoView @JvmOverloads constructor(
 
     private fun prepare(player: ExoPlayer) {
         val mediaItem = MediaItem.fromUri(if(fileUri == null) webUrl else fileUri.toString())
-        player.setMediaItem(mediaItem)
+        val mediaSource = ProgressiveMediaSource.Factory(VideoCache.buildCacheDataSourceFactory(context)).createMediaSource(mediaItem)
+        player.setMediaSource(mediaSource)
         player.prepare()
     }
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

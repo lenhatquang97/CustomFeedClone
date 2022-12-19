@@ -109,7 +109,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                     listOfImageUrl.add(it.url)
                 }
 
-                val currentVideo = CurrentVideo(currentVideoPosition = -1L, url = item.resources[i].url, listOfUrls = urlArrayList)
+                val currentVideo = CurrentVideo(currentVideoPosition = -1L, url = item.resources[i].url, listOfUrls = urlArrayList, id = item.feedId)
                 if (mimeType != null && mimeType.contains("video")) {
                     val videoView = LoadingVideoView(context, url, rectangles[i].width, rectangles[i].height)
                     videoView.layoutParams = layoutParamsCustom
@@ -127,7 +127,8 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                         }
                     }
                     val imageLoader = ImageLoader(context, rectangles[i].width, rectangles[i].height, CoroutineScope(Job()))
-                    imageLoader.loadImage(url, imageView, BitmapCustomParams())
+                    val bmpParams = BitmapCustomParams().apply { folderName = item.feedId }
+                    imageLoader.loadImage(url, imageView, bmpParams)
                     binding.customGridGroup.addView(imageView)
                 }
             }

@@ -33,7 +33,9 @@ object BitmapUtils {
             if(bitmap != null && !bitmap.isRecycled) {
                 val resizedBitmap = resizeBitmap(bitmap, reqWidth, reqHeight)
                 val managedBitmap = ManagedBitmap(resizedBitmap, resizedBitmap.width, resizedBitmap.height)
+
                 LruBitmapCache.putIntoLruCache(actualKey, managedBitmap)
+
                 inputStream.close()
                 return resizedBitmap
             }

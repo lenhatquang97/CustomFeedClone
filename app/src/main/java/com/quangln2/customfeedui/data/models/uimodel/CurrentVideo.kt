@@ -5,11 +5,13 @@ import android.os.Bundle
 data class CurrentVideo(
     val currentVideoPosition: Long,
     val url: String,
-    val listOfUrls: ArrayList<String>
+    val listOfUrls: ArrayList<String>,
+    val id: String
 ){
     fun encapsulateToBundle(): Bundle = Bundle().apply {
         putLong("currentVideoPosition", currentVideoPosition)
         putString("value", url)
         putStringArrayList("listOfUrls", listOfUrls)
+        putString("id", id)
     }
 }

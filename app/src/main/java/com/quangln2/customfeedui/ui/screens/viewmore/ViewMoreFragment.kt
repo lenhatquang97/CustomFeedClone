@@ -64,6 +64,7 @@ class ViewMoreFragment : Fragment() {
             Bundle().apply {
                 putString("value", item.resources[index].url)
                 putStringArrayList("listOfUrls", urlArrayList)
+                putString("id", item.feedId)
             }, navTransition
         )
     }
@@ -96,7 +97,8 @@ class ViewMoreFragment : Fragment() {
                             }
                             val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
                             val actualImageUrl = NetworkHelper.convertVideoUrlToImageUrl(item.resources[i].url)
-                            imageLoader.loadImage(actualImageUrl, imageView, BitmapCustomParams())
+                            val bmpParams = BitmapCustomParams().apply { folderName = item.feedId }
+                            imageLoader.loadImage(actualImageUrl, imageView, bmpParams)
                             binding.extendedCustomGridGroup.addView(imageView)
                         }
                     }

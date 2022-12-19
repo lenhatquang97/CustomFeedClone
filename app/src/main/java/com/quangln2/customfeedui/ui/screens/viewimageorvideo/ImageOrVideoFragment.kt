@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.database.FeedDatabase
 import com.quangln2.customfeedui.data.datasource.local.LocalDataSourceImpl
@@ -22,6 +23,7 @@ import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.viewmodel.ViewFullViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
+import com.quangln2.customfeedui.videocache.VideoCache
 
 
 class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
@@ -33,12 +35,15 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
     private var currentVideoPosition = -1L
     private var webUrl = ""
+    private var id = ""
 
     override fun onStart(){
         super.onStart()
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
         val position = arguments?.getInt("position")
         currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
+        id = arguments?.getString("id") ?: ""
+
         if (listOfUrls != null && position != null) {
             webUrl = listOfUrls[position]
             loadImageThumbnail()
@@ -69,14 +74,18 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
 
     private fun loadImageThumbnail(){
         val imageLoader = ImageLoader(requireContext(),0, 0, lifecycleScope)
-        val bmpParams = BitmapCustomParams().apply { this.isFullScreen = true }
+        val bmpParams = BitmapCustomParams().apply {
+            this.isFullScreen = true
+            this.folderName = id
+        }
         imageLoader.loadImage(webUrl, binding.fullImageView, bmpParams)
     }
 
     private fun initializeVideoForLoading(url: String) {
         val mediaItem = MediaItem.fromUri(url)
+        val mediaSource = ProgressiveMediaSource.Factory(VideoCache.buildCacheDataSourceFactory(requireContext())).createMediaSource(mediaItem)
         player.apply {
-            setMediaItem(mediaItem)
+            setMediaSource(mediaSource)
             seekTo(currentVideoPosition)
             prepare()
             playWhenReady = true

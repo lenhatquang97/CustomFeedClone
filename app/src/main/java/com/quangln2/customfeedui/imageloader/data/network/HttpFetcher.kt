@@ -24,8 +24,15 @@ class HttpFetcher {
         this.fileUri = fileUri
     }
 
-    fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, BitmapCustomParams) -> Unit) {
+    fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, BitmapCustomParams) -> Unit, bmpParams: BitmapCustomParams) {
+        if(bmpParams.folderName.isNotEmpty()){
+            val folderCreation = File(context.cacheDir, bmpParams.folderName)
+            if(!folderCreation.exists())
+                folderCreation.mkdir()
+        }
+
         val fileName = URLUtil.guessFileName(webUrl, null, null)
+        val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
         TaskExecutor.forBackgroundTasks()?.execute {
             val conn = URL(webUrl).openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
@@ -33,26 +40,25 @@ class HttpFetcher {
                 conn.connect()
                 val responseCode = conn.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    if(!TaskExecutor.writingFiles.contains(fileName)){
-                        TaskExecutor.writingFiles.add(fileName)
+                    if(!TaskExecutor.writingFiles.contains(actualPath)){
+                        TaskExecutor.writingFiles.add(actualPath)
                         conn.inputStream.use {inputStream ->
-                            val cacheFile = File(context.cacheDir, fileName)
+                            val cacheFile = File(context.cacheDir, actualPath)
                             val buffer = ByteArray(8*1024)
                             var len: Int
                             FileOutputStream(cacheFile).use {fos ->
-                                Log.i("HttpFetcher", "$fileName writes")
+                                Log.i("HttpFetcher", "$actualPath writes")
                                 while (inputStream.read(buffer).also { len = it } != -1) {
                                     fos.write(buffer, 0, len)
                                 }
-                                TaskExecutor.writingFiles.remove(fileName)
+                                TaskExecutor.writingFiles.remove(actualPath)
                             }
                             imageView.post {
-                                val file = File(context.cacheDir, fileName)
+                                val file = File(context.cacheDir, actualPath)
                                 if (file.exists()) {
-                                    Log.i("HttpFetcher", "$fileName read ${file.length()} ${conn.contentLength}")
-                                    loadImage(file.toUri(), imageView, BitmapCustomParams())
+                                    Log.i("HttpFetcher", "$actualPath read ${file.length()} ${conn.contentLength}")
+                                    loadImage(file.toUri(), imageView, bmpParams)
                                 }
-
                             }
                         }
                     }

@@ -14,6 +14,7 @@ class ViewFullVideoFragment : Fragment() {
     private lateinit var binding: FragmentViewFullVideoBinding
     private lateinit var player: ExoPlayer
     private var listOfUrls: ArrayList<String>? = null
+    private var id = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -22,13 +23,16 @@ class ViewFullVideoFragment : Fragment() {
         binding = FragmentViewFullVideoBinding.inflate(inflater, container, false)
 
         val value = arguments?.getString("value")
-        listOfUrls = arguments?.getStringArrayList("listOfUrls")
         val currentVideoPosition = arguments?.getLong("currentVideoPosition") ?: -1
+
+        listOfUrls = arguments?.getStringArrayList("listOfUrls")
+        id = arguments?.getString("id") ?: ""
+
 
         player = ExoPlayer.Builder(requireContext()).build()
 
-        if (value != null && listOfUrls != null) {
-            binding.viewPager.adapter = FullImageVideoAdapter(this, listOfUrls!!, currentVideoPosition, player)
+        if (value != null && listOfUrls != null && id.isNotEmpty()) {
+            binding.viewPager.adapter = FullImageVideoAdapter(this, listOfUrls!!, currentVideoPosition, player, id)
             binding.viewPager.setCurrentItem(listOfUrls!!.indexOf(value), false)
         }
         return binding.root

@@ -32,6 +32,10 @@ class ImageLoader(
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, bmpParams)
+//                async(Dispatchers.IO){
+//                    val actualKey = if(bmpParams.isFullScreen) "${uri}_fullScreen" else uri.toString()
+//                    DiskCache.writeBitmapToDiskCache(actualKey, bitmap, context)
+//                }
                 withContext(Dispatchers.Main) {
                     if (!bitmap.isRecycled) {
                         async(Dispatchers.Main){
@@ -62,6 +66,9 @@ class ImageLoader(
                             val managedBitmap = ManagedBitmap(bitmap, bitmap.width, bitmap.height)
                             LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                         }
+//                        async(Dispatchers.IO){
+//                            DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
+//                        }
                     }
                 } else {
                     async(Dispatchers.Main) {
@@ -89,12 +96,12 @@ class ImageLoader(
         }
     }
 
-    private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView) {
+    private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val httpFetcher = HttpFetcher(url)
         val loadImage = fun(a: Uri, b: ImageView, c: BitmapCustomParams){
             loadImageWithUri(a, b, c)
         }
-        httpFetcher.downloadImage(context, imageView, loadImage)
+        httpFetcher.downloadImage(context, imageView, loadImage, bmpParams)
 
     }
 
@@ -112,16 +119,21 @@ class ImageLoader(
         return file.exists()
     }
 
-    private fun handleMemoryCache(fileName: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
-        val memoryCacheFile = File(context.cacheDir, fileName)
+    private fun handleMemoryCache(filePath: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
+        if(bmpParams.folderName.isNotEmpty()){
+            val folderCreation = File(context.cacheDir, bmpParams.folderName)
+            if(!folderCreation.exists())
+                folderCreation.mkdir()
+        }
+        val memoryCacheFile = File(context.cacheDir, filePath)
         if (memoryCacheFile.exists()) {
             loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
         }
 
     }
 
-    private fun handleDiskCache(fileName: String, imageView: ImageView) {
-        val convertToUri = File(context.cacheDir, fileName)
+    private fun handleDiskCache(filePath: String, imageView: ImageView) {
+        val convertToUri = File(context.cacheDir, filePath)
         scope.launch(Dispatchers.IO) {
             val bitmap = DiskCache.getBitmapFromDiskCache(convertToUri.toUri().toString(), context)
             if (bitmap != null) {
@@ -141,16 +153,20 @@ class ImageLoader(
         if (webUrlOfFileUri.isEmpty()) {
             return
         } else if (URLUtil.isHttpUrl(webUrlOfFileUri) || URLUtil.isHttpsUrl(webUrlOfFileUri)) {
+            if(bmpParams.folderName.isNotEmpty()){
+                val folderCreation = File(context.cacheDir, bmpParams.folderName)
+                if(!folderCreation.exists())
+                    folderCreation.mkdir()
+            }
+
             val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlOfFileUri)
             val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
-            if (isInMemoryCache(fileName) && !TaskExecutor.writingFiles.contains(fileName)) {
-                handleMemoryCache(fileName, imageView, bmpParams)
-            }
-            else if(doesFileExist(fileName) && !TaskExecutor.writingFiles.contains(fileName)) {
-                handleMemoryCache(fileName, imageView, bmpParams)
+            val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
+            if ((isInMemoryCache(actualPath) || doesFileExist(actualPath)) && !TaskExecutor.writingFiles.contains(actualPath)) {
+                handleMemoryCache(actualPath, imageView, bmpParams)
             }
             else {
-                downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView)
+                downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
             }
         } else {
             val mimeType = DownloadUtils.getMimeType(webUrlOfFileUri)
