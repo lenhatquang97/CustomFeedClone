@@ -20,7 +20,7 @@ import java.util.*
 
 
 object FileUtils {
-    fun getRealPathFromURI(contentURI: Uri, context: Context): String? {
+    fun convertContentUriToFileUri(contentURI: Uri, context: Context): String? {
         val result: String?
         val cursor: Cursor? = context.contentResolver.query(contentURI, null, null, null, null)
         if (cursor == null) {
@@ -32,7 +32,7 @@ object FileUtils {
             result = cursor.getString(idx)
             cursor.close()
         }
-        return result
+        return Uri.fromFile(result?.let { File(it) }).toString()
     }
 
     fun convertUnixTimestampToTime(unixTimestamp: String): String {

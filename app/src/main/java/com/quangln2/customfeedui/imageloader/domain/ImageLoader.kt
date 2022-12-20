@@ -16,6 +16,7 @@ import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
 import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.others.utils.DownloadUtils
+import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.threadpool.TaskExecutor
 import kotlinx.coroutines.*
 import java.io.File
@@ -156,36 +157,49 @@ class ImageLoader(
             }
         }
     }
+    private fun loadImageLocally(webUrlOrFileUri: String, imageView: WeakReference<ImageView>, bmpParams: BitmapCustomParams){
+        val actualUri = if(webUrlOrFileUri.startsWith("content"))
+            FileUtils.convertContentUriToFileUri(webUrlOrFileUri.toUri(), context)
+        else
+            webUrlOrFileUri
+        actualUri?.apply {
+            val mimeType = DownloadUtils.getMimeType(this)
+            if (mimeType?.contains("video") == true) {
+                retrieveImageFromLocalVideo(webUrlOrFileUri.toUri(), imageView, bmpParams)
+            } else {
+                loadImageWithUri(this.toUri(), imageView, bmpParams)
+            }
+        }
+    }
+
+    private fun loadImageRemotely(webUrlOrFileUri: String, imageView: WeakReference<ImageView>, bmpParams: BitmapCustomParams){
+        if(bmpParams.folderName.isNotEmpty()){
+            val folderCreation = File(context.cacheDir, bmpParams.folderName)
+            if(!folderCreation.exists())
+                folderCreation.mkdir()
+        }
+
+        val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlOrFileUri)
+        val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
+        val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
+        if ((isInMemoryCache(actualPath) || doesFileExist(actualPath)) && !TaskExecutor.writingFiles.contains(actualPath)) {
+            handleMemoryCache(actualPath, imageView, bmpParams)
+        }
+        else {
+            downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
+        }
+    }
 
 
-    fun loadImage(webUrlOfFileUri: String, imgView: ImageView, bmpParams: BitmapCustomParams) {
+    fun loadImage(webUrlOrFileUri: String, imgView: ImageView, bmpParams: BitmapCustomParams) {
         val imageView = WeakReference(imgView)
         loadEmptyImage(imageView)
-        if (webUrlOfFileUri.isEmpty()) {
+        if (webUrlOrFileUri.isEmpty()) {
             return
-        } else if (URLUtil.isHttpUrl(webUrlOfFileUri) || URLUtil.isHttpsUrl(webUrlOfFileUri)) {
-            if(bmpParams.folderName.isNotEmpty()){
-                val folderCreation = File(context.cacheDir, bmpParams.folderName)
-                if(!folderCreation.exists())
-                    folderCreation.mkdir()
-            }
-
-            val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlOfFileUri)
-            val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
-            val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-            if ((isInMemoryCache(actualPath) || doesFileExist(actualPath)) && !TaskExecutor.writingFiles.contains(actualPath)) {
-                handleMemoryCache(actualPath, imageView, bmpParams)
-            }
-            else {
-                downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
-            }
+        } else if (URLUtil.isHttpUrl(webUrlOrFileUri) || URLUtil.isHttpsUrl(webUrlOrFileUri)) {
+            loadImageRemotely(webUrlOrFileUri, imageView, bmpParams)
         } else {
-            val mimeType = DownloadUtils.getMimeType(webUrlOfFileUri)
-            if (mimeType?.contains("image") == true) {
-                loadImageWithUri(webUrlOfFileUri.toUri(), imageView, bmpParams)
-            } else {
-                retrieveImageFromLocalVideo(webUrlOfFileUri.toUri(), imageView, bmpParams)
-            }
+            loadImageLocally(webUrlOrFileUri, imageView, bmpParams)
         }
     }
 }
