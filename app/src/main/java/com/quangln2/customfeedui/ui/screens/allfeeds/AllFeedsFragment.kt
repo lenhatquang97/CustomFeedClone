@@ -139,17 +139,8 @@ class AllFeedsFragment : Fragment() {
         binding.allFeeds.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    val firstVisibleItemPosition = (binding.allFeeds.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-                    lifecycleScope.launch(Dispatchers.Main){
-                        viewModel.onHandlePlayVideoAndDownloadVideo(firstVisibleItemPosition, requireContext()).collect{
-                            when(it){
-                                "playVideoWrapper" -> {
-                                    if(!isVideoPlaying())
-                                        playVideoUtil()
-                                }
-                            }
-                        }
-                    }
+                    if(!isVideoPlaying())
+                        playVideoUtil()
                 }
             }
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {

@@ -20,7 +20,6 @@ import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
 import com.quangln2.customfeedui.domain.usecase.DeleteFeedUseCase
 import com.quangln2.customfeedui.domain.usecase.GetAllFeedsModifiedUseCase
 import com.quangln2.customfeedui.domain.workmanager.UploadService
-import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -81,23 +80,6 @@ class FeedViewModel(
         }
     }
 
-    fun onHandlePlayVideoAndDownloadVideo(firstVisibleItemPosition: Int, context: Context): Flow<String> = flow{
-        emit("playVideoWrapper")
-        if(firstVisibleItemPosition > 0){
-
-            val item = uploadListRender.value?.get(firstVisibleItemPosition - 1)
-            item?.apply {
-                viewModelScope.launch(Dispatchers.IO) {
-                    for (urlObj in resources) {
-                        if(item.typeOfPost == TypeOfPost.BODY){
-                            DownloadUtils.downloadResource(urlObj.url, context)
-                        }
-
-                    }
-                }
-            }
-        }
-    }
 
     fun retrieveAllVisibleItems(firstPartiallyIndex: Int, lastPartiallyIndex: Int): List<Int>{
         val firstActualIndex = if(firstPartiallyIndex < 0) 0 else firstPartiallyIndex

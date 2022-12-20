@@ -27,6 +27,7 @@ object BitmapUtils {
         val actualKey = if(bmpParams.isFullScreen) "${key}_fullScreen" else key
         val reusedBitmap = LruBitmapCache.getLruCache(actualKey, bmpParams)
         if(reusedBitmap != null && !reusedBitmap.getBitmap().isRecycled){
+            inputStream.close()
             return reusedBitmap.getBitmap()
         } else {
             val bitmap = BitmapFactory.decodeStream(inputStream, null, anotherOptions)
