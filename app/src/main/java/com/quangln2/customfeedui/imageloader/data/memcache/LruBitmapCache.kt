@@ -9,7 +9,7 @@ import java.lang.ref.WeakReference
 object LruBitmapCache: CachePolicy {
     val bitmapToImageViewAddress = mutableMapOf<String, String>()
 
-    val cacheSize = (Runtime.getRuntime().maxMemory() / 1024).toInt() / 12
+    val cacheSize = (Runtime.getRuntime().maxMemory() / 1024).toInt() / 8
 
     private var memoryCache: LruCache<String, WeakReference<ManagedBitmap>> = object : LruCache<String, WeakReference<ManagedBitmap>>(cacheSize){
         override fun sizeOf(key: String, value: WeakReference<ManagedBitmap>): Int {

@@ -58,11 +58,8 @@ object BitmapUtils {
         } else {
             dy = (actualHeight - bitmap.height * scale) * 0.5f
         }
-
         matrix.setScale(scale, scale)
         matrix.postTranslate(dx + 0.5f, dy + 0.5f)
-
-
         val result = Bitmap.createBitmap(actualWidth, actualHeight, bitmap.config)
         val canvas = Canvas(result)
         val paint = Paint()
