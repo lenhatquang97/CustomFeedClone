@@ -10,7 +10,8 @@ object UiTracking {
     private val memStats = MemoryStats()
     fun formatString(avatarUrl: String, context: Context): String{
         val fileUri = NetworkHelper.convertImageUrlToFileUriString(avatarUrl, context)
-        val refCount = LruBitmapCache.getLruCacheWithoutIncreaseCount(fileUri)?.referenceCount
+        val bmpWithoutCount = LruBitmapCache.getLruCacheWithoutIncreaseCount(fileUri)
+        val refCount = bmpWithoutCount?.referenceCount
         return """
             Max Heap Size: ${memStats.getMaxMemory()} MB
             Total Heap Size: ${memStats.getTotalMemory()} MB

@@ -8,7 +8,7 @@ import java.io.InputStream
 import kotlin.math.max
 
 object BitmapUtils {
-     fun emptyBitmap(): Bitmap {
+     fun emptyBitmap(): Bitmap? {
         if(!LruBitmapCache.containsKey("emptyBmp")){
             val drawable = ColorDrawable(Color.parseColor("#aaaaaa"))
             val bmp = drawable.toBitmap(50, 50, Bitmap.Config.RGB_565)
@@ -16,10 +16,11 @@ object BitmapUtils {
                 LruBitmapCache.putIntoLruCache("emptyBmp", ManagedBitmap(bmp, width = 50, height = 50))
             }
         }
-        return LruBitmapCache.getLruCache("emptyBmp", BitmapCustomParams())?.getBitmap()!!
+         val bmp = LruBitmapCache.getLruCache("emptyBmp", BitmapCustomParams())
+         return bmp?.getBitmap()
     }
 
-    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int, bmpParams: BitmapCustomParams): Bitmap {
+    fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int, bmpParams: BitmapCustomParams): Bitmap? {
         val anotherOptions = BitmapFactory.Options().apply {
             inJustDecodeBounds = false
             inPreferredConfig = Bitmap.Config.RGB_565

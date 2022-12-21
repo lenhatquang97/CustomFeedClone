@@ -1,9 +1,6 @@
 package com.quangln2.customfeedui.data.database
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
 
 @Dao
@@ -11,7 +8,7 @@ interface FeedDao {
     @Query("SELECT * FROM my_post ORDER BY CAST(created_time AS BIGINT) DESC")
     fun getAll(): List<MyPost>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(myPost: MyPost)
 
     @Update

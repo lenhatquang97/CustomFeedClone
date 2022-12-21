@@ -11,7 +11,6 @@ import com.quangln2.customfeedui.threadpool.TaskExecutor
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -25,7 +24,7 @@ class HttpFetcher {
         this.fileUri = fileUri
     }
 
-    fun downloadImage(context: Context, imageView: WeakReference<ImageView>, loadImage: (Uri, WeakReference<ImageView>, BitmapCustomParams) -> Unit, bmpParams: BitmapCustomParams) {
+    fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, BitmapCustomParams) -> Unit, bmpParams: BitmapCustomParams) {
         if(bmpParams.folderName.isNotEmpty()){
             val folderCreation = File(context.cacheDir, bmpParams.folderName)
             if(!folderCreation.exists())
@@ -54,28 +53,21 @@ class HttpFetcher {
                                 }
                                 TaskExecutor.writingFiles.remove(actualPath)
                             }
-                            if(imageView.get() != null){
-                                val img = imageView.get()
-                                img?.post {
-                                    val file = File(context.cacheDir, actualPath)
-                                    if (file.exists()) {
-                                        Log.i("HttpFetcher", "$actualPath read ${file.length()} ${conn.contentLength}")
-                                        loadImage(file.toUri(), imageView, bmpParams)
-                                    }
+                            imageView.post {
+                                val file = File(context.cacheDir, actualPath)
+                                if (file.exists()) {
+                                    Log.i("HttpFetcher", "$actualPath read ${file.length()} ${conn.contentLength}")
+                                    loadImage(file.toUri(), imageView, bmpParams)
                                 }
                             }
-
                         }
                     }
-
                 }
                 conn.disconnect()
             } catch (e: java.lang.Exception) {
                 Log.e("HttpFetcher", e.stackTraceToString())
             }
         }
-
-
     }
 
     fun fetchImageByInputStream(context: Context): InputStream?{
