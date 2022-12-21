@@ -14,15 +14,21 @@ object LruBitmapCache: CachePolicy {
     private var memoryCache: LruCache<String, WeakReference<ManagedBitmap>> = object : LruCache<String, WeakReference<ManagedBitmap>>(cacheSize){
         override fun sizeOf(key: String, value: WeakReference<ManagedBitmap>): Int {
             val managedBitmap = value.get()
-            return managedBitmap?.getBitmap()?.byteCount?.div(1024) ?: 100
+            return managedBitmap?.getBitmap()?.byteCount?.div(1024) ?: 0
         }
 
     }
 
     override fun putIntoLruCache(key: String, managedBitmap: ManagedBitmap){
         synchronized(memoryCache){
-            if(memoryCache.get(key) == null){
-                memoryCache.put(key, WeakReference(managedBitmap))
+            val tmpBmp = memoryCache.get(key)
+            val managedBitmapGet = tmpBmp?.get()
+            if((tmpBmp == null || managedBitmapGet == null) && managedBitmap != null){
+                val addedByte = managedBitmap.getBitmap().byteCount.div(1024)
+                if(addedByte + memoryCache.size() < memoryCache.maxSize()){
+                    memoryCache.put(key, WeakReference(managedBitmap))
+                }
+
             }
         }
     }
@@ -39,9 +45,8 @@ object LruBitmapCache: CachePolicy {
     }
 
     override fun getLruCacheWithoutIncreaseCount(key: String): ManagedBitmap? {
-        return if(containsKey(key))
-            memoryCache.get(key).get()
-        else null
+        val tmpBmp = memoryCache.get(key)
+        return tmpBmp?.get()
     }
 
     override fun removeCache(key: String) {
@@ -51,12 +56,13 @@ object LruBitmapCache: CachePolicy {
             Log.d("LruBitmapCache", "Before-after first ${managedBitmap?.referenceCount}")
             managedBitmap?.subtractReferenceCount()
             Log.d("ReferenceCount", "Reference count: ${managedBitmap?.referenceCount} $key")
-            if(managedBitmap != null && managedBitmap.hasNoReference()){
-                memoryCache.remove(key)
-                managedBitmap.getBitmap().recycle()
-            } else if(managedBitmap != null){
-                Log.d("LruBitmapCache", "Before-after second ${managedBitmap.referenceCount}")
-                putIntoLruCache(key, managedBitmap)
+            if(managedBitmap != null){
+                if(managedBitmap.hasNoReference()){
+                    memoryCache.remove(key)
+                } else {
+                    Log.d("LruBitmapCache", "Before-after second ${managedBitmap.referenceCount}")
+                    putIntoLruCache(key, managedBitmap)
+                }
             }
         }
     }
@@ -65,11 +71,14 @@ object LruBitmapCache: CachePolicy {
 
     fun removeCacheForce(key: String){
         synchronized(memoryCache){
-            val managedBitmap = memoryCache.get(key).get()
-            if(managedBitmap != null && managedBitmap.hasNoReference()){
-                memoryCache.remove(key)
-                managedBitmap.getBitmap().recycle()
+            val memCache = memoryCache.get(key)
+            if(memCache != null){
+                val managedBitmap = memCache.get()
+                if(managedBitmap != null && managedBitmap.hasNoReference()){
+                    memoryCache.remove(key)
+                }
             }
+
         }
     }
 
