@@ -53,13 +53,16 @@ class HttpFetcher {
                                 }
                                 TaskExecutor.writingFiles.remove(actualPath)
                             }
-                            imageView.post {
-                                val file = File(context.cacheDir, actualPath)
-                                if (file.exists()) {
-                                    Log.i("HttpFetcher", "$actualPath read ${file.length()} ${conn.contentLength}")
-                                    loadImage(file.toUri(), imageView, bmpParams)
+                            if(!TaskExecutor.writingFiles.contains(actualPath)){
+                                imageView.post {
+                                    val file = File(context.cacheDir, actualPath)
+                                    if (file.exists()) {
+                                        Log.i("HttpFetcher", "$actualPath read ${file.length()} ${conn.contentLength}")
+                                        loadImage(file.toUri(), imageView, bmpParams)
+                                    }
                                 }
                             }
+
                         }
                     }
                 }

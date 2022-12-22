@@ -81,21 +81,6 @@ class ImageLoader(
         }
     }
 
-    private fun loadEmptyImage(imageView: ImageView) {
-        scope.launch(Dispatchers.IO) {
-            val bitmap = BitmapUtils.emptyBitmap()
-            withContext(Dispatchers.Main) {
-                if (bitmap != null && !bitmap.isRecycled) {
-                    async {
-                        imageView.addToManagedAddress("emptyBmp")
-                        imageView.setImageBitmap(bitmap)
-                    }
-
-                }
-            }
-        }
-    }
-
     private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val httpFetcher = HttpFetcher(url)
         val loadImage = fun(a: Uri, b: ImageView, c: BitmapCustomParams){
@@ -181,7 +166,6 @@ class ImageLoader(
 
 
     fun loadImage(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
-        loadEmptyImage(imageView)
         if (webUrlOrFileUri.isEmpty()) {
             return
         } else if (URLUtil.isHttpUrl(webUrlOrFileUri) || URLUtil.isHttpsUrl(webUrlOrFileUri)) {

@@ -3,6 +3,8 @@ package com.quangln2.customfeedui.ui.screens.allfeeds.viewholder
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.ViewGroup
 import android.webkit.URLUtil
 import android.widget.ImageView
@@ -120,6 +122,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                     binding.customGridGroup.addView(videoView)
                 } else {
                     val imageView = ImageView(context).apply {
+                        background = ColorDrawable(Color.parseColor("#aaaaaa"))
                         scaleType = ImageView.ScaleType.CENTER_CROP
                         layoutParams = layoutParamsCustom
                         setOnClickListener {

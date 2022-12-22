@@ -12,6 +12,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:scaleType="centerCrop"
+        android:background="@color/grey"
         />
 
     <com.google.android.exoplayer2.ui.PlayerView

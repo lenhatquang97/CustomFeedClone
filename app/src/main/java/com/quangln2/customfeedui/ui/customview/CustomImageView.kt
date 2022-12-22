@@ -1,6 +1,7 @@
 package com.quangln2.customfeedui.ui.customview
 
 import android.content.Context
+import android.content.res.Resources
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -38,10 +39,11 @@ class CustomImageView {
 
         private fun generateImageView(context: Context, fileUriOrWebUrl: String): ImageView {
             val imageView = ImageView(context)
-            imageView.layoutParams =
-                FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
+            imageView.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.FILL_PARENT)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-            val imageLoader = ImageLoader(context, 300, 300, CoroutineScope(Job()))
+            val marginHorizontalSum = 16 + 32
+            val widthGrid = Resources.getSystem().displayMetrics.widthPixels / 3 - marginHorizontalSum
+            val imageLoader = ImageLoader(context, widthGrid, widthGrid, CoroutineScope(Job()))
             imageLoader.loadImage(fileUriOrWebUrl, imageView, BitmapCustomParams())
             return imageView
         }

@@ -24,6 +24,7 @@
             />
 
         <ImageView
+            android:contentDescription="@string/app_name"
             android:visibility="@{viewmodel.fullImageViewVisibility ? View.VISIBLE: View.GONE}"
             android:id="@+id/fullImageView"
             android:layout_width="match_parent"
