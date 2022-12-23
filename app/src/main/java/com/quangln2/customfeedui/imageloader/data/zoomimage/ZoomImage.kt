@@ -22,7 +22,7 @@ class ZoomImage: AppCompatImageView {
         this.setOnTouchListener { v, event ->
             v.bringToFront()
             if(v is ZoomImage){
-                v.viewZoomTransformation(v, event)
+                v.zoomTransformation(v, event)
             }
             return@setOnTouchListener true
         }
@@ -42,48 +42,46 @@ class ZoomImage: AppCompatImageView {
     private var xMilestone = 0f
     private var yMilestone = 0f
 
-    fun viewZoomTransformation(view: View, event: MotionEvent) {
+    fun zoomTransformation(view: View, event: MotionEvent) {
         when (event.action and MotionEvent.ACTION_MASK) {
+            //One finger
             MotionEvent.ACTION_DOWN -> {
                 xMilestone = view.x - event.rawX
                 yMilestone = view.y - event.rawY
                 isOutSide = false
                 mode = ZoomMode.DRAG
             }
+            //Two finger
             MotionEvent.ACTION_POINTER_DOWN -> {
                 oldDist = distanceBetweenTwoPoints(event)
                 mode = if(oldDist > 5f) ZoomMode.ZOOM else mode
             }
-            MotionEvent.ACTION_POINTER_UP -> mode = ZoomMode.NONE
+            MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP -> mode = ZoomMode.NONE
             MotionEvent.ACTION_OUTSIDE -> {
                 isOutSide = true
                 mode = ZoomMode.NONE
             }
             MotionEvent.ACTION_MOVE -> if (!isOutSide) {
-                if (mode == ZoomMode.DRAG) {
-                    //Move image location for zooming
-                    view.animate().x(event.rawX + xMilestone).y(event.rawY + yMilestone).setDuration(0).start()
-                }
-                if (mode == ZoomMode.ZOOM && event.pointerCount == 2) {
-                    val newDist = distanceBetweenTwoPoints(event)
-                    if (newDist > 5f) {
-                        val scale: Float = newDist / oldDist * view.scaleX
-                        //To make image which has 1x scale can fit into view.
-                        view.animate().x(0f).y(0f).start()
-
-                        //Scale image
-                        view.scaleX = if(scale < 1f) 1f else minOf(scale, MAX_SCALE)
-                        view.scaleY = if(scale < 1f) 1f else minOf(scale, MAX_SCALE)
-                    }
-                }
+                //Move image location for zooming
+                if (mode == ZoomMode.DRAG) dragFunction(view, event)
+                if (mode == ZoomMode.ZOOM && event.pointerCount == 2) zoomFunction(view, event)
             }
         }
     }
-
+    private fun dragFunction(view: View, event: MotionEvent) = view.animate().x(event.rawX + xMilestone).y(event.rawY + yMilestone).setDuration(0).start()
+    private fun zoomFunction(view: View, event: MotionEvent){
+        val newDist = distanceBetweenTwoPoints(event)
+        if (newDist > 5f) {
+            val scale: Float = newDist / oldDist * view.scaleX
+            //To make image which has 1x scale can fit into view.
+            view.animate().x(0f).y(0f).start()
+            view.scaleX = if(scale < 1f) 1f else minOf(scale, MAX_SCALE)
+            view.scaleY = if(scale < 1f) 1f else minOf(scale, MAX_SCALE)
+        }
+    }
     private fun distanceBetweenTwoPoints(event: MotionEvent): Float {
         val x = event.getX(0) - event.getX(1)
         val y = event.getY(0) - event.getY(1)
         return sqrt((x * x + y * y).toDouble()).toInt().toFloat()
     }
-
 }
