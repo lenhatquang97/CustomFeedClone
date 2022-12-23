@@ -3,7 +3,6 @@ package com.quangln2.customfeedui.imageloader.data.zoomimage
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PointF
-import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -39,16 +38,16 @@ class ZoomImage: AppCompatImageView {
 
     private val start = PointF()
     private var oldDist = 1f
-    private var xCoOrdinate = 0f
-    private var yCoOrdinate = 0f
 
-    private val currentRect = Rect()
+    //Make a milestone as origin
+    private var xMilestone = 0f
+    private var yMilestone = 0f
 
     fun viewZoomTransformation(view: View, event: MotionEvent) {
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
-                xCoOrdinate = view.x - event.rawX
-                yCoOrdinate = view.y - event.rawY
+                xMilestone = view.x - event.rawX
+                yMilestone = view.y - event.rawY
                 start.set(event.x, event.y)
                 isOutSide = false
                 mode = ZoomMode.DRAG
@@ -65,7 +64,7 @@ class ZoomImage: AppCompatImageView {
             MotionEvent.ACTION_MOVE -> if (!isOutSide) {
                 if (mode == ZoomMode.DRAG) {
                     //Move image location for zooming
-                    view.animate().x(event.rawX + xCoOrdinate).y(event.rawY + yCoOrdinate).setDuration(0).start()
+                    view.animate().x(event.rawX + xMilestone).y(event.rawY + yMilestone).setDuration(0).start()
                 }
                 if (mode == ZoomMode.ZOOM && event.pointerCount == 2) {
                     val newDist = distanceBetweenTwoPoints(event)
