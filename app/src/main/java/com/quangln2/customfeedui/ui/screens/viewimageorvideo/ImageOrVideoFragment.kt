@@ -1,5 +1,6 @@
 package com.quangln2.customfeedui.ui.screens.viewimageorvideo
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -50,6 +51,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

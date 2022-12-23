@@ -23,7 +23,7 @@
             app:controller_layout_id="@layout/exo_playback_control_view"
             />
 
-        <ImageView
+        <com.quangln2.customfeedui.imageloader.data.zoomimage.ZoomImage
             android:contentDescription="@string/app_name"
             android:visibility="@{viewmodel.fullImageViewVisibility ? View.VISIBLE: View.GONE}"
             android:id="@+id/fullImageView"
