@@ -2,7 +2,6 @@ package com.quangln2.customfeedui.imageloader.data.zoomimage
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -36,7 +35,7 @@ class ZoomImage: AppCompatImageView {
     //Zoom mode
     private var mode = ZoomMode.NONE
 
-    private val start = PointF()
+    //Get old distance so as to calculate zoom proportion
     private var oldDist = 1f
 
     //Make a milestone as origin
@@ -48,7 +47,6 @@ class ZoomImage: AppCompatImageView {
             MotionEvent.ACTION_DOWN -> {
                 xMilestone = view.x - event.rawX
                 yMilestone = view.y - event.rawY
-                start.set(event.x, event.y)
                 isOutSide = false
                 mode = ZoomMode.DRAG
             }
