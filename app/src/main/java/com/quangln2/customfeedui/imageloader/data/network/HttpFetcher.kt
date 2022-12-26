@@ -7,7 +7,11 @@ import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
-import com.quangln2.customfeedui.threadpool.TaskExecutor
+import com.quangln2.customfeedui.uitracking.ui.UiTracking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -33,27 +37,30 @@ class HttpFetcher {
 
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-        TaskExecutor.forBackgroundTasks()?.execute {
-            val conn = URL(webUrl).openConnection() as HttpURLConnection
+        CoroutineScope(Dispatchers.IO).launch {
+            Thread.currentThread().name = UiTracking.THREAD_DOWNLOADING_IMAGE
+            val conn = withContext(Dispatchers.IO) {
+                URL(webUrl).openConnection()
+            } as HttpURLConnection
             conn.requestMethod = "GET"
             try {
                 conn.connect()
                 val responseCode = conn.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    if(!TaskExecutor.writingFiles.contains(actualPath)){
-                        TaskExecutor.writingFiles.add(actualPath)
+                    if(!NetworkHelper.writingFiles.contains(actualPath)){
+                        NetworkHelper.writingFiles.add(actualPath)
                         conn.inputStream.use {inputStream ->
                             val cacheFile = File(context.cacheDir, actualPath)
                             val buffer = ByteArray(8*1024)
                             var len: Int
-                            FileOutputStream(cacheFile).use {fos ->
+                            FileOutputStream(cacheFile).use { fos ->
                                 Log.i("HttpFetcher", "$actualPath writes")
                                 while (inputStream.read(buffer).also { len = it } != -1) {
                                     fos.write(buffer, 0, len)
                                 }
-                                TaskExecutor.writingFiles.remove(actualPath)
+                                NetworkHelper.writingFiles.remove(actualPath)
                             }
-                            if(!TaskExecutor.writingFiles.contains(actualPath)){
+                            if(!NetworkHelper.writingFiles.contains(actualPath)){
                                 imageView.post {
                                     val file = File(context.cacheDir, actualPath)
                                     if (file.exists()) {

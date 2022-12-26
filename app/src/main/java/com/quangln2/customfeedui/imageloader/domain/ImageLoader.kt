@@ -17,7 +17,7 @@ import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
 import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
-import com.quangln2.customfeedui.threadpool.TaskExecutor
+import com.quangln2.customfeedui.uitracking.ui.UiTracking
 import kotlinx.coroutines.*
 import java.io.File
 
@@ -29,6 +29,7 @@ class ImageLoader(
 ) {
     private fun loadImageWithUri(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
         scope.launch(Dispatchers.Default) {
+            Thread.currentThread().name = UiTracking.LOAD_WITH_URI
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
@@ -156,7 +157,7 @@ class ImageLoader(
         val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlOrFileUri)
         val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-        if ((isInMemoryCache(actualPath) || doesFileExist(actualPath)) && !TaskExecutor.writingFiles.contains(actualPath)) {
+        if ((isInMemoryCache(actualPath) || doesFileExist(actualPath)) && !NetworkHelper.writingFiles.contains(actualPath)) {
             handleMemoryCache(actualPath, imageView, bmpParams)
         }
         else {

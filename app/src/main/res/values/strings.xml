@@ -28,4 +28,5 @@
     <string name="wait_for_previous_upload">Please wait for the previous upload to finish</string>
     <string name="positive_title">Yes</string>
     <string name="negative_title">No</string>
+    <string name="sample_text">Hello World</string>
 </resources>

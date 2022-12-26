@@ -12,6 +12,7 @@ class CustomFeedApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        System.setProperty("kotlinx.coroutines.debug", "on")
     }
 
     private fun createNotificationChannel() {

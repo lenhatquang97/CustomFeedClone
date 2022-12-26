@@ -3,6 +3,7 @@ package com.quangln2.customfeedui.ui.screens.allfeeds
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -37,8 +38,10 @@ import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
+import com.quangln2.customfeedui.uitracking.ui.UiTracking
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 
@@ -46,6 +49,8 @@ class AllFeedsFragment : Fragment() {
     private lateinit var binding: FragmentAllFeedsBinding
     private lateinit var adapterVal: FeedListAdapter
     private var feedVideoItemPlaying = Pair(-1, -1)
+    private lateinit var timer: Timer
+    private lateinit var handler: Handler
 
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
     private val currentViewRect by lazy { Rect() }
@@ -117,6 +122,9 @@ class AllFeedsFragment : Fragment() {
             viewModel.getAllFeeds(preloadCache = true)
         }
         player.addListener(playerListener)
+
+        timer = Timer()
+        handler = Handler()
     }
 
 
@@ -186,8 +194,16 @@ class AllFeedsFragment : Fragment() {
             it?.apply {
                 viewModel.manageUploadState(it, requireContext())
             }
-
         }
+
+        timer.schedule(object : TimerTask(){
+            override fun run() {
+                handler.post {
+                    binding.uiTracking.text = UiTracking.getGeneralInfo()
+                }
+            }
+        },0, 1000)
+
         return binding.root
     }
 

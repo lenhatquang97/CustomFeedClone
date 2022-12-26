@@ -6,6 +6,7 @@ import androidx.core.net.toUri
 import java.io.File
 
 object NetworkHelper {
+    val writingFiles = mutableSetOf<String>()
     fun convertVideoUrlToImageUrl(videoUrl: String) : String{
         val index = videoUrl.lastIndexOf(".mp4")
         if(index != -1){

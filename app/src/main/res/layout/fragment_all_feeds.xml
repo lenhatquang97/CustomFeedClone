@@ -42,6 +42,18 @@
                 android:descendantFocusability="blocksDescendants"
                 android:orientation="vertical">
 
+                <TextView
+                    android:id="@+id/ui_tracking"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/sample_text"
+                    android:layout_gravity="fill_vertical"
+                    android:inputType="textMultiLine"
+                    android:maxEms="15"
+                    />
+
+
                 <include
                     android:id="@+id/loading_card"
                     layout="@layout/loading_card"

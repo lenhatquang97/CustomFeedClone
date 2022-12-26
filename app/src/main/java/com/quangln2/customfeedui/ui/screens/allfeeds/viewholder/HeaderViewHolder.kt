@@ -10,7 +10,6 @@ import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
-import com.quangln2.customfeedui.uitracking.ui.UiTracking
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
@@ -33,7 +32,6 @@ class HeaderViewHolder constructor(
     @SuppressLint("SetTextI18n")
     private fun loadFeedDescription(item: MyPostRender, context: Context) {
         binding.caption.text = item.caption
-        binding.trackingInfo.text = UiTracking.formatString(item.avatar, context)
         if(item.caption.isEmpty()){
             binding.caption.visibility = View.GONE
         } else {

@@ -83,6 +83,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
         }
 
         val keyList = item.resources.map {getFileUri(it.url) }.toList()
+
         binding.trackingInfo.text = UiTracking.getAllImageReferences(keyList)
     }
 
