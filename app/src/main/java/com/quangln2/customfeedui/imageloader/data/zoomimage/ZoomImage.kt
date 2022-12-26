@@ -22,6 +22,11 @@ class ZoomImage: AppCompatImageView {
             if(v is ZoomImage){
                 v.zoomTransformation(v, event)
             }
+            if(scale > 1f){
+                parent.requestDisallowInterceptTouchEvent(true)
+            } else {
+                parent.requestDisallowInterceptTouchEvent(false)
+            }
             return@setOnTouchListener true
         }
     }
@@ -39,13 +44,14 @@ class ZoomImage: AppCompatImageView {
     //Make a milestone as origin
     private var xMilestone = 0f
     private var yMilestone = 0f
+    private var scale = 1f
 
     fun zoomTransformation(view: View, event: MotionEvent) {
         when (event.action and MotionEvent.ACTION_MASK) {
             //One finger
             MotionEvent.ACTION_DOWN -> {
-                xMilestone = view.x - event.rawX
-                yMilestone = view.y - event.rawY
+                xMilestone = view.x * 1.1f - event.rawX
+                yMilestone = view.y * 1.1f - event.rawY
                 isOutSide = false
                 mode = ZoomMode.DRAG
             }
@@ -66,15 +72,18 @@ class ZoomImage: AppCompatImageView {
             }
         }
     }
-    private fun dragFunction(view: View, event: MotionEvent) = view.animate().x(event.rawX + xMilestone).y(event.rawY + yMilestone).setDuration(0).start()
+    private fun dragFunction(view: View, event: MotionEvent){
+        view.animate().x(event.rawX + xMilestone).y(event.rawY + yMilestone).setDuration(0).start()
+    }
     private fun zoomFunction(view: View, event: MotionEvent){
         val newDist = distanceBetweenTwoPoints(event)
         if (newDist > 5f) {
-            val scale: Float = newDist / oldDist * view.scaleX
             //To make image which has 1x scale can fit into view.
             view.animate().x(0f).y(0f).start()
-            view.scaleX = if(scale < 1f) 1f else minOf(scale, MAX_SCALE)
-            view.scaleY = if(scale < 1f) 1f else minOf(scale, MAX_SCALE)
+            val calculatedScale = newDist / oldDist * view.scaleX
+            scale = if(calculatedScale < 1f) 1f else minOf(calculatedScale, MAX_SCALE)
+            view.scaleX = scale
+            view.scaleY = scale
         }
     }
     private fun distanceBetweenTwoPoints(event: MotionEvent): Float {
