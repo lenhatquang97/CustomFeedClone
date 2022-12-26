@@ -13,8 +13,6 @@ enum class ZoomMode {
     ZOOM
 }
 const val MAX_SCALE = 5f
-
-//Reference: https://stackoverflow.com/questions/6650398/android-imageview-zoom-in-and-zoom-out
 class ZoomImage: AppCompatImageView {
     constructor(context: Context) : super(context)
     @SuppressLint("ClickableViewAccessibility")
