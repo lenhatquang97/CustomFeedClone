@@ -35,10 +35,10 @@ data class MyPostRender(
             val listsOfPostRender = mutableListOf<MyPostRender>()
             val addNewPostItem = convertMyPostToMyPostRender(MyPost()).copy(typeOfPost = TypeOfPost.ADD_NEW_POST)
             listsOfPostRender.add(addNewPostItem)
-            posts.forEach { itr ->
-                val myPostRender = convertMyPostToMyPostRender(itr)
-                for(i in 2..4){
-                    listsOfPostRender.add(myPostRender.copy(typeOfPost = getTypeOfPost(i)))
+            for(i in posts.indices){
+                val myPostRender = convertMyPostToMyPostRender(posts[i])
+                for(j in 2..4){
+                    listsOfPostRender.add(myPostRender.copy(typeOfPost = getTypeOfPost(j)))
                 }
             }
             return listsOfPostRender

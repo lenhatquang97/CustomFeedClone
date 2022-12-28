@@ -179,12 +179,14 @@ class AllFeedsFragment : Fragment() {
         //Handle observe uploadLists
         viewModel.uploadLists.observe(viewLifecycleOwner) {
             it?.apply {
-                val listOfPostRender = MyPostRender.convertToListWithRenderedPost(it)
-                viewModel.manageUploadList(listOfPostRender)
-                adapterVal.submitList(listOfPostRender.toMutableList()){
-                    if(positionDeletedOrRefreshed.get() >= 1){
-                        binding.allFeeds.scrollToPosition(positionDeletedOrRefreshed.get() - 1)
-                        positionDeletedOrRefreshed.set(-1)
+                synchronized(it){
+                    val listOfPostRender = MyPostRender.convertToListWithRenderedPost(it)
+                    viewModel.manageUploadList(listOfPostRender)
+                    adapterVal.submitList(listOfPostRender.toMutableList()){
+                        if(positionDeletedOrRefreshed.get() >= 1){
+                            binding.allFeeds.scrollToPosition(positionDeletedOrRefreshed.get() - 1)
+                            positionDeletedOrRefreshed.set(-1)
+                        }
                     }
                 }
             }

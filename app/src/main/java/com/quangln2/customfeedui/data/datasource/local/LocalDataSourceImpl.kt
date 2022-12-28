@@ -77,7 +77,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
         return if(body.isNotEmpty()){
             //Step 3: Compare data from server and data from local
             val offlinePosts = getAllFeeds()
-            val availableItems = handleModifyPostList(body)
+            val availableItems = handleModifyPostList(body).sortedByDescending { it.createdTime.toBigInteger() }
             if(!compareDBPostsAndFetchPosts(offlinePosts, availableItems)){
                 FeedWrapper(availableItems, EnumFeedLoadingCode.SUCCESS.value)
             } else {

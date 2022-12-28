@@ -3,6 +3,7 @@ package com.quangln2.customfeedui.data.repository
 import android.content.Context
 import android.widget.Toast
 import com.quangln2.customfeedui.R
+import com.quangln2.customfeedui.data.database.convertFromUploadPostToMyPost
 import com.quangln2.customfeedui.data.datasource.local.LocalDataSource
 import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSource
 import com.quangln2.customfeedui.data.models.datamodel.MyPost
@@ -25,6 +26,14 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
          }
          //Step 2: Fetch data from server
          val body = remoteDataSource.getAllFeeds()
+
+        //For realtime passing
+         var ls = mutableListOf<MyPost>()
+         body.forEach {
+             ls.add(convertFromUploadPostToMyPost(it, mutableListOf()))
+             emit(FeedWrapper(ls, 200))
+         }
+
          val result = localDataSource.updatePostsBasedOnServer(body)
          emit(result)
     }.flowOn(Dispatchers.IO)

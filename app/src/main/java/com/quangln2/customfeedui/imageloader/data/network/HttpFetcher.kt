@@ -7,11 +7,8 @@ import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
+import com.quangln2.customfeedui.uitracking.ui.BitmapTaskManager
 import com.quangln2.customfeedui.uitracking.ui.UiTracking
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -37,11 +34,9 @@ class HttpFetcher {
 
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-        CoroutineScope(Dispatchers.IO).launch {
+        BitmapTaskManager.executor.execute {
             Thread.currentThread().name = UiTracking.THREAD_DOWNLOADING_IMAGE
-            val conn = withContext(Dispatchers.IO) {
-                URL(webUrl).openConnection()
-            } as HttpURLConnection
+            val conn = URL(webUrl).openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
             try {
                 conn.connect()

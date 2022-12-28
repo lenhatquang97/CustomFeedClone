@@ -61,8 +61,14 @@ class FeedViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             getAllFeedsModifiedUseCase(preloadCache).collect{
                 _feedLoadingCode.postValue(it.loadingCode)
-                _uploadLists.postValue(it.feedList.toMutableList())
-                isRefreshingLoadState.postValue(false)
+                synchronized(_uploadLists){
+                    val oldList = _uploadLists.value
+                    oldList?.apply {
+                        this.addAll(it.feedList.toMutableList())
+                        _uploadLists.postValue(this.distinctBy { itr -> itr.feedId }.toMutableList())
+                        isRefreshingLoadState.postValue(false)
+                    }
+                }
             }
         }
     }

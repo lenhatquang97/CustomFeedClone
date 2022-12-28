@@ -30,9 +30,11 @@ class ImageLoader(
     private fun loadImageWithUri(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
         scope.launch(Dispatchers.Default) {
             Thread.currentThread().name = UiTracking.LOAD_WITH_URI
+
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
+                UiTracking.howManyTasksLoadingImage += 1
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, bmpParams)
 //                async(Dispatchers.IO){
 //                    val actualKey = if(bmpParams.isFullScreen) "${uri}_fullScreen" else uri.toString()
@@ -45,8 +47,11 @@ class ImageLoader(
                             imageView.setImageBitmap(bitmap)
                         }
                     }
+                    UiTracking.howManyTasksLoadingImage -= 1
                 }
             }
+
+
         }
     }
 
