@@ -10,7 +10,6 @@ import androidx.core.net.toUri
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapUtils
 import com.quangln2.customfeedui.imageloader.data.bitmap.ManagedBitmap
-import com.quangln2.customfeedui.imageloader.data.diskcache.DiskCache
 import com.quangln2.customfeedui.imageloader.data.extension.addToManagedAddress
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
@@ -34,12 +33,7 @@ class ImageLoader(
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
-                UiTracking.howManyTasksLoadingImage += 1
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, bmpParams)
-//                async(Dispatchers.IO){
-//                    val actualKey = if(bmpParams.isFullScreen) "${uri}_fullScreen" else uri.toString()
-//                    DiskCache.writeBitmapToDiskCache(actualKey, bitmap, context)
-//                }
                 withContext(Dispatchers.Main) {
                     if (bitmap != null && !bitmap.isRecycled) {
                         async(Dispatchers.Main){
@@ -47,7 +41,6 @@ class ImageLoader(
                             imageView.setImageBitmap(bitmap)
                         }
                     }
-                    UiTracking.howManyTasksLoadingImage -= 1
                 }
             }
 
@@ -101,10 +94,6 @@ class ImageLoader(
         return LruBitmapCache.containsKey(memoryCacheFile.toUri().toString())
     }
 
-    private fun isInDiskCache(context: Context, fileName: String): Boolean {
-        return DiskCache.containsWith(fileName, context)
-    }
-
     private fun doesFileExist(fileName: String): Boolean {
         val file = File(context.cacheDir, fileName)
         return file.exists()
@@ -123,20 +112,6 @@ class ImageLoader(
 
     }
 
-    private fun handleDiskCache(filePath: String, imageView: ImageView) {
-        val convertToUri = File(context.cacheDir, filePath)
-        scope.launch(Dispatchers.IO) {
-            val bitmap = DiskCache.getBitmapFromDiskCache(convertToUri.toUri().toString(), context)
-            if (bitmap != null) {
-                LruBitmapCache.putIntoLruCache(convertToUri.toUri().toString(), ManagedBitmap(bitmap, bitmap.width, bitmap.height))
-            }
-            withContext(Dispatchers.Main) {
-                async {
-                    imageView.setImageBitmap(bitmap)
-                }
-            }
-        }
-    }
     private fun loadImageLocally(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams){
         val actualUri = if(webUrlOrFileUri.startsWith("content"))
             FileUtils.convertContentUriToFileUri(webUrlOrFileUri.toUri(), context)

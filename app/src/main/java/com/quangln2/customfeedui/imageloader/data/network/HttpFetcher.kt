@@ -34,45 +34,51 @@ class HttpFetcher {
 
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-        BitmapTaskManager.executor.execute {
-            Thread.currentThread().name = UiTracking.THREAD_DOWNLOADING_IMAGE
-            val conn = URL(webUrl).openConnection() as HttpURLConnection
-            conn.requestMethod = "GET"
-            try {
-                conn.connect()
-                val responseCode = conn.responseCode
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    if(!NetworkHelper.writingFiles.contains(actualPath)){
-                        NetworkHelper.writingFiles.add(actualPath)
-                        conn.inputStream.use {inputStream ->
-                            val cacheFile = File(context.cacheDir, actualPath)
-                            val buffer = ByteArray(8*1024)
-                            var len: Int
-                            FileOutputStream(cacheFile).use { fos ->
-                                Log.i("HttpFetcher", "$actualPath writes")
-                                while (inputStream.read(buffer).also { len = it } != -1) {
-                                    fos.write(buffer, 0, len)
+        val managingThread = Thread.getAllStackTraces().keys
+        val doesContainLink =
+            managingThread.any { it.name.contains(webUrl) && (it.state == Thread.State.WAITING || it.state == Thread.State.RUNNABLE) }
+        if(!doesContainLink){
+            BitmapTaskManager.executorDownloadingImage.execute {
+                Thread.currentThread().name = UiTracking.THREAD_DOWNLOADING_IMAGE + webUrl
+                val conn = URL(webUrl).openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+                try {
+                    conn.connect()
+                    val responseCode = conn.responseCode
+                    if (responseCode == HttpURLConnection.HTTP_OK) {
+                        if(!NetworkHelper.writingFiles.contains(actualPath)){
+                            NetworkHelper.writingFiles.add(actualPath)
+                            conn.inputStream.use {inputStream ->
+                                val cacheFile = File(context.cacheDir, actualPath)
+                                val buffer = ByteArray(8*1024)
+                                var len: Int
+                                FileOutputStream(cacheFile).use { fos ->
+                                    Log.i("HttpFetcher", "$actualPath writes")
+                                    while (inputStream.read(buffer).also { len = it } != -1) {
+                                        fos.write(buffer, 0, len)
+                                    }
+                                    NetworkHelper.writingFiles.remove(actualPath)
                                 }
-                                NetworkHelper.writingFiles.remove(actualPath)
-                            }
-                            if(!NetworkHelper.writingFiles.contains(actualPath)){
-                                imageView.post {
-                                    val file = File(context.cacheDir, actualPath)
-                                    if (file.exists()) {
-                                        Log.i("HttpFetcher", "$actualPath read ${file.length()} ${conn.contentLength}")
-                                        loadImage(file.toUri(), imageView, bmpParams)
+                                if(!NetworkHelper.writingFiles.contains(actualPath)){
+                                    imageView.post {
+                                        val file = File(context.cacheDir, actualPath)
+                                        if (file.exists()) {
+                                            Log.i("HttpFetcher", "$actualPath read ${file.length()} ${conn.contentLength}")
+                                            loadImage(file.toUri(), imageView, bmpParams)
+                                        }
                                     }
                                 }
-                            }
 
+                            }
                         }
                     }
+                    conn.disconnect()
+                } catch (e: java.lang.Exception) {
+                    Log.e("HttpFetcher", e.stackTraceToString())
                 }
-                conn.disconnect()
-            } catch (e: java.lang.Exception) {
-                Log.e("HttpFetcher", e.stackTraceToString())
             }
         }
+
     }
 
     fun fetchImageByInputStream(context: Context): InputStream?{

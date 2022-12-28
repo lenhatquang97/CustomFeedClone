@@ -8,37 +8,50 @@ object UiTracking {
     const val THREAD_DOWNLOADING_IMAGE = "ImageFetcherThread"
     const val LOAD_WITH_URI = "LoadImageWithUriThread"
 
-    var howManyTasksLoadingImage = 0
-
-
     private val memStats = MemoryStats()
     private fun isNotSpecialTask(name: String): Boolean {
         return !name.contains("Daemon") && !name.contains("Catcher")
     }
 
-    fun getGeneralInfo(): String{
-        val threadSet = Thread.getAllStackTraces().keys
+    private fun getOverallInfo(threadSet: MutableSet<Thread>): String {
         val waitingThreads = threadSet.filter {it.state == Thread.State.WAITING && isNotSpecialTask(it.name)}
-        val numOfThreadFetchingImage = threadSet.filter {it.name == THREAD_DOWNLOADING_IMAGE}.size
-        val numOfThreadLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI}.size
-        var waitingThreadName = StringBuilder()
-
-        waitingThreads.forEach {
-            waitingThreadName.append(String.format("%10s%n", it.name))
-        }
-
         val usedHeapSizeFormat = "Used Heap Size: ${memStats.getUsedMemory()} MB\n"
         val numberOfWaitingThreadsFormat = "Number of waiting threads: ${waitingThreads.size}\n"
-        val numOfThreadImage = "Number of threads downloading images: $numOfThreadFetchingImage\n"
-        val numOfTaskWaitingDownloadingImage = "Number of tasks waiting for downloading images: ${BitmapTaskManager.executor.taskWaiting()}\n"
+        val formatString = StringBuilder().apply {
+            append(usedHeapSizeFormat)
+            append(numberOfWaitingThreadsFormat)
+        }
+        return formatString.toString()
+    }
 
+    private fun getDownloadImageStat(threadSet: MutableSet<Thread>): String {
+        val totalThreadDownImage = threadSet.filter { it.name.contains(THREAD_DOWNLOADING_IMAGE) }.size
+        val numOfThreadDownImageRunning = threadSet.filter {it.name.contains(THREAD_DOWNLOADING_IMAGE) && it.state == Thread.State.RUNNABLE}.size
+        val numOfTaskDownImageWaiting = BitmapTaskManager.executorDownloadingImage.taskWaiting()
+
+        val formatTotalThreadDownImage = "Total number of threads downloading images: $totalThreadDownImage\n"
+        val formatNumOfThreadDownImageRunning = "Number of threads running downloading images: $numOfThreadDownImageRunning\n"
+        val formatNumOfTaskDownImageWaiting = "Number of tasks waiting for downloading images: $numOfTaskDownImageWaiting\n"
+
+        val formatString = StringBuilder().apply {
+            //Download images
+            append(formatTotalThreadDownImage)
+            append(formatNumOfThreadDownImageRunning)
+            append(formatNumOfTaskDownImageWaiting)
+        }
+        return formatString.toString()
+    }
+
+    fun getGeneralInfo(): String{
+        val threadSet = Thread.getAllStackTraces().keys
+        val numOfThreadLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI}.size
         val numOfLoadingBitmapURI = "Number of threads loading Bitmap with URI: $numOfThreadLoadingImage\n"
-        val numOfTaskLoadingBitmapURI = "Number of tasks loading Bitmap with URI: $howManyTasksLoadingImage\n"
-
-//        val allOfWaitingTasksDescription = "All of waiting tasks in waiting threads: $waitingThreadName\n"
-
-
-        return usedHeapSizeFormat + numberOfWaitingThreadsFormat + numOfThreadImage + numOfTaskWaitingDownloadingImage + numOfLoadingBitmapURI + numOfTaskLoadingBitmapURI
+        val formatString = StringBuilder().apply {
+            append(getOverallInfo(threadSet))
+            append(getDownloadImageStat(threadSet))
+            append(numOfLoadingBitmapURI)
+        }
+        return formatString.toString()
     }
 
     fun getAllImageReferences(keyList: List<String>): String{

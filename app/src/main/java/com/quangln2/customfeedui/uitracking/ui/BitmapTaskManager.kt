@@ -11,12 +11,13 @@ val NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors()
 
 object BitmapTaskManager {
     var backgroundPriorityThreadFactory: ThreadFactory = PriorityThreadFactory(Process.THREAD_PRIORITY_BACKGROUND)
-    val executor: ExecutorService = ThreadPoolExecutor(
+    val executorDownloadingImage: ExecutorService = ThreadPoolExecutor(
         2 * NUMBER_OF_CORES,
         2 * NUMBER_OF_CORES,
-        60L,
+        30L,
         TimeUnit.SECONDS,
         LinkedBlockingQueue(),
         backgroundPriorityThreadFactory
     )
+
 }
