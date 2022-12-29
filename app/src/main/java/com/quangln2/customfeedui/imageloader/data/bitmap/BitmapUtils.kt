@@ -13,7 +13,7 @@ object BitmapUtils {
         }
         val actualKey = if(bmpParams.isFullScreen) "${key}_fullScreen" else key
         val reusedBitmap = LruBitmapCache.getLruCache(actualKey, bmpParams)
-        if(reusedBitmap != null && !reusedBitmap.getBitmap().isRecycled){
+        if(reusedBitmap != null){
             inputStream.close()
             return reusedBitmap.getBitmap()
         } else {
@@ -21,9 +21,7 @@ object BitmapUtils {
             if(bitmap != null && !bitmap.isRecycled) {
                 val resizedBitmap = resizeBitmap(bitmap, reqWidth, reqHeight)
                 val managedBitmap = ManagedBitmap(resizedBitmap, resizedBitmap.width, resizedBitmap.height)
-
                 LruBitmapCache.putIntoLruCache(actualKey, managedBitmap)
-
                 inputStream.close()
                 return resizedBitmap
             }

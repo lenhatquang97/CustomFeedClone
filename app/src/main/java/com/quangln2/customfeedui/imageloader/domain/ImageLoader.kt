@@ -17,7 +17,10 @@ import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.uitracking.ui.UiTracking
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 
 class ImageLoader(
@@ -27,24 +30,20 @@ class ImageLoader(
     private var scope: CoroutineScope
 ) {
     private fun loadImageWithUri(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
-        scope.launch(Dispatchers.Default) {
+        CoroutineScope(Dispatchers.Default).launch {
             Thread.currentThread().name = UiTracking.LOAD_WITH_URI
-
             val httpFetcher = HttpFetcher(uri)
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, bmpParams)
-                withContext(Dispatchers.Main) {
-                    if (bitmap != null && !bitmap.isRecycled) {
-                        async(Dispatchers.Main){
-                            imageView.addToManagedAddress(uri.toString())
-                            imageView.setImageBitmap(bitmap)
-                        }
+                if (bitmap != null) {
+                    async(Dispatchers.Main) {
+                        println("OnAfterRemove C: $uri ${bitmap.width} ${bitmap.height}")
+                        imageView.addToManagedAddress(uri.toString())
+                        imageView.setImageBitmap(bitmap)
                     }
                 }
             }
-
-
         }
     }
 
@@ -89,7 +88,6 @@ class ImageLoader(
             }
         }
         httpFetcher.downloadImage(context, imageView, loadImage, bmpParams)
-
     }
 
     private fun isInMemoryCache(fileName: String): Boolean {
@@ -130,7 +128,7 @@ class ImageLoader(
         }
     }
 
-    private fun loadImageRemotely(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams){
+    private fun loadImageRemotely(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams, callback: () -> Unit = {}){
         if(bmpParams.folderName.isNotEmpty()){
             val folderCreation = File(context.cacheDir, bmpParams.folderName)
             if(!folderCreation.exists())

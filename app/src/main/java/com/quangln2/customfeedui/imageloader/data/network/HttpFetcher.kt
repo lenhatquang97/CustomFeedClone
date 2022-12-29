@@ -51,20 +51,17 @@ class HttpFetcher {
                                 val buffer = ByteArray(8*1024)
                                 var len: Int
                                 FileOutputStream(cacheFile).use { fos ->
-                                    Log.i("HttpFetcher", "$actualPath writes")
                                     while (inputStream.read(buffer).also { len = it } != -1) {
                                         fos.write(buffer, 0, len)
                                     }
                                     NetworkHelper.onAfterRemove(actualPath){
-                                        imageView.post {
-                                            loadImage(actualPath, imageView, bmpParams)
-                                        }
+                                        println("OnAfterRemove A: $actualPath")
+                                        loadImage(actualPath, imageView, bmpParams)
                                     }
                                 }
                                 if(!NetworkHelper.writingFiles.contains(actualPath)){
-                                    imageView.post {
-                                        loadImage(actualPath, imageView, bmpParams)
-                                    }
+                                    println("OnAfterRemove B: $actualPath")
+                                    loadImage(actualPath, imageView, bmpParams)
                                 }
                             }
                         }
