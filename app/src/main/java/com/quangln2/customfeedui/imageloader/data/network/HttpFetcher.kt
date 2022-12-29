@@ -5,7 +5,6 @@ import android.net.Uri
 import android.util.Log
 import android.webkit.URLUtil
 import android.widget.ImageView
-import androidx.core.net.toUri
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.uitracking.ui.BitmapTaskManager
 import com.quangln2.customfeedui.uitracking.ui.UiTracking
@@ -25,7 +24,7 @@ class HttpFetcher {
         this.fileUri = fileUri
     }
 
-    fun downloadImage(context: Context, imageView: ImageView, loadImage: (Uri, ImageView, BitmapCustomParams) -> Unit, bmpParams: BitmapCustomParams) {
+    fun downloadImage(context: Context, imageView: ImageView, loadImage: (String, ImageView, BitmapCustomParams) -> Unit, bmpParams: BitmapCustomParams) {
         if(bmpParams.folderName.isNotEmpty()){
             val folderCreation = File(context.cacheDir, bmpParams.folderName)
             if(!folderCreation.exists())
@@ -35,8 +34,7 @@ class HttpFetcher {
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
         val managingThread = Thread.getAllStackTraces().keys
-        val doesContainLink =
-            managingThread.any { it.name.contains(webUrl) && (it.state == Thread.State.WAITING || it.state == Thread.State.RUNNABLE) }
+        val doesContainLink = managingThread.any { it.name.contains(webUrl) && (it.state == Thread.State.RUNNABLE || it.state == Thread.State.WAITING) }
         if(!doesContainLink){
             BitmapTaskManager.executorDownloadingImage.execute {
                 Thread.currentThread().name = UiTracking.THREAD_DOWNLOADING_IMAGE + webUrl
@@ -57,18 +55,17 @@ class HttpFetcher {
                                     while (inputStream.read(buffer).also { len = it } != -1) {
                                         fos.write(buffer, 0, len)
                                     }
-                                    NetworkHelper.writingFiles.remove(actualPath)
-                                }
-                                if(!NetworkHelper.writingFiles.contains(actualPath)){
-                                    imageView.post {
-                                        val file = File(context.cacheDir, actualPath)
-                                        if (file.exists()) {
-                                            Log.i("HttpFetcher", "$actualPath read ${file.length()} ${conn.contentLength}")
-                                            loadImage(file.toUri(), imageView, bmpParams)
+                                    NetworkHelper.onAfterRemove(actualPath){
+                                        imageView.post {
+                                            loadImage(actualPath, imageView, bmpParams)
                                         }
                                     }
                                 }
-
+                                if(!NetworkHelper.writingFiles.contains(actualPath)){
+                                    imageView.post {
+                                        loadImage(actualPath, imageView, bmpParams)
+                                    }
+                                }
                             }
                         }
                     }
@@ -78,7 +75,6 @@ class HttpFetcher {
                 }
             }
         }
-
     }
 
     fun fetchImageByInputStream(context: Context): InputStream?{

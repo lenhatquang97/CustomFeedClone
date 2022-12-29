@@ -1,5 +1,6 @@
 package com.quangln2.customfeedui.imageloader.data.network
 
+
 object NetworkHelper {
     val writingFiles = mutableSetOf<String>()
     fun convertVideoUrlToImageUrl(videoUrl: String) : String{
@@ -8,5 +9,9 @@ object NetworkHelper {
             return videoUrl.substring(0, index) + ".png"
         }
         return videoUrl
+    }
+    fun onAfterRemove(item: String, callback: () -> Unit){
+        writingFiles.remove(item)
+        callback()
     }
 }

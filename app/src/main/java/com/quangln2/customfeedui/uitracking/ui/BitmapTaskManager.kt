@@ -7,13 +7,12 @@ fun ExecutorService.taskWaiting(): Int{
     val threadPoolExecutor = this as ThreadPoolExecutor
     return threadPoolExecutor.queue.size
 }
-val NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors()
 
 object BitmapTaskManager {
     var backgroundPriorityThreadFactory: ThreadFactory = PriorityThreadFactory(Process.THREAD_PRIORITY_BACKGROUND)
     val executorDownloadingImage: ExecutorService = ThreadPoolExecutor(
-        2 * NUMBER_OF_CORES,
-        2 * NUMBER_OF_CORES,
+        4,
+        4,
         30L,
         TimeUnit.SECONDS,
         LinkedBlockingQueue(),

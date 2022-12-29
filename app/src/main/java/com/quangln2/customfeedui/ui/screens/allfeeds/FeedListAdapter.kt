@@ -99,7 +99,9 @@ class FeedListAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         when(getItemViewType(position)){
-            TypeOfPost.ADD_NEW_POST.value -> (holder as AddNewItemViewHolder).bind(context)
+            TypeOfPost.ADD_NEW_POST.value -> {
+                (holder as AddNewItemViewHolder).bind(context)
+            }
             TypeOfPost.HEADER.value -> (holder as HeaderViewHolder).bind(item, context)
             TypeOfPost.BODY.value -> (holder as BodyViewHolder).bind(item, context)
             else -> (holder as FooterViewHolder).bind(item)

@@ -82,8 +82,11 @@ class ImageLoader(
 
     private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val httpFetcher = HttpFetcher(url)
-        val loadImage = fun(a: Uri, b: ImageView, c: BitmapCustomParams){
-            loadImageWithUri(a, b, c)
+        val loadImage = fun(filePath: String, imageView: ImageView, bmpParams: BitmapCustomParams){
+            val memoryCacheFile = File(context.cacheDir, filePath)
+            if (memoryCacheFile.exists()) {
+                loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
+            }
         }
         httpFetcher.downloadImage(context, imageView, loadImage, bmpParams)
 

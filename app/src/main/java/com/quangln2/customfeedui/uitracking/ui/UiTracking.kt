@@ -1,5 +1,6 @@
 package com.quangln2.customfeedui.uitracking.ui
 
+import android.content.Context
 import android.webkit.URLUtil
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.uitracking.data.MemoryStats
@@ -9,17 +10,17 @@ object UiTracking {
     const val LOAD_WITH_URI = "LoadImageWithUriThread"
 
     private val memStats = MemoryStats()
-    private fun isNotSpecialTask(name: String): Boolean {
-        return !name.contains("Daemon") && !name.contains("Catcher")
-    }
 
-    private fun getOverallInfo(threadSet: MutableSet<Thread>): String {
-        val waitingThreads = threadSet.filter {it.state == Thread.State.WAITING && isNotSpecialTask(it.name)}
+
+    private fun getOverallInfo(context: Context): String {
         val usedHeapSizeFormat = "Used Heap Size: ${memStats.getUsedMemory()} MB\n"
-        val numberOfWaitingThreadsFormat = "Number of waiting threads: ${waitingThreads.size}\n"
+        val memorySizeFormat = "Size in LruCache: ${LruBitmapCache.memoryCache.size()}\n"
+        val bitmapSizeFormat = "Number of bitmaps in LruCache: ${LruBitmapCache.memoryCache.snapshot().size}\n\n"
         val formatString = StringBuilder().apply {
+            append("General:\n")
             append(usedHeapSizeFormat)
-            append(numberOfWaitingThreadsFormat)
+            append(memorySizeFormat)
+            append(bitmapSizeFormat)
         }
         return formatString.toString()
     }
@@ -29,27 +30,45 @@ object UiTracking {
         val numOfThreadDownImageRunning = threadSet.filter {it.name.contains(THREAD_DOWNLOADING_IMAGE) && it.state == Thread.State.RUNNABLE}.size
         val numOfTaskDownImageWaiting = BitmapTaskManager.executorDownloadingImage.taskWaiting()
 
-        val formatTotalThreadDownImage = "Total number of threads downloading images: $totalThreadDownImage\n"
-        val formatNumOfThreadDownImageRunning = "Number of threads running downloading images: $numOfThreadDownImageRunning\n"
-        val formatNumOfTaskDownImageWaiting = "Number of tasks waiting for downloading images: $numOfTaskDownImageWaiting\n"
+        val formatTotalThreadDownImage = "Max threads: $totalThreadDownImage\n"
+        val formatNumOfThreadDownImageRunning = "State RUNNABLE: $numOfThreadDownImageRunning\n"
+        val formatNumOfThreadDownImageWaiting = "State IN THE QUEUE: $numOfTaskDownImageWaiting\n\n"
 
         val formatString = StringBuilder().apply {
             //Download images
+            append("Downloading Images\n")
             append(formatTotalThreadDownImage)
             append(formatNumOfThreadDownImageRunning)
-            append(formatNumOfTaskDownImageWaiting)
+            append(formatNumOfThreadDownImageWaiting)
         }
         return formatString.toString()
     }
 
-    fun getGeneralInfo(): String{
-        val threadSet = Thread.getAllStackTraces().keys
+    private fun getLoadImageStat(threadSet: MutableSet<Thread>): String{
         val numOfThreadLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI}.size
-        val numOfLoadingBitmapURI = "Number of threads loading Bitmap with URI: $numOfThreadLoadingImage\n"
+        val runnableLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI && it.state == Thread.State.RUNNABLE}.size
+        val waitingLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI && it.state == Thread.State.WAITING}.size
+
+        val formatMaxThreadLoadURI = "Max threads: $numOfThreadLoadingImage\n"
+        val formatNumOfThreadRunning = "State RUNNABLE: $runnableLoadingImage\n"
+        val formatNumOfTaskWaiting = "State IN THE QUEUE: $waitingLoadingImage\n"
+
         val formatString = StringBuilder().apply {
-            append(getOverallInfo(threadSet))
+            append("Load bitmap with URI\n")
+            append(formatMaxThreadLoadURI)
+            append(formatNumOfThreadRunning)
+            append(formatNumOfTaskWaiting)
+        }
+        return formatString.toString()
+    }
+
+    fun getGeneralInfo(context: Context): String{
+        val threadSet = Thread.getAllStackTraces().keys
+
+        val formatString = StringBuilder().apply {
+            append(getOverallInfo(context))
             append(getDownloadImageStat(threadSet))
-            append(numOfLoadingBitmapURI)
+            append(getLoadImageStat(threadSet))
         }
         return formatString.toString()
     }

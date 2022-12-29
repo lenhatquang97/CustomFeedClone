@@ -201,7 +201,7 @@ class AllFeedsFragment : Fragment() {
         timer.schedule(object : TimerTask(){
             override fun run() {
                 handler.post {
-                    binding.uiTracking.text = UiTracking.getGeneralInfo()
+                    binding.uiTracking.text = UiTracking.getGeneralInfo(requireContext())
                 }
             }
         },0, 1000)

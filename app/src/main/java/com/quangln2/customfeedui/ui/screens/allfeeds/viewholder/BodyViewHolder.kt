@@ -119,7 +119,6 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                     videoView.setOnClickListener {
                         eventFeedCallback.onClickVideoView(currentVideo)
                     }
-
                     binding.customGridGroup.addView(videoView)
                 } else {
                     val imageView = ImageView(context).apply {

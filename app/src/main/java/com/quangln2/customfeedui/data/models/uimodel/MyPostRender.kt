@@ -33,7 +33,7 @@ data class MyPostRender(
 
         fun convertToListWithRenderedPost(posts: List<MyPost>): List<MyPostRender>{
             val listsOfPostRender = mutableListOf<MyPostRender>()
-            val addNewPostItem = convertMyPostToMyPostRender(MyPost()).copy(typeOfPost = TypeOfPost.ADD_NEW_POST)
+            val addNewPostItem = convertMyPostToMyPostRender(MyPost()).copy(typeOfPost = TypeOfPost.ADD_NEW_POST, feedId = "-1")
             listsOfPostRender.add(addNewPostItem)
             for(i in posts.indices){
                 val myPostRender = convertMyPostToMyPostRender(posts[i])

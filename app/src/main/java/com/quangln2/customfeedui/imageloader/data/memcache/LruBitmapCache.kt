@@ -11,7 +11,7 @@ object LruBitmapCache: CachePolicy {
 
     val cacheSize = (Runtime.getRuntime().maxMemory() / 1024).toInt() / 8
 
-    private var memoryCache: LruCache<String, WeakReference<ManagedBitmap>> = object : LruCache<String, WeakReference<ManagedBitmap>>(cacheSize){
+    var memoryCache: LruCache<String, WeakReference<ManagedBitmap>> = object : LruCache<String, WeakReference<ManagedBitmap>>(cacheSize){
         override fun sizeOf(key: String, value: WeakReference<ManagedBitmap>): Int {
             val managedBitmap = value.get()
             return managedBitmap?.getBitmap()?.byteCount?.div(1024) ?: 0
