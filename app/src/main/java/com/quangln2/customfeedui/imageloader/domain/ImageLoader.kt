@@ -38,7 +38,6 @@ class ImageLoader(
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, bmpParams)
                 if (bitmap != null) {
                     async(Dispatchers.Main) {
-                        println("OnAfterRemove C: $uri ${bitmap.width} ${bitmap.height}")
                         imageView.addToManagedAddress(uri.toString())
                         imageView.setImageBitmap(bitmap)
                     }
@@ -65,9 +64,6 @@ class ImageLoader(
                             val managedBitmap = ManagedBitmap(bitmap, bitmap.width, bitmap.height)
                             LruBitmapCache.putIntoLruCache(uri.toString(), managedBitmap)
                         }
-//                        async(Dispatchers.IO){
-//                            DiskCache.writeBitmapToDiskCache(uri.toString(), bitmap, context)
-//                        }
                     }
                 } else {
                     async(Dispatchers.Main) {

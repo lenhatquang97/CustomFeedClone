@@ -55,12 +55,10 @@ class HttpFetcher {
                                         fos.write(buffer, 0, len)
                                     }
                                     NetworkHelper.onAfterRemove(actualPath){
-                                        println("OnAfterRemove A: $actualPath")
                                         loadImage(actualPath, imageView, bmpParams)
                                     }
                                 }
                                 if(!NetworkHelper.writingFiles.contains(actualPath)){
-                                    println("OnAfterRemove B: $actualPath")
                                     loadImage(actualPath, imageView, bmpParams)
                                 }
                             }

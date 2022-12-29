@@ -13,10 +13,9 @@ object BitmapTaskManager {
     val executorDownloadingImage: ExecutorService = ThreadPoolExecutor(
         4,
         4,
-        30L,
+        0L,
         TimeUnit.SECONDS,
         LinkedBlockingQueue(),
         backgroundPriorityThreadFactory
     )
-
 }

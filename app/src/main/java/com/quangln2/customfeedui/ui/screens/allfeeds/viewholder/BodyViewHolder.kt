@@ -113,11 +113,13 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                 val currentVideo = CurrentVideo(currentVideoPosition = -1L, url = item.resources[i].url, listOfUrls = urlArrayList, id = item.feedId)
                 if (mimeType != null && mimeType.contains("video")) {
                     val videoView = LoadingVideoView(context, url, rectangles[i].width, rectangles[i].height)
+                    videoView.initForShowThumbnail(rectangles[i].width, rectangles[i].height)
                     videoView.layoutParams = layoutParamsCustom
                     videoView.setOnClickListener {
                         eventFeedCallback.onClickVideoView(currentVideo)
                     }
                     binding.customGridGroup.addView(videoView)
+
                 } else {
                     val imageView = ImageView(context).apply {
                         background = ColorDrawable(Color.parseColor("#aaaaaa"))
@@ -129,9 +131,8 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                     }
                     val imageLoader = ImageLoader(context, rectangles[i].width, rectangles[i].height, CoroutineScope(Job()))
                     val bmpParams = BitmapCustomParams().apply { folderName = item.feedId }
-                    imageLoader.loadImage(url, imageView, bmpParams)
-                    println("OnAfterRemove D: $url")
                     binding.customGridGroup.addView(imageView)
+                    imageLoader.loadImage(url, imageView, bmpParams)
                 }
             }
         }
