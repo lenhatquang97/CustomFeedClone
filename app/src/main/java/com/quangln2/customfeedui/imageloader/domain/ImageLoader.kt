@@ -16,11 +16,7 @@ import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
 import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
-import com.quangln2.customfeedui.uitracking.ui.UiTracking
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 
 class ImageLoader(
@@ -30,20 +26,21 @@ class ImageLoader(
     private var scope: CoroutineScope
 ) {
     private fun loadImageWithUri(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
-        CoroutineScope(Dispatchers.Default).launch {
-            Thread.currentThread().name = UiTracking.LOAD_WITH_URI
-            val httpFetcher = HttpFetcher(uri)
+        val httpFetcher = HttpFetcher(uri)
+        scope.launch(Dispatchers.Default) {
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, bmpParams)
                 if (bitmap != null) {
-                    async(Dispatchers.Main) {
+                    withContext(Dispatchers.Main){
                         imageView.addToManagedAddress(uri.toString())
                         imageView.setImageBitmap(bitmap)
                     }
+
                 }
             }
         }
+
     }
 
     private fun retrieveImageFromLocalVideo(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
@@ -77,13 +74,17 @@ class ImageLoader(
 
     private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val httpFetcher = HttpFetcher(url)
-        val loadImage = fun(filePath: String, imageView: ImageView, bmpParams: BitmapCustomParams){
-            val memoryCacheFile = File(context.cacheDir, filePath)
-            if (memoryCacheFile.exists()) {
-                loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
+        val loadImageCallback = fun(){
+            imageView.post {
+                val fileName = URLUtil.guessFileName(url, null, null)
+                val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
+                val memoryCacheFile = File(context.cacheDir, actualPath)
+                if (memoryCacheFile.exists()) {
+                    loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
+                }
             }
         }
-        httpFetcher.downloadImage(context, imageView, loadImage, bmpParams)
+        httpFetcher.downloadImage(context, bmpParams, loadImageCallback)
     }
 
     private fun isInMemoryCache(fileName: String): Boolean {
@@ -139,6 +140,7 @@ class ImageLoader(
         }
         else {
             downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
+
         }
     }
 

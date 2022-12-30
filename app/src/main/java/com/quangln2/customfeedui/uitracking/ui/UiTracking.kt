@@ -42,7 +42,7 @@ object UiTracking {
             append(formatNumOfThreadDownImageWaiting)
         }
 
-        println("Filter UiTracking: ${Thread.getAllStackTraces().keys.filter {it.name.contains(THREAD_DOWNLOADING_IMAGE) }.map{it.state}}")
+//        println("Filter UiTracking: ${Thread.getAllStackTraces().keys.filter {it.name.contains(THREAD_DOWNLOADING_IMAGE) }.map{it.state}}")
         return formatString.toString()
     }
 
