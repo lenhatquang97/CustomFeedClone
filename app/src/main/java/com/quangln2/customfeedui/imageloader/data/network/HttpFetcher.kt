@@ -24,6 +24,38 @@ class HttpFetcher {
     constructor(fileUri: Uri){
         this.fileUri = fileUri
     }
+    private fun downloadImageTask(context: Context, actualPath: String) = flow {
+        Thread.currentThread().name = UiTracking.THREAD_DOWNLOADING_IMAGE + webUrl
+        val conn = withContext(Dispatchers.Main) {URL(webUrl).openConnection()} as HttpURLConnection
+        conn.requestMethod = "GET"
+        try{
+            conn.connect()
+            if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                if(!NetworkHelper.writingFiles.contains(actualPath)){
+                    NetworkHelper.writingFiles.add(actualPath)
+                    conn.inputStream.use {inputStream ->
+                        val cacheFile = File(context.cacheDir, actualPath)
+                        val buffer = ByteArray(8*1024)
+                        var len: Int
+                        emit(actualPath)
+                        FileOutputStream(cacheFile).use { fos ->
+                            while (inputStream.read(buffer).also { len = it } != -1) {
+                                fos.write(buffer, 0, len)
+                                emit(actualPath)
+                            }
+                            NetworkHelper.writingFiles.remove(actualPath)
+                            emit(actualPath)
+                        }
+                        emit(actualPath)
+                    }
+                }
+            }
+            emit(actualPath)
+            conn.disconnect()
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
+    }.flowOn(BitmapTaskManager.executorDownloadingImage.asCoroutineDispatcher())
 
     fun downloadImage(context: Context, bmpParams: BitmapCustomParams, loadImageCallback: () -> Unit){
         if(bmpParams.folderName.isNotEmpty()){
@@ -33,49 +65,12 @@ class HttpFetcher {
         }
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-        val managingThread = Thread.getAllStackTraces().keys
-        val doesContainLink = managingThread.any { it.name.contains(webUrl) && (it.state == Thread.State.RUNNABLE || it.state == Thread.State.WAITING) }
-        val downloadImageTask = flow<String>{
-            Thread.currentThread().name = UiTracking.THREAD_DOWNLOADING_IMAGE + webUrl
-            val conn = withContext(Dispatchers.Main) {URL(webUrl).openConnection()} as HttpURLConnection
-            conn.requestMethod = "GET"
-            try{
-                conn.connect()
-                if (conn.responseCode == HttpURLConnection.HTTP_OK) {
-                    if(!NetworkHelper.writingFiles.contains(actualPath)){
-                        NetworkHelper.writingFiles.add(actualPath)
-                        conn.inputStream.use {inputStream ->
-                            val cacheFile = File(context.cacheDir, actualPath)
-                            val buffer = ByteArray(8*1024)
-                            var len: Int
-                            FileOutputStream(cacheFile).use { fos ->
-                                while (inputStream.read(buffer).also { len = it } != -1) {
-                                    fos.write(buffer, 0, len)
-                                    emit(actualPath)
-                                }
-                                NetworkHelper.writingFiles.remove(actualPath)
-                                emit(actualPath)
-                            }
-                            emit(actualPath)
-                        }
-                    }
-                }
-                emit(actualPath)
-                conn.disconnect()
-            } catch (e: Exception){
-                e.printStackTrace()
-            }
-        }.flowOn((BitmapTaskManager.executorDownloadingImage.asCoroutineDispatcher()))
-
-        if(!doesContainLink){
-            CoroutineScope(Dispatchers.Main).launch{
-                downloadImageTask.collect {
-                    if(!NetworkHelper.writingFiles.contains(it)){
-                        loadImageCallback()
-                    }
+        CoroutineScope(Dispatchers.Main).launch{
+            downloadImageTask(context, actualPath).collect {
+                if(!NetworkHelper.writingFiles.contains(it)){
+                    loadImageCallback()
                 }
             }
-
         }
     }
 
