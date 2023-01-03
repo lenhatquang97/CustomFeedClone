@@ -24,6 +24,7 @@
             />
 
         <com.quangln2.customfeedui.imageloader.data.zoomimage.ZoomImage
+            android:scaleType="matrix"
             android:contentDescription="@string/app_name"
             android:visibility="@{viewmodel.fullImageViewVisibility ? View.VISIBLE: View.GONE}"
             android:id="@+id/fullImageView"

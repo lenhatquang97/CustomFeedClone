@@ -16,6 +16,7 @@ import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
 import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
+import com.quangln2.customfeedui.uitracking.ui.UiTracking
 import kotlinx.coroutines.*
 import java.io.File
 
@@ -27,7 +28,8 @@ class ImageLoader(
 ) {
     private fun loadImageWithUri(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val httpFetcher = HttpFetcher(uri)
-        scope.launch(Dispatchers.Default) {
+        CoroutineScope(Dispatchers.Default).launch {
+            Thread.currentThread().name = UiTracking.LOAD_WITH_URI + uri.toString()
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
                 val bitmap = BitmapUtils.decodeBitmapFromInputStream(uri.toString(), inputStream, width, height, bmpParams)
