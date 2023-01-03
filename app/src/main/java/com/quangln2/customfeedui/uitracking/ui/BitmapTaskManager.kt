@@ -1,5 +1,7 @@
 package com.quangln2.customfeedui.uitracking.ui
 
+import android.os.Handler
+import android.os.Looper
 import android.os.Process
 import java.util.concurrent.*
 
@@ -13,9 +15,10 @@ object BitmapTaskManager {
     val executorDownloadingImage: ExecutorService = ThreadPoolExecutor(
         4,
         4,
-        0L,
+        30L,
         TimeUnit.SECONDS,
         LinkedBlockingQueue(),
         backgroundPriorityThreadFactory
     )
+    val myHandler = Handler(Looper.getMainLooper())
 }

@@ -6,9 +6,12 @@ import android.webkit.URLUtil
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.uitracking.ui.BitmapTaskManager
 import com.quangln2.customfeedui.uitracking.ui.UiTracking
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -26,9 +29,9 @@ class HttpFetcher {
     }
     private fun downloadImageTask(context: Context, actualPath: String) = flow {
         Thread.currentThread().name = UiTracking.THREAD_DOWNLOADING_IMAGE + webUrl
-        val conn = withContext(Dispatchers.Main) {URL(webUrl).openConnection()} as HttpURLConnection
-        conn.requestMethod = "GET"
         try{
+            val conn = URL(webUrl).openConnection() as HttpURLConnection
+            conn.requestMethod = "GET"
             conn.connect()
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 if(!NetworkHelper.writingFiles.contains(actualPath)){
@@ -37,21 +40,20 @@ class HttpFetcher {
                         val cacheFile = File(context.cacheDir, actualPath)
                         val buffer = ByteArray(8*1024)
                         var len: Int
-                        emit(actualPath)
                         FileOutputStream(cacheFile).use { fos ->
                             while (inputStream.read(buffer).also { len = it } != -1) {
                                 fos.write(buffer, 0, len)
-                                emit(actualPath)
                             }
                             NetworkHelper.writingFiles.remove(actualPath)
                             emit(actualPath)
                         }
                         emit(actualPath)
                     }
+                    emit(actualPath)
                 }
             }
-            emit(actualPath)
             conn.disconnect()
+            emit(actualPath)
         } catch (e: Exception){
             e.printStackTrace()
         }
@@ -65,11 +67,9 @@ class HttpFetcher {
         }
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-        CoroutineScope(Dispatchers.Main).launch{
-            downloadImageTask(context, actualPath).collect {
-                if(!NetworkHelper.writingFiles.contains(it)){
-                    loadImageCallback()
-                }
+        CoroutineScope(Dispatchers.Main).launch {
+            downloadImageTask(context, actualPath).collect{
+                loadImageCallback()
             }
         }
     }
