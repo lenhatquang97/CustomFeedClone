@@ -151,19 +151,15 @@ class ZoomImage: AppCompatImageView, View.OnTouchListener {
         val phoneWidth = Resources.getSystem().displayMetrics.widthPixels
         val isOutOfBoundWidth = (firstCorner.first < 0 && secondCorner.first < phoneWidth) || (firstCorner.first > 0 && secondCorner.first > phoneWidth)
         val isOutOfBoundHeight = (firstCorner.second < centerLocation.first && thirdCorner.second < centerLocation.second) || (firstCorner.second > centerLocation.first && thirdCorner.second > centerLocation.second)
-
         if(isOutOfBoundWidth && scale == 1f) myMatrix.postTranslate(-firstCorner.first, 0f)
         if(isOutOfBoundHeight && scale == 1f) myMatrix.postTranslate(0f, -(firstCorner.second - centerLocation.first))
-
     }
 
     private fun checkConstraintInZoomFunction(oldMatrix: Matrix){
         val points = FloatArray(8)
         oldMatrix.mapPoints(points)
         val firstCorner = Pair(points[0], points[1])
-        val isInScopeWidth = firstCorner.first >= 0f
-        val isInScopeHeight = firstCorner.second >= centerLocation.first
-        if(isInScopeWidth && isInScopeHeight){
+        if(firstCorner.first >= 0f && firstCorner.second >= centerLocation.first){
             myMatrix.set(matrix)
             makeCenterImage()
         } else {
