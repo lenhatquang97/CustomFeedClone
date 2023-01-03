@@ -6,7 +6,6 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.PointF
-import android.graphics.RectF
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
@@ -40,6 +39,9 @@ class ZoomImage: AppCompatImageView, View.OnTouchListener {
     private val start = PointF()
     private val mid = PointF()
     private var scale = 1f
+
+
+    private var centerLocation: Pair<Float, Float> = Pair(0f, 0f)
 
     private fun distanceBetweenTwoPoints(event: MotionEvent): Float {
         val x = event.getX(0) - event.getX(1)
@@ -82,8 +84,16 @@ class ZoomImage: AppCompatImageView, View.OnTouchListener {
             }
             MotionEvent.ACTION_MOVE -> if (!isOutSide) {
                 when(mode){
-                    ZoomMode.DRAG -> doDragFunction(event)
-                    else -> doZoomFunction(event)
+                    ZoomMode.DRAG -> {
+                        if(event.pointerCount == 1) {
+                            doDragFunction(event)
+                        }
+                    }
+                    else -> {
+                        if(event.pointerCount == 2){
+                            doZoomFunction(event)
+                        }
+                    }
                 }
             }
         }
@@ -102,6 +112,9 @@ class ZoomImage: AppCompatImageView, View.OnTouchListener {
             val moveDy = (phoneHeight - imgHeight) / 2f
             myMatrix.setTranslate(0f,  moveDy)
             imageMatrix = myMatrix
+            val points = FloatArray(8)
+            myMatrix.mapPoints(points)
+            centerLocation = Pair(points[1], points[5] + phoneHeight + statusBarHeight)
         }
     }
     private fun doDragFunction(event: MotionEvent){
@@ -109,36 +122,53 @@ class ZoomImage: AppCompatImageView, View.OnTouchListener {
         val dx = event.x - start.x
         val dy = event.y - start.y
         myMatrix.postTranslate(dx, dy)
-        checkConstraintInDragFunction(dx, dy)
+        checkConstraintInDragFunction()
     }
 
     private fun doZoomFunction(event: MotionEvent){
-        val newDist = distanceBetweenTwoPoints(event)
-        if(newDist > 5f){
-            myMatrix.set(savedMatrix)
-            val oldMatrix = Matrix().apply {
-                set(myMatrix)
-                scale = newDist / oldDist
-                postScale(scale, scale, mid.x, mid.y)
+        try{
+            val newDist = distanceBetweenTwoPoints(event)
+            if(newDist > 5f){
+                myMatrix.set(savedMatrix)
+                val oldMatrix = Matrix().apply {
+                    set(myMatrix)
+                    scale = newDist / oldDist
+                    postScale(scale, scale, mid.x, mid.y)
+                }
+                checkConstraintInZoomFunction(oldMatrix)
             }
-            checkConstraintInZoomFunction(oldMatrix)
+        } catch(e: Exception){
+            Log.d("Exception", e.cause.toString())
         }
     }
 
-    private fun checkConstraintInDragFunction(dx: Float, dy: Float){
-        val rect = RectF()
-        myMatrix.mapRect(rect)
+    private fun checkConstraintInDragFunction(){
+        val points = FloatArray(8)
+        myMatrix.mapPoints(points)
+        val firstCorner = Pair(points[0], points[1])
+        val secondCorner = Pair(points[2] + width, points[3])
+        val thirdCorner = Pair(points[4] + width, points[5] + height)
         val phoneWidth = Resources.getSystem().displayMetrics.widthPixels
-        val notAllowDragIllegally = rect.right + width <= phoneWidth && rect.left >= 0
-        Log.d("ConstraintDrag","${rect.left} ${rect.right + width} $notAllowDragIllegally")
-        if(!notAllowDragIllegally) myMatrix.postTranslate(-dx, -dy)
+        val isOutOfBoundWidth = (firstCorner.first < 0 && secondCorner.first < phoneWidth) || (firstCorner.first > 0 && secondCorner.first > phoneWidth)
+        val isOutOfBoundHeight = (firstCorner.second < centerLocation.first && thirdCorner.second < centerLocation.second) || (firstCorner.second > centerLocation.first && thirdCorner.second > centerLocation.second)
+
+        if(isOutOfBoundWidth && scale == 1f) myMatrix.postTranslate(-firstCorner.first, 0f)
+        if(isOutOfBoundHeight && scale == 1f) myMatrix.postTranslate(0f, -(firstCorner.second - centerLocation.first))
+
     }
 
     private fun checkConstraintInZoomFunction(oldMatrix: Matrix){
-        val rect = RectF()
-        oldMatrix.mapRect(rect)
-        val zoomIllegally = rect.left > 0
-        Log.d("ConstraintZoom", "${rect.left} ${rect.right + width} $zoomIllegally")
-        if(zoomIllegally) scale = 1f else myMatrix.set(oldMatrix)
+        val points = FloatArray(8)
+        oldMatrix.mapPoints(points)
+        val firstCorner = Pair(points[0], points[1])
+        val isInScopeWidth = firstCorner.first >= 0f
+        val isInScopeHeight = firstCorner.second >= centerLocation.first
+        if(isInScopeWidth && isInScopeHeight){
+            myMatrix.set(matrix)
+            makeCenterImage()
+        } else {
+            myMatrix.set(oldMatrix)
+        }
+
     }
 }
