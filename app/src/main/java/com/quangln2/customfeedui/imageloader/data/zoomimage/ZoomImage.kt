@@ -11,15 +11,10 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.widget.AppCompatImageView
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-
-enum class ZoomMode {
-    NONE,
-    DRAG,
-    ZOOM
-}
 class ZoomImage: AppCompatImageView, View.OnTouchListener {
     constructor(context: Context) : super(context)
     @SuppressLint("ClickableViewAccessibility")
@@ -148,8 +143,7 @@ class ZoomImage: AppCompatImageView, View.OnTouchListener {
         val firstCorner = Pair(points[0], points[1])
         val secondCorner = Pair(points[2] + width, points[3])
         val thirdCorner = Pair(points[4] + width, points[5] + height)
-        val phoneWidth = Resources.getSystem().displayMetrics.widthPixels
-        val isOutOfBoundWidth = (firstCorner.first < 0 && secondCorner.first < phoneWidth) || (firstCorner.first > 0 && secondCorner.first > phoneWidth)
+        val isOutOfBoundWidth = (firstCorner.first < 0 && secondCorner.first < ConstantSetup.PHONE_WIDTH) || (firstCorner.first > 0 && secondCorner.first > ConstantSetup.PHONE_WIDTH)
         val isOutOfBoundHeight = (firstCorner.second < centerLocation.first && thirdCorner.second < centerLocation.second) || (firstCorner.second > centerLocation.first && thirdCorner.second > centerLocation.second)
         if(isOutOfBoundWidth && scale == 1f) myMatrix.postTranslate(-firstCorner.first, 0f)
         if(isOutOfBoundHeight && scale == 1f) myMatrix.postTranslate(0f, -(firstCorner.second - centerLocation.first))

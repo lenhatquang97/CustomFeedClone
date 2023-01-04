@@ -17,6 +17,9 @@ data class MyPostRender(
 ) {
 
     companion object {
+        var numberOfImagesAndThumbnails = 0
+
+
         fun convertMyPostToMyPostRender(myPost: MyPost): MyPostRender {
             return MyPostRender(
                 feedId = myPost.feedId,
@@ -32,7 +35,14 @@ data class MyPostRender(
         }
 
         fun convertToListWithRenderedPost(posts : List<MyPost>): List<MyPostRender>{
-            val sortedPost = posts.sortedBy { it.createdTime.toBigInteger() }.asReversed()
+            //First step: Sort by UNIX time descending
+            val sortedPost = posts.sortedByDescending { it.createdTime.toBigInteger() }
+
+            //Second step: Retrieve number of images and thumbnails
+            val values = posts.filter {it.resources.isNotEmpty()}.map{it.resources.size}
+            numberOfImagesAndThumbnails = if(values.isNotEmpty()) values.reduce { a, b -> a + b } else 0
+
+
             val listsOfPostRender = mutableListOf<MyPostRender>()
             val addNewPostItem = convertMyPostToMyPostRender(MyPost()).copy(typeOfPost = TypeOfPost.ADD_NEW_POST, feedId = "-1")
             listsOfPostRender.add(addNewPostItem)

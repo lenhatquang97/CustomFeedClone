@@ -6,16 +6,17 @@ import com.quangln2.customfeedui.data.models.datamodel.UploadPost
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 
 fun convertFromUploadPostToMyPost(uploadPost: UploadPost, oldPost: List<MyPost>): MyPost {
-    val myPost = MyPost()
-    myPost.feedId = uploadPost.feedId
-    myPost.avatar = uploadPost.avatar
-    myPost.name = uploadPost.name
-    myPost.caption = uploadPost.caption
-    myPost.createdTime = uploadPost.createdTime
-    myPost.firstWidth = uploadPost.firstWidth
-    myPost.firstHeight = uploadPost.firstHeight
+    val myPost = MyPost().apply {
+        feedId = uploadPost.feedId
+        avatar = uploadPost.avatar
+        name = uploadPost.name
+        caption = uploadPost.caption
+        createdTime = uploadPost.createdTime
+        firstWidth = uploadPost.firstWidth
+        firstHeight = uploadPost.firstHeight
+    }
 
-    //This is because in MongoDB, no items will return null :)
+    /* Note: In MongoDB, no items on array or in any attributes will return null :) */
     if (uploadPost.imagesAndVideos !=null && uploadPost.imagesAndVideos.size > 0) {
         for (i in 0 until uploadPost.imagesAndVideos.size) {
             val value = uploadPost.imagesAndVideos[i]
@@ -25,7 +26,6 @@ fun convertFromUploadPostToMyPost(uploadPost: UploadPost, oldPost: List<MyPost>)
             myPost.resources.add(OfflineResource(value, actualFileSize, 0L))
         }
     }
-
 
     return myPost
 }

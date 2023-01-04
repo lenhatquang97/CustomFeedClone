@@ -2,7 +2,6 @@ package com.quangln2.customfeedui.ui.screens.allfeeds.viewholder
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.ViewGroup
@@ -38,7 +37,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
         val rectangles = getGridItemsLocation(item.resources.size, item.firstItemWidth, item.firstItemHeight)
         val contentPadding = 16
         val marginHorizontalSum = 16 + 32
-        val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
+        val widthGrid = ConstantSetup.PHONE_WIDTH - marginHorizontalSum
         val itemLocations = mutableListOf<ItemLocation>()
         for(i in rectangles.indices){
             val leftView = (rectangles[i].leftTop.x * widthGrid).toInt() + contentPadding

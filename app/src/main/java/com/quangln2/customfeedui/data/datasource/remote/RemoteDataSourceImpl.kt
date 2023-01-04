@@ -25,8 +25,6 @@ class RemoteDataSourceImpl : RemoteDataSource {
         return byteArray
     }
 
-
-
     override fun getAllFeeds(): MutableList<UploadPost> {
         val obj = URL(ConstantSetup.GET_FEEDS)
         val conn = obj.openConnection() as HttpURLConnection

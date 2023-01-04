@@ -1,9 +1,16 @@
-package com.quangln2.customfeedui.others.extensions
+package com.quangln2.customfeedui.extensions
 
 import android.content.Context
 import android.media.ExifInterface
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.ThreadPoolExecutor
+
+fun ExecutorService.taskWaiting(): Int{
+    val threadPoolExecutor = this as ThreadPoolExecutor
+    return threadPoolExecutor.queue.size
+}
 
 fun Uri.getImageDimensions(context: Context): Pair<Int, Int> {
     val inputStream = context.contentResolver.openInputStream(this)!!

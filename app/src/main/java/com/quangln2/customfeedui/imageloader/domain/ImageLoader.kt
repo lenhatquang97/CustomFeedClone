@@ -28,7 +28,7 @@ class ImageLoader(
 ) {
     private fun loadImageWithUri(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val httpFetcher = HttpFetcher(uri)
-        CoroutineScope(Dispatchers.Default).launch {
+        scope.launch(Dispatchers.Default) {
             Thread.currentThread().name = UiTracking.LOAD_WITH_URI + uri.toString()
             val inputStream = httpFetcher.fetchImageByInputStream(context)
             if (inputStream != null) {
@@ -42,7 +42,6 @@ class ImageLoader(
                 }
             }
         }
-
     }
 
     private fun retrieveImageFromLocalVideo(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
@@ -127,7 +126,7 @@ class ImageLoader(
         }
     }
 
-    private fun loadImageRemotely(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams, callback: () -> Unit = {}){
+    private fun loadImageRemotely(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams){
         if(bmpParams.folderName.isNotEmpty()){
             val folderCreation = File(context.cacheDir, bmpParams.folderName)
             if(!folderCreation.exists())
@@ -142,7 +141,6 @@ class ImageLoader(
         }
         else {
             downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
-
         }
     }
 

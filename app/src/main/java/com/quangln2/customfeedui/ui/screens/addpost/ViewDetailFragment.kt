@@ -1,6 +1,5 @@
 package com.quangln2.customfeedui.ui.screens.addpost
 
-import android.content.res.Resources
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.quangln2.customfeedui.R
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.databinding.FragmentViewDetailBinding
 import com.quangln2.customfeedui.ui.customview.CustomImageView
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
@@ -69,7 +69,7 @@ class ViewDetailFragment : Fragment() {
     private fun initCustomGrid(listOfUris: MutableList<String>) {
         val rectangles = getGridItemsLocationWithMoreThanTen(listOfUris.size)
         val marginHorizontalSum = 16 + 32
-        val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
+        val widthGrid = ConstantSetup.PHONE_WIDTH - marginHorizontalSum
         val contentPadding = 16
         lifecycleScope.launch(Dispatchers.IO) {
             //This will prevent ConcurrentModificationException

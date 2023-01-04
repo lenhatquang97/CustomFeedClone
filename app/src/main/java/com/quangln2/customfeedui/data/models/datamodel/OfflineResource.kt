@@ -9,10 +9,6 @@ data class OfflineResource(
     var size: Long,
     var bytesCopied: Long
 ) {
-    override fun hashCode(): Int {
-        return super.hashCode()
-    }
-
     override fun equals(other: Any?): Boolean {
         if (other is OfflineResource) {
             val sameUrl = url == other.url

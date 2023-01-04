@@ -2,16 +2,16 @@ package com.quangln2.customfeedui.ui.viewmodel
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.models.others.UploadWorkerModel
 import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
 import com.quangln2.customfeedui.domain.workmanager.UploadService
-import com.quangln2.customfeedui.others.extensions.getImageDimensions
+import com.quangln2.customfeedui.extensions.getImageDimensions
 import com.quangln2.customfeedui.ui.customview.customgrid.getGridItemsLocation
 import com.quangln2.customfeedui.ui.screens.addpost.IMAGE_MIMETYPE
 import com.quangln2.customfeedui.ui.screens.addpost.VIDEO_MIMETYPE
@@ -42,7 +42,7 @@ class UploadViewModel: ViewModel() {
         val marginLeft = 8
         val contentPadding = 32
         val marginHorizontalSum = 2 * marginLeft + contentPadding
-        val widthGrid = Resources.getSystem().displayMetrics.widthPixels - marginHorizontalSum
+        val widthGrid = ConstantSetup.PHONE_WIDTH - marginHorizontalSum
 
         val itemLocations = mutableListOf<ItemLocation>()
         for (i in rectangles.indices) {

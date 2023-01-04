@@ -1,24 +1,28 @@
 package com.quangln2.customfeedui.uitracking.ui
 
 import android.webkit.URLUtil
+import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
+import com.quangln2.customfeedui.extensions.taskWaiting
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.uitracking.data.MemoryStats
 
 object UiTracking {
     const val THREAD_DOWNLOADING_IMAGE = "ImageFetcherThread"
     const val LOAD_WITH_URI = "LoadImageWithUriThread"
-
     private val memStats = MemoryStats()
-
 
     private fun getOverallInfo(): String {
         val usedHeapSizeFormat = "Used Heap Size: ${memStats.getUsedMemory()} MB\n"
         val memorySizeFormat = "Size in LruCache: ${LruBitmapCache.memoryCache.size()}\n"
+        val totalImagesIncludingDuplicatesFormat = "Number of images/thumbnails including duplicates: ${MyPostRender.numberOfImagesAndThumbnails}\n"
+
         val bitmapSizeFormat = "Number of bitmaps in LruCache: ${LruBitmapCache.memoryCache.snapshot().size}\n\n"
+
         val formatString = StringBuilder().apply {
             append("General:\n")
             append(usedHeapSizeFormat)
             append(memorySizeFormat)
+            append(totalImagesIncludingDuplicatesFormat)
             append(bitmapSizeFormat)
         }
         return formatString.toString()
@@ -40,8 +44,6 @@ object UiTracking {
             append(formatNumOfThreadDownImageRunning)
             append(formatNumOfThreadDownImageWaiting)
         }
-
-//        println("Filter UiTracking: ${Thread.getAllStackTraces().keys.filter {it.name.contains(THREAD_DOWNLOADING_IMAGE) }.map{it.state}}")
         return formatString.toString()
     }
 

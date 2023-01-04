@@ -1,9 +1,11 @@
 package com.quangln2.customfeedui.imageloader.data.bitmap
 
 import android.graphics.*
+import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import java.io.InputStream
 import kotlin.math.max
+import kotlin.math.min
 
 object BitmapUtils {
     fun decodeBitmapFromInputStream(key: String, inputStream: InputStream, reqWidth: Int, reqHeight: Int, bmpParams: BitmapCustomParams): Bitmap? {
@@ -31,8 +33,8 @@ object BitmapUtils {
     }
 
     private fun resizeBitmap(bitmap: Bitmap, reqWidth: Int, reqHeight: Int): Bitmap {
-        val actualWidth = if(reqWidth > 0) reqWidth else bitmap.width
-        val actualHeight = if(reqHeight > 0) reqHeight else bitmap.height
+        val actualWidth = if(reqWidth > 0) reqWidth else min(bitmap.width, ConstantSetup.PHONE_WIDTH)
+        val actualHeight = if(reqHeight > 0) reqHeight else min(bitmap.height, ConstantSetup.PHONE_HEIGHT * 3/4)
         var (dx, dy) = Pair(0f, 0f)
         val matrix = Matrix()
 
