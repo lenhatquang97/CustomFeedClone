@@ -1,6 +1,5 @@
 package com.quangln2.customfeedui.uitracking.ui
 
-import android.content.Context
 import android.webkit.URLUtil
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
 import com.quangln2.customfeedui.uitracking.data.MemoryStats
@@ -12,7 +11,7 @@ object UiTracking {
     private val memStats = MemoryStats()
 
 
-    private fun getOverallInfo(context: Context): String {
+    private fun getOverallInfo(): String {
         val usedHeapSizeFormat = "Used Heap Size: ${memStats.getUsedMemory()} MB\n"
         val memorySizeFormat = "Size in LruCache: ${LruBitmapCache.memoryCache.size()}\n"
         val bitmapSizeFormat = "Number of bitmaps in LruCache: ${LruBitmapCache.memoryCache.snapshot().size}\n\n"
@@ -64,11 +63,11 @@ object UiTracking {
         return formatString.toString()
     }
 
-    fun getGeneralInfo(context: Context): String{
+    fun getGeneralInfo(): String{
         val threadSet = Thread.getAllStackTraces().keys
 
         val formatString = StringBuilder().apply {
-            append(getOverallInfo(context))
+            append(getOverallInfo())
             append(getDownloadImageStat(threadSet))
             append(getLoadImageStat(threadSet))
         }

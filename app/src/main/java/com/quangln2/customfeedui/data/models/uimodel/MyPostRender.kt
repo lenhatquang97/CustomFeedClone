@@ -31,12 +31,13 @@ data class MyPostRender(
             )
         }
 
-        fun convertToListWithRenderedPost(posts: List<MyPost>): List<MyPostRender>{
+        fun convertToListWithRenderedPost(posts : List<MyPost>): List<MyPostRender>{
+            val sortedPost = posts.sortedBy { it.createdTime.toBigInteger() }.asReversed()
             val listsOfPostRender = mutableListOf<MyPostRender>()
             val addNewPostItem = convertMyPostToMyPostRender(MyPost()).copy(typeOfPost = TypeOfPost.ADD_NEW_POST, feedId = "-1")
             listsOfPostRender.add(addNewPostItem)
-            for(i in posts.indices){
-                val myPostRender = convertMyPostToMyPostRender(posts[i])
+            for(i in sortedPost.indices){
+                val myPostRender = convertMyPostToMyPostRender(sortedPost[i])
                 for(j in 2..4){
                     listsOfPostRender.add(myPostRender.copy(typeOfPost = getTypeOfPost(j)))
                 }

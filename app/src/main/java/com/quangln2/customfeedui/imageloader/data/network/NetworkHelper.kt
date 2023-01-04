@@ -10,8 +10,4 @@ object NetworkHelper {
         }
         return videoUrl
     }
-    fun onAfterRemove(item: String, callback: () -> Unit){
-        writingFiles.remove(item)
-        callback()
-    }
 }

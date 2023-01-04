@@ -69,9 +69,7 @@ class HttpFetcher {
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
         CoroutineScope(Dispatchers.Main).launch {
             downloadImageTask(context, actualPath).collect{
-                BitmapTaskManager.myHandler.post {
-                    loadImageCallback()
-                }
+                loadImageCallback()
             }
         }
     }

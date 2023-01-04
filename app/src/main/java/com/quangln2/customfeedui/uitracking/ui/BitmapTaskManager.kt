@@ -1,7 +1,5 @@
 package com.quangln2.customfeedui.uitracking.ui
 
-import android.os.Handler
-import android.os.Looper
 import android.os.Process
 import java.util.concurrent.*
 
@@ -20,5 +18,4 @@ object BitmapTaskManager {
         LinkedBlockingQueue(),
         backgroundPriorityThreadFactory
     )
-    val myHandler = Handler(Looper.getMainLooper())
 }
