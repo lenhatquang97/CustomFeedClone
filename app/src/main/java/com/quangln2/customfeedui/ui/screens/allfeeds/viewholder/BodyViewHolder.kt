@@ -87,7 +87,6 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     }
 
     fun bind(item: MyPostRender, context: Context){
-        println("BodyViewHolder onBind")
         listOfImageUrl.clear()
         itemUseForAttached = item
         val rectangles = initializeDataForShowingGrid(item)
