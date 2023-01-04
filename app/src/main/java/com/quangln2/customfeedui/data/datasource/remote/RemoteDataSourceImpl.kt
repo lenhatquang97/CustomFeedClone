@@ -11,6 +11,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 
+const val TEMPORARY_REDIRECT = 307
+
 class RemoteDataSourceImpl : RemoteDataSource {
     private fun readFileToByteArray(file: File): ByteArray{
         //read byte to byte
@@ -108,19 +110,21 @@ class RemoteDataSourceImpl : RemoteDataSource {
             request.writeBytes("\r\n")
             request.writeBytes("--$boundary--\r\n")
             request.flush()
-            val responseCode = connection.responseCode
-            if(responseCode == HttpURLConnection.HTTP_OK) {
-                val br = BufferedReader(InputStreamReader(connection.inputStream))
-                val result = br.readLine()
-                br.close()
-                connection.disconnect()
-                return result
-            } else if(responseCode == 307){
-                connection.disconnect()
-                return uploadFileWithId(connection.url.toString(), file, id)
-            }
-            else {
-                Log.d("Failed", "Upload file failed $responseCode")
+            when (val responseCode = connection.responseCode) {
+                HttpURLConnection.HTTP_OK -> {
+                    val br = BufferedReader(InputStreamReader(connection.inputStream))
+                    val result = br.readLine()
+                    br.close()
+                    connection.disconnect()
+                    return result
+                }
+                TEMPORARY_REDIRECT -> {
+                    connection.disconnect()
+                    return uploadFileWithId(connection.url.toString(), file, id)
+                }
+                else -> {
+                    Log.d("Failed", "Upload file failed $responseCode")
+                }
             }
 
         } catch (e: java.lang.Exception){

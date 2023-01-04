@@ -112,7 +112,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
 
                 val currentVideo = CurrentVideo(currentVideoPosition = -1L, url = item.resources[i].url, listOfUrls = urlArrayList, id = item.feedId)
                 if (mimeType != null && mimeType.contains("video")) {
-                    val videoView = LoadingVideoView(context, url, rectangles[i].width, rectangles[i].height)
+                    val videoView = LoadingVideoView(context, url)
                     videoView.initForShowThumbnail(rectangles[i].width, rectangles[i].height)
                     videoView.layoutParams = layoutParamsCustom
                     videoView.setOnClickListener {

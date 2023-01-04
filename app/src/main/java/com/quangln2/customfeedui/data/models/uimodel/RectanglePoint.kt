@@ -1,11 +1,13 @@
 package com.quangln2.customfeedui.data.models.uimodel
 
+import android.graphics.PointF
+
 class RectanglePoint(left: Float, top: Float, right: Float, bottom: Float) {
-    var leftTop: APoint
-    var rightBottom: APoint
+    var leftTop: PointF
+    var rightBottom: PointF
 
     init {
-        this.leftTop = APoint(left, top)
-        this.rightBottom = APoint(right, bottom)
+        this.leftTop = PointF(left, top)
+        this.rightBottom = PointF(right, bottom)
     }
 }

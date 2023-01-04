@@ -27,7 +27,6 @@ class LoadingVideoView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyleAttr) {
     lateinit var progressBar: ProgressBar
     lateinit var playButton: ImageView
-    private lateinit var soundButton: ImageView
     lateinit var playerView: PlayerView
     lateinit var crossButton: ImageView
     lateinit var thumbnailView: ImageView
@@ -35,6 +34,7 @@ class LoadingVideoView @JvmOverloads constructor(
 
     private var webUrl = ""
     private var fileUri: Uri? = null
+    private lateinit var soundButton: ImageView
 
     //Use for load thumbnail
     constructor(context: Context, uri: Uri): this(context){
@@ -43,7 +43,7 @@ class LoadingVideoView @JvmOverloads constructor(
         initForShowThumbnail()
     }
 
-    constructor(context: Context, webUrl: String, width: Int, height: Int) : this(context) {
+    constructor(context: Context, webUrl: String) : this(context) {
         this.webUrl = webUrl
         initFindById()
     }

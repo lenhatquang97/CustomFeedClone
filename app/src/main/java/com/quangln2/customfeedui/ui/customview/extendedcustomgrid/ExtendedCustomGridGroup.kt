@@ -13,8 +13,8 @@ class ExtendedCustomGridGroup : ViewGroup {
     private val rectangles = mutableListOf<RectanglePoint>()
     private val contentPadding = 5
 
-    var firstItemWidth = 0
-    var firstItemHeight = 0
+    private var firstItemWidth = 0
+    private var firstItemHeight = 0
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)

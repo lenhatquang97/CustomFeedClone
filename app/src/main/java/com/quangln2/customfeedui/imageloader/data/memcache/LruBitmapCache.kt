@@ -16,7 +16,6 @@ object LruBitmapCache: CachePolicy {
             val managedBitmap = value.get()
             return managedBitmap?.getBitmap()?.byteCount?.div(1024) ?: 0
         }
-
     }
 
     override fun putIntoLruCache(key: String, managedBitmap: ManagedBitmap){

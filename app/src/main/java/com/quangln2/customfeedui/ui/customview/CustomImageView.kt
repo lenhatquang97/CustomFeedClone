@@ -27,8 +27,7 @@ class CustomImageView {
 
         private fun generateCrossButton(context: Context): ImageView {
             val crossButton = ImageView(context)
-            val params =
-                FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
+            val params = FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
 
             crossButton.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.remove_icon))
             params.gravity = Gravity.END

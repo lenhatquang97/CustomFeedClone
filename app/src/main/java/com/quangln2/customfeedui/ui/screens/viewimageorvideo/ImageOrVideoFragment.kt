@@ -38,6 +38,17 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     private var webUrl = ""
     private var id = ""
 
+    private val listener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            super.onPlaybackStateChanged(playbackState)
+            when (playbackState) {
+                Player.STATE_ENDED -> {
+                    player.seekTo(0)
+                }
+            }
+        }
+    }
+
     override fun onStart(){
         super.onStart()
         val listOfUrls = arguments?.getStringArrayList("listOfUrls")
@@ -59,18 +70,7 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_image_or_video, container, false)
         binding.viewmodel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
-        player.addListener(
-            object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    super.onPlaybackStateChanged(playbackState)
-                    when (playbackState) {
-                        Player.STATE_ENDED -> {
-                            player.seekTo(0)
-                        }
-                    }
-                }
-            }
-        )
+        player.addListener(listener)
         return binding.root
     }
 
@@ -122,5 +122,10 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
                 viewModel.fullVideoViewVisibility.value = false
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        player.removeListener(listener)
     }
 }
