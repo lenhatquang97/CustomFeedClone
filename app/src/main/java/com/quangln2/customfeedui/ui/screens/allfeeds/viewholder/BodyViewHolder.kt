@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
+import androidx.core.view.isEmpty
 import androidx.core.view.size
 import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeedui.data.constants.ConstantSetup
@@ -86,6 +87,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     }
 
     fun bind(item: MyPostRender, context: Context){
+        println("BodyViewHolder onBind")
         listOfImageUrl.clear()
         itemUseForAttached = item
         val rectangles = initializeDataForShowingGrid(item)
@@ -148,7 +150,8 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     }
 
     fun onViewAttached(){
-        binding.customGridGroup.removeAllViews()
-        itemUseForAttached?.let { bind(it, context) }
+        if(binding.customGridGroup.isEmpty()){
+            itemUseForAttached?.let { bind(it, context) }
+        }
     }
 }

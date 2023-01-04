@@ -77,13 +77,11 @@ class ImageLoader(
     private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val httpFetcher = HttpFetcher(url)
         val loadImageCallback = fun(){
-            imageView.post {
-                val fileName = URLUtil.guessFileName(url, null, null)
-                val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-                val memoryCacheFile = File(context.cacheDir, actualPath)
-                if (memoryCacheFile.exists()) {
-                    loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
-                }
+            val fileName = URLUtil.guessFileName(url, null, null)
+            val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
+            val memoryCacheFile = File(context.cacheDir, actualPath)
+            if (memoryCacheFile.exists()) {
+                loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
             }
         }
         httpFetcher.downloadImage(context, bmpParams, loadImageCallback)
@@ -155,5 +153,6 @@ class ImageLoader(
         } else {
             loadImageLocally(webUrlOrFileUri, imageView, bmpParams)
         }
+
     }
 }
