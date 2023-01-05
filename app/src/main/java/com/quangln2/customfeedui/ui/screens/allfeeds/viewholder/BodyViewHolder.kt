@@ -9,6 +9,7 @@ import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
+import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedBodyBinding
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
@@ -18,6 +19,7 @@ import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
+import com.quangln2.customfeedui.ui.customview.customgrid.CustomGridGroup
 import com.quangln2.customfeedui.uitracking.ui.UiTracking
 import kotlinx.coroutines.*
 import java.io.File
@@ -25,6 +27,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                                  private var context: Context,
                                  private val eventFeedCallback: EventFeedCallback):
     RecyclerView.ViewHolder(binding.root) {
+    private var gridForLayout = mutableListOf<ItemLocation>()
     @SuppressLint("SetTextI18n")
     private fun addMoreImageOrVideoLayer(i: Int, item: MyPostRender): Boolean {
         if (i >= 8 && item.resources.size > ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID) {
@@ -53,7 +56,11 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     }
 
     fun bind(item: MyPostRender){
+        gridForLayout.clear()
         binding.customGridGroup.removeAllViews()
+        binding.customGridGroup.firstItemWidth = item.firstItemWidth
+        binding.customGridGroup.firstItemHeight = item.firstItemHeight
+        gridForLayout.addAll(CustomGridGroup.initializeDataForShowingGrid(item.resources.size, item.firstItemWidth, item.firstItemHeight))
         for (i in item.resources.indices) {
             if (addMoreImageOrVideoLayer(i, item)) return
             val url = item.resources[i].url
@@ -76,7 +83,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     private fun createVideoView(item: MyPostRender, i: Int, url: String, urlArrayList: ArrayList<String>){
         val currentVideo = CurrentVideo(currentVideoPosition = -1L, url = item.resources[i].url, listOfUrls = urlArrayList, id = item.feedId)
         val videoView = LoadingVideoView(context, url)
-        videoView.initForShowThumbnail(300, 300)
+        videoView.initForShowThumbnail(gridForLayout[i].width, gridForLayout[i].height)
         videoView.setOnClickListener {
             eventFeedCallback.onClickVideoView(currentVideo)
         }
@@ -91,7 +98,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                 eventFeedCallback.onClickVideoView(currentVideo)
             }
         }
-        val imageLoader = ImageLoader(context,300,300,CoroutineScope(Job()))
+        val imageLoader = ImageLoader(context, gridForLayout[i].width, gridForLayout[i].height,CoroutineScope(Job()))
         val bmpParams = BitmapCustomParams().apply { folderName = item.feedId }
         binding.customGridGroup.addView(imageView)
         imageLoader.loadImage(url, imageView, bmpParams)

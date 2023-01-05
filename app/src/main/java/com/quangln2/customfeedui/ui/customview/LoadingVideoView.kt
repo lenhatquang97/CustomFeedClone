@@ -117,6 +117,9 @@ class LoadingVideoView @JvmOverloads constructor(
 
         playerView.layoutParams.width = width
         playerView.layoutParams.height = height
+
+        thumbnailView.layoutParams.width = width
+        thumbnailView.layoutParams.height = height
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
