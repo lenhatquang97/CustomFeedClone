@@ -29,7 +29,7 @@ object UiTracking {
     }
 
     private fun getDownloadImageStat(threadSet: MutableSet<Thread>): String {
-        val totalThreadDownImage = threadSet.filter { it.name.contains(THREAD_DOWNLOADING_IMAGE) }.size
+        val totalThreadDownImage = 4
         val numOfThreadDownImageRunning = threadSet.filter {it.name.contains(THREAD_DOWNLOADING_IMAGE) && it.state == Thread.State.RUNNABLE}.size
         val numOfTaskDownImageWaiting = BitmapTaskManager.executorDownloadingImage.taskWaiting()
 

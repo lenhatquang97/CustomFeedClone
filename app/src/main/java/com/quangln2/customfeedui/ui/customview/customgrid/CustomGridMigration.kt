@@ -7,7 +7,6 @@ object CustomGridMigration {
         return listOf(
             RectanglePoint(0f, 0f, 1f, 1f)
         )
-
     }
 
     fun drawSixChildrenGrid(): List<RectanglePoint> {

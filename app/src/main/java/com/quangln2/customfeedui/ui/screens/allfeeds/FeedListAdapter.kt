@@ -71,9 +71,6 @@ class FeedListAdapter(
             is HeaderViewHolder -> {
                 holder.onViewAttached(context, false)
             }
-            is BodyViewHolder -> {
-                holder.onViewAttached()
-            }
             is AddNewItemViewHolder -> {
                 holder.onViewAttached(context, false)
             }
@@ -83,9 +80,6 @@ class FeedListAdapter(
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         super.onViewDetachedFromWindow(holder)
         when (holder) {
-            is BodyViewHolder -> {
-                holder.onViewRecycled()
-            }
             is HeaderViewHolder -> {
                 holder.onViewRecycled()
             }
@@ -103,7 +97,7 @@ class FeedListAdapter(
                 (holder as AddNewItemViewHolder).bind(context)
             }
             TypeOfPost.HEADER.value -> (holder as HeaderViewHolder).bind(item, context)
-            TypeOfPost.BODY.value -> (holder as BodyViewHolder).bind(item, context)
+            TypeOfPost.BODY.value -> (holder as BodyViewHolder).bind(item)
             else -> (holder as FooterViewHolder).bind(item)
 
         }

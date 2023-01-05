@@ -7,11 +7,9 @@ import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.size
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -36,6 +34,7 @@ import com.quangln2.customfeedui.imageloader.data.extension.recycle
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
+import com.quangln2.customfeedui.ui.customview.customgrid.CustomGridGroup
 import com.quangln2.customfeedui.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
 import com.quangln2.customfeedui.uitracking.ui.UiTracking
@@ -284,9 +283,9 @@ class AllFeedsFragment : Fragment() {
     private fun retrieveAllVisibleVideosOnScreen(visibleFeeds: List<Int>){
         visibleFeeds.forEach { feedIdx ->
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(feedIdx)
-            val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+            val customGridGroup = viewItem?.itemView?.findViewById<CustomGridGroup>(R.id.customGridGroup)
             customGridGroup?.let{
-                for(i in 0 until it.size){
+                for(i in 0 until it.childCount){
                     val view = it.getChildAt(i)
                     val videoPair = Pair(feedIdx, i)
                     viewModel.checkLoadingVideoViewIsVisible(view, currentViewRect, videoPair)
@@ -297,7 +296,7 @@ class AllFeedsFragment : Fragment() {
 
     private fun getVideoView(mainItemIndex: Int, videoIndex: Int): View?{
         val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(mainItemIndex)
-        val customGridGroup = viewItem?.itemView?.findViewById<FrameLayout>(R.id.customGridGroup)
+        val customGridGroup = viewItem?.itemView?.findViewById<CustomGridGroup>(R.id.customGridGroup)
         return customGridGroup?.getChildAt(videoIndex)
     }
 }

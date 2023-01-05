@@ -6,6 +6,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.PointF
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
@@ -116,8 +117,7 @@ class ZoomImage: AppCompatImageView, View.OnTouchListener {
         myMatrix.set(savedMatrix)
         val dx = event.x - start.x
         val dy = event.y - start.y
-        myMatrix.postTranslate(dx, dy)
-        checkConstraintInDragFunction()
+        checkConstraintInDragFunction(dx, dy)
     }
 
     private fun doZoomFunction(event: MotionEvent){
@@ -136,20 +136,40 @@ class ZoomImage: AppCompatImageView, View.OnTouchListener {
             Log.d("Exception", e.cause.toString())
         }
     }
+    private fun createPairArray(it: Drawable): Pair<Pair<Float, Float>, Pair<Float, Float>>{
+        val values = FloatArray(9)
+        myMatrix.getValues(values)
+        val leftTop = Pair(values[2], values[5])
+        val rightBottom = Pair(values[2] + it.intrinsicWidth * values[0], values[5] + it.intrinsicHeight * values[4])
+        return Pair(leftTop, rightBottom)
+    }
 
-    private fun checkConstraintInDragFunction(){
-        val points = FloatArray(8)
-        myMatrix.mapPoints(points)
-        val firstCorner = Pair(points[0], points[1])
-        val secondCorner = Pair(points[2] + width, points[3])
-        val thirdCorner = Pair(points[4] + width, points[5] + height)
-        val isOutOfBoundWidth = (firstCorner.first < 0 && secondCorner.first < ConstantSetup.PHONE_WIDTH) || (firstCorner.first > 0 && secondCorner.first > ConstantSetup.PHONE_WIDTH)
-        val isOutOfBoundHeight = (firstCorner.second < centerLocation.first && thirdCorner.second < centerLocation.second) || (firstCorner.second > centerLocation.first && thirdCorner.second > centerLocation.second)
-        if(isOutOfBoundWidth && scale == 1f) myMatrix.postTranslate(-firstCorner.first, 0f)
-        if(isOutOfBoundHeight && scale == 1f) myMatrix.postTranslate(0f, -(firstCorner.second - centerLocation.first))
+    private fun checkConstraintInDragFunction(dx: Float, dy: Float){
+        drawable?.let {
+            // values[2] and values[5] are the x,y coordinates of the top left corner of the drawable image, regardless of the zoom factor.
+            // values[0] and values[4] are the zoom factors for the image's width and height respectively. If you zoom at the same factor, these should both be the same value.
+            var (leftTop, rightBottom) = createPairArray(it)
+            Log.d("ZoomImage","2 main points: $leftTop $rightBottom")
+            if(leftTop.first < 0 && rightBottom.first > ConstantSetup.PHONE_WIDTH){
+                myMatrix.postTranslate(dx, dy)
+                val result = createPairArray(it)
+                leftTop = result.first
+                rightBottom = result.second
+            }
+            val outOfBoundXCondition = (leftTop.first > 0 && rightBottom.first > ConstantSetup.PHONE_WIDTH) || (leftTop.first < 0 && rightBottom.first < ConstantSetup.PHONE_WIDTH)
+            if(outOfBoundXCondition){
+                myMatrix.postTranslate(-dx, 0f)
+                val result = createPairArray(it)
+                leftTop = result.first
+                rightBottom = result.second
+            }
+            val outOfBoundYCondition = (leftTop.second > 0 && rightBottom.second > ConstantSetup.PHONE_HEIGHT) || (leftTop.second < 0 && rightBottom.second < ConstantSetup.PHONE_HEIGHT)
+            if(outOfBoundYCondition) myMatrix.postTranslate(0f, -dy)
+        }
     }
 
     private fun checkConstraintInZoomFunction(oldMatrix: Matrix){
+        //TODO: Check constraint in zoom function
         val points = FloatArray(8)
         oldMatrix.mapPoints(points)
         val firstCorner = Pair(points[0], points[1])
