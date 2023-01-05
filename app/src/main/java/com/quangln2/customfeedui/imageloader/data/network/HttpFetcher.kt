@@ -45,6 +45,7 @@ class HttpFetcher {
                                 fos.write(buffer, 0, len)
                             }
                             NetworkHelper.writingFiles.remove(actualPath)
+                            NetworkHelper.doingTask.remove(actualPath)
                             emit(actualPath)
                         }
                         emit(actualPath)
@@ -67,9 +68,12 @@ class HttpFetcher {
         }
         val fileName = URLUtil.guessFileName(webUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-        CoroutineScope(Dispatchers.Main).launch {
-            downloadImageTask(context, actualPath).collect{
-                loadImageCallback()
+        if(!NetworkHelper.doingTask.contains(actualPath)){
+            NetworkHelper.doingTask.add(actualPath)
+            CoroutineScope(Dispatchers.Main).launch {
+                downloadImageTask(context, actualPath).collect{
+                    loadImageCallback()
+                }
             }
         }
     }
