@@ -37,9 +37,7 @@ import java.util.*
 
 
 class UploadService : Service() {
-    val database by lazy {
-        FeedDatabase.getFeedDatabase(this)
-    }
+    val database by lazy { FeedDatabase.getFeedDatabase(this) }
     private val builder = NotificationCompat.Builder(this, "FeedPost")
         .setContentTitle("CustomFeed")
         .setSmallIcon(R.drawable.ic_baseline_post_add_24)

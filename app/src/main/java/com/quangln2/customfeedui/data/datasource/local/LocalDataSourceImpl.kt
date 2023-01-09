@@ -13,6 +13,7 @@ class LocalDataSourceImpl(private val feedDao: FeedDao) : LocalDataSource {
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
     override suspend fun getFeedWithId(feed_id: String): MyPost = feedDao.getFeedWithId(feed_id)
+
     override suspend fun handleModifyPostList(body: MutableList<UploadPost>): List<MyPost> {
         val ls = mutableListOf<MyPost>()
         val deletedFeeds = mutableListOf<MyPost>()
