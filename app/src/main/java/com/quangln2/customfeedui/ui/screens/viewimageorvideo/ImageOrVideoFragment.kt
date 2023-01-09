@@ -19,7 +19,6 @@ import com.quangln2.customfeedui.data.datasource.local.LocalDataSourceImpl
 import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentImageOrVideoBinding
-import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.viewmodel.ViewFullViewModel
@@ -75,12 +74,11 @@ class ImageOrVideoFragment(private val player: ExoPlayer) : Fragment() {
     }
 
     private fun loadImageThumbnail(){
-        val imageLoader = ImageLoader(requireContext(),0, 0, lifecycleScope)
-        val bmpParams = BitmapCustomParams().apply {
-            this.isFullScreen = true
-            this.folderName = id
-        }
-        imageLoader.loadImage(webUrl, binding.fullImageView, bmpParams)
+        ImageLoader.Builder().inScope(lifecycleScope)
+            .putIntoFolder(id)
+            .makeFullScreen()
+            .build(requireContext())
+            .loadImage(webUrl, binding.fullImageView)
     }
 
     private fun initializeVideoForLoading(url: String) {

@@ -28,16 +28,13 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.models.others.EnumFeedSplashScreenState
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentHomeScreenBinding
-import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.ui.customview.CustomImageView
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.viewmodel.UploadViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 const val TAG = "HomeScreenFragment"
 const val KEY_INSTANCE = "arrayListOfUris"
@@ -144,8 +141,11 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun loadInitialProfile() {
-        val imageLoader = ImageLoader(requireContext(),100, 100, lifecycleScope)
-        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage, BitmapCustomParams())
+        ImageLoader.Builder()
+            .resize(100, 100)
+            .inScope(lifecycleScope)
+            .build(requireContext())
+            .loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage)
     }
 
     private fun buttonHandleSubmitToServer() {

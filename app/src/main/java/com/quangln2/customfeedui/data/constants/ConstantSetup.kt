@@ -11,7 +11,6 @@ object ConstantSetup {
     * Delete Feed: /feeds/{id}
     */
     private const val DEFAULT_ENDPOINT = "https://feeduiclone.win/"
-
     const val GET_FEEDS = DEFAULT_ENDPOINT + "feeds"
     const val UPLOAD_FEED_VERSION_2 = DEFAULT_ENDPOINT + "feeds/upload_v2"
     const val DELETE_FEED = DEFAULT_ENDPOINT + "feeds/"

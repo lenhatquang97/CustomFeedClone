@@ -18,7 +18,6 @@ import com.quangln2.customfeedui.data.datasource.remote.RemoteDataSourceImpl
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentViewMoreBinding
-import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.utils.FileUtils
@@ -50,8 +49,11 @@ class ViewMoreFragment : Fragment() {
         binding.myName.text = item.name
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
         binding.caption.text = item.caption
-        val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
-        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage, BitmapCustomParams())
+        ImageLoader.Builder()
+            .resize(100, 100)
+            .inScope(lifecycleScope)
+            .build(requireContext())
+            .loadImage(ConstantSetup.AVATAR_LINK, binding.myAvatarImage)
     }
 
     private fun onViewDetailImageOrVideo(item: MyPostRender, index: Int){
@@ -95,10 +97,13 @@ class ViewMoreFragment : Fragment() {
                             imageView.setOnClickListener {
                                 onViewDetailImageOrVideo(item, i)
                             }
-                            val imageLoader = ImageLoader(requireContext(),100,100, lifecycleScope)
                             val actualImageUrl = NetworkHelper.convertVideoUrlToImageUrl(item.resources[i].url)
-                            val bmpParams = BitmapCustomParams().apply { folderName = item.feedId }
-                            imageLoader.loadImage(actualImageUrl, imageView, bmpParams)
+                            ImageLoader.Builder()
+                                .resize(100, 100)
+                                .inScope(lifecycleScope)
+                                .putIntoFolder(item.feedId)
+                                .build(requireContext())
+                                .loadImage(actualImageUrl, imageView)
                             binding.extendedCustomGridGroup.addView(imageView)
                         }
                     }

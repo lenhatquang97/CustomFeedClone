@@ -6,11 +6,8 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedHeaderBinding
-import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.utils.FileUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 
 class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
     RecyclerView.ViewHolder(binding.root) {
@@ -21,8 +18,10 @@ class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
         imgUrl = item.avatar
 
-        val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
-        imageLoader.loadImage(item.avatar, binding.myAvatarImage, BitmapCustomParams())
+        ImageLoader.Builder()
+            .resize(100, 100)
+            .build(context)
+            .loadImage(item.avatar, binding.myAvatarImage)
     }
 
     @SuppressLint("SetTextI18n")

@@ -7,10 +7,7 @@ import android.widget.ImageView
 import androidx.appcompat.content.res.AppCompatResources
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.constants.ConstantSetup
-import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 
 class CustomImageView {
     companion object {
@@ -42,8 +39,7 @@ class CustomImageView {
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
             val marginHorizontalSum = 16 + 32
             val widthGrid = ConstantSetup.PHONE_WIDTH / 3 - marginHorizontalSum
-            val imageLoader = ImageLoader(context, widthGrid, widthGrid, CoroutineScope(Job()))
-            imageLoader.loadImage(fileUriOrWebUrl, imageView, BitmapCustomParams())
+            ImageLoader.Builder().resize(widthGrid, widthGrid).build(context).loadImage(fileUriOrWebUrl, imageView)
             return imageView
         }
     }

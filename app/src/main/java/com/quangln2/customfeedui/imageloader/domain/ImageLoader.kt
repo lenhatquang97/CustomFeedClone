@@ -22,13 +22,14 @@ import com.quangln2.customfeedui.uitracking.ui.UiTracking
 import kotlinx.coroutines.*
 import java.io.File
 
-class ImageLoader(
+class ImageLoader private constructor(
     private var context: Context,
     private var width: Int,
     private var height: Int,
-    private var scope: CoroutineScope
+    private var scope: CoroutineScope,
+    private var bmpParams: BitmapCustomParams
 ) {
-    private fun loadImageWithUri(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
+    private fun loadImageWithUri(uri: Uri, imageView: ImageView) {
         val httpFetcher = HttpFetcher(uri)
         scope.launch(Dispatchers.Default) {
             Thread.currentThread().name = UiTracking.LOAD_WITH_URI + uri.toString()
@@ -45,7 +46,7 @@ class ImageLoader(
         }
     }
 
-    private fun retrieveImageFromLocalVideo(uri: Uri, imageView: ImageView, bmpParams: BitmapCustomParams) {
+    private fun retrieveImageFromLocalVideo(uri: Uri, imageView: ImageView) {
         scope.launch(Dispatchers.IO) {
             val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
             val cursor = context.contentResolver.query(uri, filePathColumn, null, null, null)
@@ -74,7 +75,7 @@ class ImageLoader(
         }
     }
 
-    private fun downAndLoadImage(url: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
+    private fun downAndLoadImage(url: String, imageView: ImageView) {
         val httpFetcher = HttpFetcher(url)
         val loadImageCallback = fun(){
             imageView.post {
@@ -82,14 +83,14 @@ class ImageLoader(
                 val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
                 val memoryCacheFile = File(context.cacheDir, actualPath)
                 if (memoryCacheFile.exists()) {
-                    loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
+                    loadImageWithUri(memoryCacheFile.toUri(), imageView)
                 }
             }
         }
         httpFetcher.downloadImage(context, bmpParams, loadImageCallback)
     }
 
-    private fun handleCache(filePath: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
+    private fun handleCache(filePath: String, imageView: ImageView) {
         if(bmpParams.folderName.isNotEmpty()){
             val folderCreation = File(context.cacheDir, bmpParams.folderName)
             if(!folderCreation.exists())
@@ -97,7 +98,7 @@ class ImageLoader(
         }
         val memoryCacheFile = File(context.cacheDir, filePath)
         if (memoryCacheFile.exists()) {
-            loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
+            loadImageWithUri(memoryCacheFile.toUri(), imageView)
         }
     }
 
@@ -114,7 +115,7 @@ class ImageLoader(
     }
 
 
-    private fun loadImageRemotely(webUrl: String, imageView: ImageView, bmpParams: BitmapCustomParams){
+    private fun loadImageRemotely(webUrl: String, imageView: ImageView){
         val webUri = Uri.parse(webUrl)
         val webUrlWithoutQueryParams = "${webUri.scheme}://${webUri.host}${webUri.path}"
 
@@ -129,19 +130,19 @@ class ImageLoader(
 
         if (doesExistInMemCacheOrDisk && notWriting) {
             if(preCheckWithChecksum(actualPath, webUri)){
-                handleCache(actualPath, imageView, bmpParams)
+                handleCache(actualPath, imageView)
             } else {
                 ImageLoaderUtils.deleteIfExists(actualPath, context)
-                downAndLoadImage(imageThumbnailUrl, imageView, bmpParams)
+                downAndLoadImage(imageThumbnailUrl, imageView)
             }
         }
         else {
             ImageLoaderUtils.createFolder(bmpParams.folderName, context)
-            downAndLoadImage(imageThumbnailUrl, imageView, bmpParams)
+            downAndLoadImage(imageThumbnailUrl, imageView)
         }
     }
 
-    private fun loadImageLocally(uriString: String, imageView: ImageView, bmpParams: BitmapCustomParams){
+    private fun loadImageLocally(uriString: String, imageView: ImageView){
         val fileUri = if(uriString.startsWith("content"))
             FileUtils.convertContentUriToFileUri(uriString.toUri(), context)
         else
@@ -149,17 +150,43 @@ class ImageLoader(
         fileUri.apply {
             val mimeType = DownloadUtils.getMimeType(this)
             if (mimeType?.contains("video") == true) {
-                retrieveImageFromLocalVideo(uriString.toUri(), imageView, bmpParams)
+                retrieveImageFromLocalVideo(uriString.toUri(), imageView)
             } else {
-                loadImageWithUri(this.toUri(), imageView, bmpParams)
+                loadImageWithUri(this.toUri(), imageView)
             }
         }
     }
 
-    fun loadImage(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
+    fun loadImage(webUrlOrFileUri: String, imageView: ImageView) {
         val isWebUrl = URLUtil.isHttpUrl(webUrlOrFileUri) || URLUtil.isHttpsUrl(webUrlOrFileUri)
         if (webUrlOrFileUri.isEmpty()) return
-        else if (isWebUrl) loadImageRemotely(webUrlOrFileUri, imageView, bmpParams)
-        else loadImageLocally(webUrlOrFileUri, imageView, bmpParams)
+        else if (isWebUrl) loadImageRemotely(webUrlOrFileUri, imageView)
+        else loadImageLocally(webUrlOrFileUri, imageView)
     }
+
+    data class Builder(
+        var width: Int = 0,
+        var height: Int = 0,
+        var scope: CoroutineScope = CoroutineScope(Job()),
+        var bmpParams: BitmapCustomParams = BitmapCustomParams()
+    ) {
+        fun resize(width: Int, height: Int) = apply {
+            this.width = width
+            this.height = height
+        }
+        fun inScope(scope: CoroutineScope) = apply{
+            this.scope = scope
+        }
+
+        fun putIntoFolder(folderName: String) = apply {
+            this.bmpParams.folderName = folderName
+        }
+
+        fun makeFullScreen() = apply {
+            this.bmpParams.isFullScreen = true
+        }
+
+        fun build(context: Context) = ImageLoader(context, width, height, scope, bmpParams)
+    }
+
 }

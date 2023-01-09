@@ -12,7 +12,6 @@ import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedBodyBinding
-import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
@@ -28,6 +27,7 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                                  private val eventFeedCallback: EventFeedCallback):
     RecyclerView.ViewHolder(binding.root) {
     private var gridForLayout = mutableListOf<ItemLocation>()
+
     @SuppressLint("SetTextI18n")
     private fun addMoreImageOrVideoLayer(i: Int, item: MyPostRender): Boolean {
         if (i >= 8 && item.resources.size > ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID) {
@@ -98,9 +98,11 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
                 eventFeedCallback.onClickVideoView(currentVideo)
             }
         }
-        val imageLoader = ImageLoader(context, gridForLayout[i].width, gridForLayout[i].height,CoroutineScope(Job()))
-        val bmpParams = BitmapCustomParams().apply { folderName = item.feedId }
         binding.customGridGroup.addView(imageView)
-        imageLoader.loadImage(url, imageView, bmpParams)
+        ImageLoader.Builder()
+            .resize(gridForLayout[i].width, gridForLayout[i].height)
+            .putIntoFolder(item.feedId)
+            .build(context)
+            .loadImage(url, imageView)
     }
 }

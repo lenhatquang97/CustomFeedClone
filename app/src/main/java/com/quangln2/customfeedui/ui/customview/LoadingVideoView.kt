@@ -15,12 +15,8 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.controllers.FeedCtrl.isMute
-import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
-import com.quangln2.customfeedui.imageloader.data.bitmap.TypeImage
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.videocache.VideoCache
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 
 
 class LoadingVideoView @JvmOverloads constructor(
@@ -60,24 +56,19 @@ class LoadingVideoView @JvmOverloads constructor(
     }
 
      private fun initForShowThumbnail() {
-        progressBar.visibility = View.GONE
-        val imageLoader = ImageLoader(context,0,0, CoroutineScope(Job()))
-        if(fileUri == null){
-            imageLoader.loadImage(webUrl,thumbnailView, BitmapCustomParams(type = TypeImage.VideoThumbnail))
-        } else {
-            imageLoader.loadImage(fileUri.toString(),thumbnailView, BitmapCustomParams(type = TypeImage.VideoThumbnail))
-        }
+         progressBar.visibility = View.GONE
+         ImageLoader.Builder()
+             .build(context)
+             .loadImage(if(fileUri == null) webUrl else fileUri.toString(), thumbnailView)
     }
 
      fun initForShowThumbnail(width: Int, height: Int) {
-        progressBar.visibility = View.GONE
-        val imageLoader = ImageLoader(context,width,height, CoroutineScope(Job()))
-        if(fileUri == null){
-            imageLoader.loadImage(webUrl,thumbnailView, BitmapCustomParams(type = TypeImage.VideoThumbnail))
-        } else {
-            imageLoader.loadImage(fileUri.toString(),thumbnailView, BitmapCustomParams(type = TypeImage.VideoThumbnail))
-        }
-    }
+         progressBar.visibility = View.GONE
+         ImageLoader.Builder()
+             .resize(width, height)
+             .build(context)
+             .loadImage(if(fileUri == null) webUrl else fileUri.toString(), thumbnailView)
+     }
 
 
     @SuppressLint("UseCompatLoadingForDrawables")
