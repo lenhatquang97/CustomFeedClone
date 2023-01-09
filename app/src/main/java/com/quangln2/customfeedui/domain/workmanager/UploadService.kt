@@ -25,6 +25,7 @@ import com.quangln2.customfeedui.domain.usecase.UploadFileWithPostIdUseCase
 import com.quangln2.customfeedui.domain.usecase.UploadPostV2UseCase
 import com.quangln2.customfeedui.extensions.getImageDimensions
 import com.quangln2.customfeedui.extensions.getVideoSize
+import com.quangln2.customfeedui.extensions.md5
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
 import kotlinx.coroutines.CoroutineScope
@@ -91,7 +92,8 @@ class UploadService : Service() {
         CoroutineScope(Dispatchers.IO).launch {
             for(uri in uriLists){
                 val actualUri = handleCaseUri(uri)
-                val actualUrl = uploadFileWithPostIdUseCase(ConstantSetup.UPLOAD_FILE, actualUri, uploadingPost.feedId)
+                val md5Checksum = actualUri.md5()
+                val actualUrl = uploadFileWithPostIdUseCase(ConstantSetup.UPLOAD_FILE, actualUri, uploadingPost.feedId, md5Checksum)
                 if(actualUrl != "error"){
                     if(listOfUrls.isEmpty()){
                         val mimeType = DownloadUtils.getMimeType(uri.path)

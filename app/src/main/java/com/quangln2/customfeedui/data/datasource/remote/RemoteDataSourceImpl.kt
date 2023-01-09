@@ -88,7 +88,7 @@ class RemoteDataSourceImpl : RemoteDataSource {
         return responseCode
     }
 
-    override fun uploadFileWithId(url: String, file: File, id: String): String{
+    override fun uploadFileWithId(url: String, file: File, id: String, checksum: String): String{
         val connection = URL(url).openConnection() as HttpURLConnection
         val boundary = UUID.randomUUID().toString()
         connection.requestMethod = "POST"
@@ -99,12 +99,18 @@ class RemoteDataSourceImpl : RemoteDataSource {
             connection.connect()
             val request = DataOutputStream(connection.outputStream)
             request.writeBytes("--$boundary\r\n")
+
+            //ID
             request.writeBytes("Content-Disposition: form-data; name=\"id\"\r\n\r\n")
             request.writeBytes(id + "\r\n")
             request.writeBytes("--$boundary\r\n")
-            request.writeBytes("Content-Disposition: form-data; name=\"description\"\r\n\r\n")
-            request.writeBytes(file.name + "\r\n")
+
+            //Checksum
+            request.writeBytes("Content-Disposition: form-data; name=\"checksum\"\r\n\r\n")
+            request.writeBytes(checksum + "\r\n")
             request.writeBytes("--$boundary\r\n")
+
+            //File
             request.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"${file.name}\"\r\n\r\n")
             request.write(readFileToByteArray(file))
             request.writeBytes("\r\n")
@@ -120,7 +126,7 @@ class RemoteDataSourceImpl : RemoteDataSource {
                 }
                 TEMPORARY_REDIRECT -> {
                     connection.disconnect()
-                    return uploadFileWithId(connection.url.toString(), file, id)
+                    return uploadFileWithId(connection.url.toString(), file, id, checksum)
                 }
                 else -> {
                     Log.d("Failed", "Upload file failed $responseCode")

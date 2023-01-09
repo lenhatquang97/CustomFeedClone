@@ -16,6 +16,7 @@ import com.google.android.exoplayer2.ui.PlayerView
 import com.quangln2.customfeedui.R
 import com.quangln2.customfeedui.data.controllers.FeedCtrl.isMute
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
+import com.quangln2.customfeedui.imageloader.data.bitmap.TypeImage
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.videocache.VideoCache
 import kotlinx.coroutines.CoroutineScope
@@ -62,9 +63,9 @@ class LoadingVideoView @JvmOverloads constructor(
         progressBar.visibility = View.GONE
         val imageLoader = ImageLoader(context,0,0, CoroutineScope(Job()))
         if(fileUri == null){
-            imageLoader.loadImage(webUrl,thumbnailView, BitmapCustomParams())
+            imageLoader.loadImage(webUrl,thumbnailView, BitmapCustomParams(type = TypeImage.VideoThumbnail))
         } else {
-            imageLoader.loadImage(fileUri.toString(),thumbnailView, BitmapCustomParams())
+            imageLoader.loadImage(fileUri.toString(),thumbnailView, BitmapCustomParams(type = TypeImage.VideoThumbnail))
         }
     }
 
@@ -72,9 +73,9 @@ class LoadingVideoView @JvmOverloads constructor(
         progressBar.visibility = View.GONE
         val imageLoader = ImageLoader(context,width,height, CoroutineScope(Job()))
         if(fileUri == null){
-            imageLoader.loadImage(webUrl,thumbnailView, BitmapCustomParams())
+            imageLoader.loadImage(webUrl,thumbnailView, BitmapCustomParams(type = TypeImage.VideoThumbnail))
         } else {
-            imageLoader.loadImage(fileUri.toString(),thumbnailView, BitmapCustomParams())
+            imageLoader.loadImage(fileUri.toString(),thumbnailView, BitmapCustomParams(type = TypeImage.VideoThumbnail))
         }
     }
 

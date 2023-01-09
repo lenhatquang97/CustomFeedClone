@@ -58,7 +58,7 @@ class FeedRepository(private val localDataSource: LocalDataSource, private val r
     suspend fun delete(id: String) = localDataSource.delete(id)
     suspend fun retrieveItemWithId(id: String) = localDataSource.getFeedWithId(id)
     fun uploadPostV2(requestBody: UploadPost) = remoteDataSource.uploadPostV2(requestBody)
-    fun uploadFileWithPostId(url: String, file: File, postId: String) = remoteDataSource.uploadFileWithId(url, file, postId)
+    fun uploadFileWithPostId(url: String, file: File, postId: String, checksum: String) = remoteDataSource.uploadFileWithId(url, file, postId, checksum)
 
 
 }

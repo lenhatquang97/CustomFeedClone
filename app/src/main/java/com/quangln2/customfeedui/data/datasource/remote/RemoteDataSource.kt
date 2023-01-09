@@ -8,5 +8,5 @@ interface RemoteDataSource {
     fun uploadPostV2(requestBody: UploadPost): Int
     fun getAllFeeds(): MutableList<UploadPost>
     fun deleteFeed(id: String): Int
-    fun uploadFileWithId(url: String, file: File, id: String): String
+    fun uploadFileWithId(url: String, file: File, id: String, checksum: String): String
 }

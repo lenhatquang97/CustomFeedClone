@@ -4,9 +4,11 @@ import android.content.Context
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
+import com.quangln2.customfeedui.extensions.md5
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapUtils
 import com.quangln2.customfeedui.imageloader.data.bitmap.ManagedBitmap
@@ -126,24 +128,45 @@ class ImageLoader(
         }
     }
 
-    private fun loadImageRemotely(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams){
+    private fun loadImageRemotely(webUrl: String, imageView: ImageView, bmpParams: BitmapCustomParams){
         if(bmpParams.folderName.isNotEmpty()){
             val folderCreation = File(context.cacheDir, bmpParams.folderName)
             if(!folderCreation.exists())
                 folderCreation.mkdir()
         }
 
-        val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlOrFileUri)
+        val webUri = Uri.parse(webUrl)
+        val webUrlWithoutQueryParams = "${webUri.scheme}://${webUri.host}${webUri.path}"
+        val queryParamsArray = webUri.getQueryParameters("checksum")
+        val checkSumParams =  if (queryParamsArray.isNotEmpty()) queryParamsArray[0] else ""
+
+        val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlWithoutQueryParams)
         val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
         val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-        if ((isInMemoryCache(actualPath) || doesFileExist(actualPath)) && !NetworkHelper.writingFiles.contains(actualPath)) {
-            handleMemoryCache(actualPath, imageView, bmpParams)
+
+        val doesExistInMemCacheOrDisk = isInMemoryCache(actualPath) || doesFileExist(actualPath)
+        val notWriting = !NetworkHelper.writingFiles.contains(actualPath)
+
+        if (doesExistInMemCacheOrDisk && notWriting) {
+            val fileContain = File(context.cacheDir, actualPath)
+            if(fileContain.exists()){
+                val actualChecksum = fileContain.md5()
+                Log.d("ImageLoader", "Checksum on the server: $checkSumParams vs Checksum in reality: $actualChecksum")
+
+                val isSameChecksum = checkSumParams == actualChecksum
+                val someExceptions = checkSumParams == ""
+                if(isSameChecksum || someExceptions){
+                    handleMemoryCache(actualPath, imageView, bmpParams)
+                } else {
+                    fileContain.delete()
+                    downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
+                }
+            }
         }
         else {
             downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
         }
     }
-
 
     fun loadImage(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         if (webUrlOrFileUri.isEmpty()) {
