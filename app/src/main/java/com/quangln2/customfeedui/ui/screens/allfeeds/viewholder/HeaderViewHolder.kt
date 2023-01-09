@@ -9,8 +9,7 @@ import com.quangln2.customfeedui.databinding.FeedHeaderBinding
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
 import com.quangln2.customfeedui.others.utils.FileUtils
 
-class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
-    RecyclerView.ViewHolder(binding.root) {
+class HeaderViewHolder constructor(private val binding: FeedHeaderBinding): RecyclerView.ViewHolder(binding.root) {
     private fun loadBasicInfoAboutFeed(item: MyPostRender, context: Context) {
         binding.feedId.text = item.feedId
         binding.myName.text = item.name
@@ -25,11 +24,7 @@ class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
     @SuppressLint("SetTextI18n")
     private fun loadFeedDescription(item: MyPostRender) {
         binding.caption.text = item.caption
-        if(item.caption.isEmpty()){
-            binding.caption.visibility = View.GONE
-        } else {
-            binding.caption.visibility = View.VISIBLE
-        }
+        binding.caption.visibility = if(item.caption.isEmpty()) View.GONE else View.VISIBLE
     }
 
     fun bind(item: MyPostRender, context: Context){

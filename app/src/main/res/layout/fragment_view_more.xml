@@ -67,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
                 android:paddingRight="32dp"
-                android:text="How many people are there?"
+                android:text="@string/sample_text_more"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/created_time" />
 

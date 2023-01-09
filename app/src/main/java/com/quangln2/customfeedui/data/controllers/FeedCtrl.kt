@@ -22,6 +22,7 @@ object FeedCtrl {
         }
         return true
     }
+    fun clearVideoDeque() = videoDeque.clear()
 
 
 }

@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.AsyncDifferConfig
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.models.uimodel.TypeOfPost
@@ -75,18 +74,6 @@ class FeedListAdapter(
 
         }
     }
-
 }
 
-class FeedListDiffCallback : DiffUtil.ItemCallback<MyPostRender>() {
-    override fun areItemsTheSame(oldItem: MyPostRender, newItem: MyPostRender): Boolean = oldItem == newItem
-    override fun areContentsTheSame(
-        oldItem: MyPostRender,
-        newItem: MyPostRender
-    ): Boolean {
-        return oldItem.typeOfPost == newItem.typeOfPost && oldItem.feedId == newItem.feedId
-                && oldItem.caption == newItem.caption && oldItem.resources == newItem.resources
-                && oldItem.createdTime == newItem.createdTime
-    }
-}
 

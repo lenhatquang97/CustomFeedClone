@@ -29,9 +29,9 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     private var gridForLayout = mutableListOf<ItemLocation>()
 
     @SuppressLint("SetTextI18n")
-    private fun addMoreImageOrVideoLayer(i: Int, item: MyPostRender): Boolean {
+    private fun addBlackLayerForViewMore(i: Int, item: MyPostRender): Boolean {
         if (i >= 8 && item.resources.size > ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID) {
-            val numbersOfAddedImages = item.resources.size - ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID
+            val numbersOfAddedImages = item.resources.size - ConstantSetup.MAXIMUM_IMAGE_IN_A_GRID + 1
             val viewChild = CustomLayer(context)
             viewChild.setOnClickListener {
                 eventFeedCallback.onClickViewMore(item.feedId)
@@ -56,13 +56,15 @@ class BodyViewHolder constructor(private val binding: FeedBodyBinding,
     }
 
     fun bind(item: MyPostRender){
-        gridForLayout.clear()
         binding.customGridGroup.removeAllViews()
         binding.customGridGroup.firstItemWidth = item.firstItemWidth
         binding.customGridGroup.firstItemHeight = item.firstItemHeight
+        gridForLayout.clear()
         gridForLayout.addAll(CustomGridGroup.initializeDataForShowingGrid(item.resources.size, item.firstItemWidth, item.firstItemHeight))
+
+
         for (i in item.resources.indices) {
-            if (addMoreImageOrVideoLayer(i, item)) return
+            if (addBlackLayerForViewMore(i, item)) return
             val url = item.resources[i].url
             val mimeType = DownloadUtils.getMimeType(url)
             val urlArrayList = ArrayList<String>().apply {

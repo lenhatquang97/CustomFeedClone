@@ -3,11 +3,9 @@ package com.quangln2.customfeedui.ui.screens.allfeeds
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
-import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -30,7 +28,6 @@ import com.quangln2.customfeedui.data.models.uimodel.CurrentVideo
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.data.repository.FeedRepository
 import com.quangln2.customfeedui.databinding.FragmentAllFeedsBinding
-import com.quangln2.customfeedui.imageloader.data.extension.recycle
 import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
@@ -47,9 +44,8 @@ import java.util.concurrent.atomic.AtomicInteger
 class AllFeedsFragment : Fragment() {
     private lateinit var binding: FragmentAllFeedsBinding
     private lateinit var adapterVal: FeedListAdapter
-    private var feedVideoItemPlaying = Pair(-1, -1)
     private lateinit var timer: Timer
-    private lateinit var handler: Handler
+    private lateinit var feedVideoItemPlaying: Pair<Int, Int>
 
     private val database by lazy { FeedDatabase.getFeedDatabase(requireContext()) }
     private val currentViewRect by lazy { Rect() }
@@ -104,14 +100,6 @@ class AllFeedsFragment : Fragment() {
             }
             override fun onClickViewMore(id: String) = findNavController().
                 navigate(R.id.action_allFeedsFragment_to_viewMoreFragment, Bundle().apply { putString("id", id) }, navTransition)
-            override fun onRecycled(child: View) {
-                if(child is LoadingVideoView){
-                    child.pauseAndReleaseVideo(player)
-                } else if(child is ImageView){
-                    child.setImageBitmap(null)
-                    child.recycle()
-                }
-            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,9 +109,8 @@ class AllFeedsFragment : Fragment() {
             viewModel.getAllFeeds(preloadCache = true)
         }
         player.addListener(playerListener)
-
         timer = Timer()
-        handler = Handler()
+        feedVideoItemPlaying = Pair(-1, -1)
     }
 
 
@@ -135,6 +122,7 @@ class AllFeedsFragment : Fragment() {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_all_feeds, container,false)
         binding.viewmodel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
+
         //Initialize recycler view
         adapterVal = FeedListAdapter(requireContext(), eventCallback)
         adapterVal.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
@@ -157,7 +145,7 @@ class AllFeedsFragment : Fragment() {
                 val indexLists = viewModel.retrieveAllVisibleItems(firstPartiallyIndex, lastPartiallyIndex)
 
                 //Step 1: Clear deque and get visible items
-                clearVideoDeque()
+                FeedCtrl.clearVideoDeque()
                 retrieveAllVisibleVideosOnScreen(indexLists)
                 //Step 2: put incoming video to play
                 lifecycleScope.launch(Dispatchers.Main){
@@ -199,7 +187,7 @@ class AllFeedsFragment : Fragment() {
 
         timer.schedule(object : TimerTask(){
             override fun run() {
-                handler.post {
+                binding.uiTracking.post {
                     if(context != null) binding.uiTracking.text = UiTracking.getGeneralInfo()
                 }
             }
@@ -279,7 +267,6 @@ class AllFeedsFragment : Fragment() {
         }
     }
 
-    private fun clearVideoDeque() = FeedCtrl.videoDeque.clear()
     private fun retrieveAllVisibleVideosOnScreen(visibleFeeds: List<Int>){
         visibleFeeds.forEach { feedIdx ->
             val viewItem = binding.allFeeds.findViewHolderForAdapterPosition(feedIdx)

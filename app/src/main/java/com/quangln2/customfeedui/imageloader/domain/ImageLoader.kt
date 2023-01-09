@@ -4,11 +4,9 @@ import android.content.Context
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import android.webkit.URLUtil
 import android.widget.ImageView
 import androidx.core.net.toUri
-import com.quangln2.customfeedui.extensions.md5
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapUtils
 import com.quangln2.customfeedui.imageloader.data.bitmap.ManagedBitmap
@@ -102,19 +100,6 @@ class ImageLoader private constructor(
         }
     }
 
-    private fun preCheckWithChecksum(actualPath: String, webUri: Uri): Boolean{
-        val checkSumParams = webUri.getQueryParameters("checksum")
-        val checkSumValue = if (checkSumParams.isNotEmpty()) checkSumParams[0] else ""
-        val fileContain = File(context.cacheDir, actualPath)
-        if(fileContain.exists()){
-            val actualChecksum = fileContain.md5()
-            Log.d("ImageLoader", "Checksum on the server: $checkSumValue vs Checksum in reality: $actualChecksum")
-            return checkSumValue == actualChecksum || checkSumValue.isEmpty()
-        }
-        return false
-    }
-
-
     private fun loadImageRemotely(webUrl: String, imageView: ImageView){
         val webUri = Uri.parse(webUrl)
         val webUrlWithoutQueryParams = "${webUri.scheme}://${webUri.host}${webUri.path}"
@@ -129,7 +114,7 @@ class ImageLoader private constructor(
         val notWriting = !NetworkHelper.writingFiles.contains(actualPath)
 
         if (doesExistInMemCacheOrDisk && notWriting) {
-            if(preCheckWithChecksum(actualPath, webUri)){
+            if(ImageLoaderUtils.preCheckWithChecksum(actualPath, webUri, context)){
                 handleCache(actualPath, imageView)
             } else {
                 ImageLoaderUtils.deleteIfExists(actualPath, context)

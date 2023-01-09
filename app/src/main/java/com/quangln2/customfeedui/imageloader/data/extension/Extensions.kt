@@ -40,5 +40,4 @@ fun ImageView.addToManagedAddress(webUrlOrFileUri: String){
     if(checkViewIsVisible()){
         LruBitmapCache.bitmapToImageViewAddress[imageViewAddress] = webUrlOrFileUri
     }
-
 }

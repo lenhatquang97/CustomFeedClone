@@ -30,4 +30,5 @@
     <string name="negative_title">No</string>
     <string name="sample_text">Hello World</string>
     <string name="retry">RETRY</string>
+    <string name="sample_text_more">How many people are there?</string>
 </resources>
