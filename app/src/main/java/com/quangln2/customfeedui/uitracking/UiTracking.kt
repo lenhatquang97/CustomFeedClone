@@ -1,21 +1,20 @@
-package com.quangln2.customfeedui.uitracking.ui
+package com.quangln2.customfeedui.uitracking
 
 import android.webkit.URLUtil
 import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.extensions.taskWaiting
 import com.quangln2.customfeedui.imageloader.data.memcache.LruBitmapCache
-import com.quangln2.customfeedui.uitracking.data.MemoryStats
 
 object UiTracking {
     const val THREAD_DOWNLOADING_IMAGE = "ImageFetcherThread"
     const val LOAD_WITH_URI = "LoadImageWithUriThread"
-    private val memStats = MemoryStats()
+    private const val MB_UNIT = 1048576L
 
     private fun getOverallInfo(): String {
-        val usedHeapSizeFormat = "Used Heap Size: ${memStats.getUsedMemory()} MB\n"
+        val usedHeapSize = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / MB_UNIT
+        val usedHeapSizeFormat = "Used Heap Size: $usedHeapSize MB\n"
         val memorySizeFormat = "Size in LruCache: ${LruBitmapCache.memoryCache.size()}\n"
         val totalImagesIncludingDuplicatesFormat = "Number of images/thumbnails including duplicates: ${MyPostRender.numberOfImagesAndThumbnails}\n"
-
         val bitmapSizeFormat = "Number of bitmaps in LruCache: ${LruBitmapCache.memoryCache.snapshot().size}\n\n"
 
         val formatString = StringBuilder().apply {
@@ -27,6 +26,7 @@ object UiTracking {
         }
         return formatString.toString()
     }
+
 
     private fun getDownloadImageStat(threadSet: MutableSet<Thread>): String {
         val totalThreadDownImage = 4
@@ -48,7 +48,7 @@ object UiTracking {
     }
 
     private fun getLoadImageStat(threadSet: MutableSet<Thread>): String{
-        val numOfThreadLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI}.size
+        val numOfThreadLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI }.size
         val runnableLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI && it.state == Thread.State.RUNNABLE}.size
         val waitingLoadingImage = threadSet.filter {it.name == LOAD_WITH_URI && it.state == Thread.State.WAITING}.size
 

@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.webkit.URLUtil
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
-import com.quangln2.customfeedui.uitracking.ui.BitmapTaskManager
-import com.quangln2.customfeedui.uitracking.ui.UiTracking
+import com.quangln2.customfeedui.uitracking.BitmapTaskManager
+import com.quangln2.customfeedui.uitracking.UiTracking
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher

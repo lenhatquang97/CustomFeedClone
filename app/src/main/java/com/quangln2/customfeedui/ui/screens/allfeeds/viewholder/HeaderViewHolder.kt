@@ -11,12 +11,10 @@ import com.quangln2.customfeedui.others.utils.FileUtils
 
 class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
     RecyclerView.ViewHolder(binding.root) {
-    var imgUrl = ""
     private fun loadBasicInfoAboutFeed(item: MyPostRender, context: Context) {
         binding.feedId.text = item.feedId
         binding.myName.text = item.name
         binding.createdTime.text = FileUtils.convertUnixTimestampToTime(item.createdTime)
-        imgUrl = item.avatar
 
         ImageLoader.Builder()
             .resize(100, 100)

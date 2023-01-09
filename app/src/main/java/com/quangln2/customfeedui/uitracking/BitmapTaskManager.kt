@@ -1,4 +1,4 @@
-package com.quangln2.customfeedui.uitracking.ui
+package com.quangln2.customfeedui.uitracking
 
 import android.os.Process
 import java.util.concurrent.*

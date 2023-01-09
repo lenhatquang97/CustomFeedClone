@@ -18,7 +18,7 @@ import com.quangln2.customfeedui.imageloader.data.network.HttpFetcher
 import com.quangln2.customfeedui.imageloader.data.network.NetworkHelper
 import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.others.utils.FileUtils
-import com.quangln2.customfeedui.uitracking.ui.UiTracking
+import com.quangln2.customfeedui.uitracking.UiTracking
 import kotlinx.coroutines.*
 import java.io.File
 

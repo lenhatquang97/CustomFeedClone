@@ -15,17 +15,14 @@ class CustomImageView {
             val frameLayout = FrameLayout(context)
             val imageView = generateImageView(context, url)
             val crossButton = generateCrossButton(context)
-
             frameLayout.addView(imageView)
             frameLayout.addView(crossButton)
-
             return frameLayout
         }
 
         private fun generateCrossButton(context: Context): ImageView {
             val crossButton = ImageView(context)
             val params = FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
-
             crossButton.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.remove_icon))
             params.gravity = Gravity.END
             crossButton.layoutParams = params

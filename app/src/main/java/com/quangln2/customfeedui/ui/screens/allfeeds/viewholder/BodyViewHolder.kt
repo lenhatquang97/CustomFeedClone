@@ -19,7 +19,7 @@ import com.quangln2.customfeedui.others.utils.DownloadUtils
 import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.customview.customgrid.CustomGridGroup
-import com.quangln2.customfeedui.uitracking.ui.UiTracking
+import com.quangln2.customfeedui.uitracking.UiTracking
 import kotlinx.coroutines.*
 import java.io.File
 class BodyViewHolder constructor(private val binding: FeedBodyBinding,

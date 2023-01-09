@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import com.quangln2.customfeedui.data.constants.ConstantSetup
 import com.quangln2.customfeedui.data.models.uimodel.ItemLocation
+import com.quangln2.customfeedui.ui.customview.CustomLayer
 import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 
 class CustomGridGroup: ViewGroup {
@@ -57,7 +58,7 @@ class CustomGridGroup: ViewGroup {
         val rectangles = initializeDataForShowingGrid()
         for (i in 0 until childCount) {
             val child = getChildAt(i)
-            if(child is LoadingVideoView){
+            if(child is LoadingVideoView || child is CustomLayer){
                 child.measure(rectangles[i].width, rectangles[i].height)
             }
             child.layout(rectangles[i].left, rectangles[i].top,

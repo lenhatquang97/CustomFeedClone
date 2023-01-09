@@ -37,7 +37,7 @@ import com.quangln2.customfeedui.ui.customview.LoadingVideoView
 import com.quangln2.customfeedui.ui.customview.customgrid.CustomGridGroup
 import com.quangln2.customfeedui.ui.viewmodel.FeedViewModel
 import com.quangln2.customfeedui.ui.viewmodelfactory.ViewModelFactory
-import com.quangln2.customfeedui.uitracking.ui.UiTracking
+import com.quangln2.customfeedui.uitracking.UiTracking
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
