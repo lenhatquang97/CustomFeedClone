@@ -40,7 +40,6 @@ class ImageLoader(
                         imageView.addToManagedAddress(uri.toString())
                         imageView.setImageBitmap(bitmap)
                     }
-
                 }
             }
         }
@@ -75,7 +74,7 @@ class ImageLoader(
         }
     }
 
-    private fun downloadImageAndThenLoadImageWithUrl(url: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
+    private fun downAndLoadImage(url: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         val httpFetcher = HttpFetcher(url)
         val loadImageCallback = fun(){
             imageView.post {
@@ -90,17 +89,7 @@ class ImageLoader(
         httpFetcher.downloadImage(context, bmpParams, loadImageCallback)
     }
 
-    private fun isInMemoryCache(fileName: String): Boolean {
-        val memoryCacheFile = File(context.cacheDir, fileName)
-        return LruBitmapCache.containsKey(memoryCacheFile.toUri().toString())
-    }
-
-    private fun doesFileExist(fileName: String): Boolean {
-        val file = File(context.cacheDir, fileName)
-        return file.exists()
-    }
-
-    private fun handleMemoryCache(filePath: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
+    private fun handleCache(filePath: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
         if(bmpParams.folderName.isNotEmpty()){
             val folderCreation = File(context.cacheDir, bmpParams.folderName)
             if(!folderCreation.exists())
@@ -110,73 +99,67 @@ class ImageLoader(
         if (memoryCacheFile.exists()) {
             loadImageWithUri(memoryCacheFile.toUri(), imageView, bmpParams)
         }
-
     }
 
-    private fun loadImageLocally(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams){
-        val actualUri = if(webUrlOrFileUri.startsWith("content"))
-            FileUtils.convertContentUriToFileUri(webUrlOrFileUri.toUri(), context)
+    private fun preCheckWithChecksum(actualPath: String, webUri: Uri): Boolean{
+        val checkSumParams = webUri.getQueryParameters("checksum")
+        val checkSumValue = if (checkSumParams.isNotEmpty()) checkSumParams[0] else ""
+        val fileContain = File(context.cacheDir, actualPath)
+        if(fileContain.exists()){
+            val actualChecksum = fileContain.md5()
+            Log.d("ImageLoader", "Checksum on the server: $checkSumValue vs Checksum in reality: $actualChecksum")
+            return checkSumValue == actualChecksum || checkSumValue.isEmpty()
+        }
+        return false
+    }
+
+
+    private fun loadImageRemotely(webUrl: String, imageView: ImageView, bmpParams: BitmapCustomParams){
+        val webUri = Uri.parse(webUrl)
+        val webUrlWithoutQueryParams = "${webUri.scheme}://${webUri.host}${webUri.path}"
+
+        //Use in case for getting thumbnail image if video exists
+        val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlWithoutQueryParams)
+
+        val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
+        val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
+
+        val doesExistInMemCacheOrDisk = ImageLoaderUtils.isInMemoryCache(actualPath, context) || ImageLoaderUtils.doesFileExist(actualPath, context)
+        val notWriting = !NetworkHelper.writingFiles.contains(actualPath)
+
+        if (doesExistInMemCacheOrDisk && notWriting) {
+            if(preCheckWithChecksum(actualPath, webUri)){
+                handleCache(actualPath, imageView, bmpParams)
+            } else {
+                ImageLoaderUtils.deleteIfExists(actualPath, context)
+                downAndLoadImage(imageThumbnailUrl, imageView, bmpParams)
+            }
+        }
+        else {
+            ImageLoaderUtils.createFolder(bmpParams.folderName, context)
+            downAndLoadImage(imageThumbnailUrl, imageView, bmpParams)
+        }
+    }
+
+    private fun loadImageLocally(uriString: String, imageView: ImageView, bmpParams: BitmapCustomParams){
+        val fileUri = if(uriString.startsWith("content"))
+            FileUtils.convertContentUriToFileUri(uriString.toUri(), context)
         else
-            webUrlOrFileUri
-        actualUri?.apply {
+            uriString
+        fileUri.apply {
             val mimeType = DownloadUtils.getMimeType(this)
             if (mimeType?.contains("video") == true) {
-                retrieveImageFromLocalVideo(webUrlOrFileUri.toUri(), imageView, bmpParams)
+                retrieveImageFromLocalVideo(uriString.toUri(), imageView, bmpParams)
             } else {
                 loadImageWithUri(this.toUri(), imageView, bmpParams)
             }
         }
     }
 
-    private fun loadImageRemotely(webUrl: String, imageView: ImageView, bmpParams: BitmapCustomParams){
-        if(bmpParams.folderName.isNotEmpty()){
-            val folderCreation = File(context.cacheDir, bmpParams.folderName)
-            if(!folderCreation.exists())
-                folderCreation.mkdir()
-        }
-
-        val webUri = Uri.parse(webUrl)
-        val webUrlWithoutQueryParams = "${webUri.scheme}://${webUri.host}${webUri.path}"
-        val queryParamsArray = webUri.getQueryParameters("checksum")
-        val checkSumParams =  if (queryParamsArray.isNotEmpty()) queryParamsArray[0] else ""
-
-        val imageThumbnailUrl = NetworkHelper.convertVideoUrlToImageUrl(webUrlWithoutQueryParams)
-        val fileName = URLUtil.guessFileName(imageThumbnailUrl, null, null)
-        val actualPath = if(bmpParams.folderName.isEmpty()) fileName else "${bmpParams.folderName}/$fileName"
-
-        val doesExistInMemCacheOrDisk = isInMemoryCache(actualPath) || doesFileExist(actualPath)
-        val notWriting = !NetworkHelper.writingFiles.contains(actualPath)
-
-        if (doesExistInMemCacheOrDisk && notWriting) {
-            val fileContain = File(context.cacheDir, actualPath)
-            if(fileContain.exists()){
-                val actualChecksum = fileContain.md5()
-                Log.d("ImageLoader", "Checksum on the server: $checkSumParams vs Checksum in reality: $actualChecksum")
-
-                val isSameChecksum = checkSumParams == actualChecksum
-                val someExceptions = checkSumParams == ""
-                if(isSameChecksum || someExceptions){
-                    handleMemoryCache(actualPath, imageView, bmpParams)
-                } else {
-                    fileContain.delete()
-                    downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
-                }
-            }
-        }
-        else {
-            downloadImageAndThenLoadImageWithUrl(imageThumbnailUrl, imageView, bmpParams)
-        }
-    }
-
     fun loadImage(webUrlOrFileUri: String, imageView: ImageView, bmpParams: BitmapCustomParams) {
-        if (webUrlOrFileUri.isEmpty()) {
-            return
-        } else if (URLUtil.isHttpUrl(webUrlOrFileUri) || URLUtil.isHttpsUrl(webUrlOrFileUri)) {
-            loadImageRemotely(webUrlOrFileUri, imageView, bmpParams)
-        } else {
-            loadImageLocally(webUrlOrFileUri, imageView, bmpParams)
-        }
-
-
+        val isWebUrl = URLUtil.isHttpUrl(webUrlOrFileUri) || URLUtil.isHttpsUrl(webUrlOrFileUri)
+        if (webUrlOrFileUri.isEmpty()) return
+        else if (isWebUrl) loadImageRemotely(webUrlOrFileUri, imageView, bmpParams)
+        else loadImageLocally(webUrlOrFileUri, imageView, bmpParams)
     }
 }

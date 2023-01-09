@@ -20,7 +20,7 @@ import java.util.*
 
 
 object FileUtils {
-    fun convertContentUriToFileUri(contentURI: Uri, context: Context): String? {
+    fun convertContentUriToFileUri(contentURI: Uri, context: Context): String {
         val result: String?
         val cursor: Cursor? = context.contentResolver.query(contentURI, null, null, null, null)
         if (cursor == null) {
@@ -80,7 +80,6 @@ object FileUtils {
                 }
             }
         }
-
         return result
     }
 

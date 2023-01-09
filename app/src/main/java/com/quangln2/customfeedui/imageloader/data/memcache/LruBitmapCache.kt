@@ -18,23 +18,22 @@ object LruBitmapCache: CachePolicy {
         }
     }
 
+    override fun containsKey(key: String): Boolean = memoryCache.get(key) != null
+
     override fun putIntoLruCache(key: String, managedBitmap: ManagedBitmap){
         synchronized(memoryCache){
             val tmpBmp = memoryCache.get(key)
             val managedBitmapGet = tmpBmp?.get()
-            if((tmpBmp == null || managedBitmapGet == null) && managedBitmap != null){
+            if((tmpBmp == null || managedBitmapGet == null)){
                 val addedByte = managedBitmap.getBitmap().byteCount.div(1024)
                 if(addedByte + memoryCache.size() < memoryCache.maxSize()){
                     memoryCache.put(key, WeakReference(managedBitmap))
                 }
-
             }
         }
     }
 
-    fun containsKey(key: String): Boolean = memoryCache.get(key) != null
-
-    fun getLruCache(key: String, bmpParams: BitmapCustomParams): ManagedBitmap? {
+    override fun getLruCache(key: String, bmpParams: BitmapCustomParams): ManagedBitmap? {
         val tmpBmp = memoryCache.get(key)
         val managedBitmap = tmpBmp?.get()
         if(bmpParams.countRef){
@@ -66,9 +65,7 @@ object LruBitmapCache: CachePolicy {
         }
     }
 
-    override fun removeAll() = memoryCache.evictAll()
-
-    fun removeCacheForce(key: String){
+    override fun removeCacheForce(key: String){
         synchronized(memoryCache){
             val memCache = memoryCache.get(key)
             if(memCache != null){
@@ -77,9 +74,10 @@ object LruBitmapCache: CachePolicy {
                     memoryCache.remove(key)
                 }
             }
-
         }
     }
+
+    override fun removeAll() = memoryCache.evictAll()
 
 
 

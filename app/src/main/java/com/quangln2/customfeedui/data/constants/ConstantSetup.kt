@@ -18,7 +18,7 @@ object ConstantSetup {
     const val UPLOAD_FILE = DEFAULT_ENDPOINT + "upload"
 
     //Hardcoded avatar link
-    const val AVATAR_LINK = "https://i.imgur.com/CzXTtJV.jpg"
+    const val AVATAR_LINK = "https://i.imgur.com/CzXTtJV.jpg?checksum=a177ecedcabae1ebcb103b3cba2bd7fb"
     //Max items in a grid
     const val MAXIMUM_IMAGE_IN_A_GRID = 9
     //Phone information
