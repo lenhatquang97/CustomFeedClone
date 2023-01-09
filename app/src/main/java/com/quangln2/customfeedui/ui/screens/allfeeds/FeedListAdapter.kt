@@ -52,7 +52,7 @@ class FeedListAdapter(
             }
             TypeOfPost.HEADER.value -> {
                 val binding = FeedHeaderBinding.inflate(layoutInflater, parent, false)
-                HeaderViewHolder(binding, eventFeedCallback)
+                HeaderViewHolder(binding)
             }
             TypeOfPost.BODY.value -> {
                 val binding = FeedBodyBinding.inflate(layoutInflater, parent, false)
@@ -64,31 +64,6 @@ class FeedListAdapter(
             }
         }
     }
-
-    override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
-        super.onViewAttachedToWindow(holder)
-        when(holder){
-            is HeaderViewHolder -> {
-                holder.onViewAttached(context, false)
-            }
-            is AddNewItemViewHolder -> {
-                holder.onViewAttached(context, false)
-            }
-        }
-    }
-
-    override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
-        super.onViewDetachedFromWindow(holder)
-        when (holder) {
-            is HeaderViewHolder -> {
-                holder.onViewRecycled()
-            }
-            is AddNewItemViewHolder -> {
-                holder.onViewRecycled()
-            }
-        }
-    }
-
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)

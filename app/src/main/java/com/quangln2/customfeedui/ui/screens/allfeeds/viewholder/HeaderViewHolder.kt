@@ -8,15 +8,11 @@ import com.quangln2.customfeedui.data.models.uimodel.MyPostRender
 import com.quangln2.customfeedui.databinding.FeedHeaderBinding
 import com.quangln2.customfeedui.imageloader.data.bitmap.BitmapCustomParams
 import com.quangln2.customfeedui.imageloader.domain.ImageLoader
-import com.quangln2.customfeedui.others.callback.EventFeedCallback
 import com.quangln2.customfeedui.others.utils.FileUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
-class HeaderViewHolder constructor(
-    private val binding: FeedHeaderBinding,
-    private val eventFeedCallback: EventFeedCallback
-    ):
+class HeaderViewHolder constructor(private val binding: FeedHeaderBinding):
     RecyclerView.ViewHolder(binding.root) {
     var imgUrl = ""
     private fun loadBasicInfoAboutFeed(item: MyPostRender, context: Context) {
@@ -30,7 +26,7 @@ class HeaderViewHolder constructor(
     }
 
     @SuppressLint("SetTextI18n")
-    private fun loadFeedDescription(item: MyPostRender, context: Context) {
+    private fun loadFeedDescription(item: MyPostRender) {
         binding.caption.text = item.caption
         if(item.caption.isEmpty()){
             binding.caption.visibility = View.GONE
@@ -41,15 +37,6 @@ class HeaderViewHolder constructor(
 
     fun bind(item: MyPostRender, context: Context){
         loadBasicInfoAboutFeed(item, context)
-        loadFeedDescription(item, context)
-    }
-
-    fun onViewRecycled(){
-        eventFeedCallback.onRecycled(binding.myAvatarImage)
-    }
-    fun onViewAttached(context: Context, countRef: Boolean = true){
-        val imageLoader = ImageLoader(context, 100,100, CoroutineScope(Job()))
-        val bmpParams = BitmapCustomParams().apply { this.countRef = countRef }
-        imageLoader.loadImage(imgUrl, binding.myAvatarImage, bmpParams)
+        loadFeedDescription(item)
     }
 }

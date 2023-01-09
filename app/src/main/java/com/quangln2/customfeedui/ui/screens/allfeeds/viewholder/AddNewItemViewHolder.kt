@@ -21,12 +21,4 @@ class AddNewItemViewHolder constructor(private val binding: FeedCardBinding,
             eventFeedCallback.onClickAddPost()
         }
     }
-    fun onViewRecycled(){
-        eventFeedCallback.onRecycled(binding.circleAvatar)
-    }
-    fun onViewAttached(context: Context, countRef: Boolean = true){
-        val imageLoader = ImageLoader(context,100,100, CoroutineScope(Job()))
-        val bmpParams = BitmapCustomParams().apply { this.countRef = countRef }
-        imageLoader.loadImage(ConstantSetup.AVATAR_LINK, binding.circleAvatar, bmpParams)
-    }
 }

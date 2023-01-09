@@ -33,6 +33,7 @@ class ViewFullVideoFragment : Fragment() {
 
         if (value != null && listOfUrls != null && id.isNotEmpty()) {
             binding.viewPager.adapter = FullImageVideoAdapter(this, listOfUrls!!, currentVideoPosition, player, id)
+            binding.viewPager.offscreenPageLimit = 1
             binding.viewPager.setCurrentItem(listOfUrls!!.indexOf(value), false)
         }
         return binding.root
