@@ -7,8 +7,6 @@ import com.quangln2.customfeedui.imageloader.data.bitmap.ManagedBitmap
 import java.lang.ref.WeakReference
 
 object LruBitmapCache: CachePolicy {
-    val bitmapToImageViewAddress = mutableMapOf<String, String>()
-
     val cacheSize = (Runtime.getRuntime().maxMemory() / 1024).toInt() / 8
 
     var memoryCache: LruCache<String, WeakReference<ManagedBitmap>> = object : LruCache<String, WeakReference<ManagedBitmap>>(cacheSize){

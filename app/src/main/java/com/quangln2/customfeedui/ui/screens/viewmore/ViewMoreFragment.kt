@@ -99,7 +99,7 @@ class ViewMoreFragment : Fragment() {
                             }
                             val actualImageUrl = NetworkHelper.convertVideoUrlToImageUrl(item.resources[i].url)
                             ImageLoader.Builder()
-                                .resize(100, 100)
+                                .resize(ConstantSetup.PHONE_WIDTH / 3, ConstantSetup.PHONE_WIDTH / 3)
                                 .inScope(lifecycleScope)
                                 .putIntoFolder(item.feedId)
                                 .build(requireContext())
